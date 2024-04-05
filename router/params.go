@@ -4,7 +4,7 @@ import "github.com/webmafia/fast"
 
 type Params []kv
 
-func (p *Params) reset() {
+func (p *Params) Reset() {
 	*p = (*p)[:0]
 }
 

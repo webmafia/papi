@@ -25,9 +25,9 @@ func (r *Router) Clear() {
 	r.tree.nodes = r.tree.nodes[:0]
 }
 
-func (r *Router) Add(path string, ptr unsafe.Pointer) {
+func (r *Router) Add(method string, path string, ptr unsafe.Pointer) {
 	p := fast.StringToBytes(path)
-	n := &r.tree
+	n := r.add(&r.tree, fast.StringToBytes(method))
 
 	for {
 		idx := bytes.IndexByte(p, '/')
@@ -69,14 +69,20 @@ func (r *Router) add(n *node, part []byte) *node {
 	return nn
 }
 
-func (r *Router) Lookup(path string, params *Params) (ptr unsafe.Pointer) {
-	p := fast.StringToBytes(path)
+func (r *Router) LookupString(method string, path string, params *Params) (ptr unsafe.Pointer) {
+	return r.Lookup(fast.StringToBytes(method), fast.StringToBytes(path), params)
+}
 
+func (r *Router) Lookup(method []byte, p []byte, params *Params) (ptr unsafe.Pointer) {
 	if p[0] == '/' {
 		p = p[1:]
 	}
 
-	n := &r.tree
+	n := r.lookup(&r.tree, method, params)
+
+	if n == nil {
+		return
+	}
 
 	for {
 		idx := bytes.IndexByte(p, '/')
