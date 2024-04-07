@@ -1,4 +1,4 @@
-package router
+package fastapi
 
 import "github.com/webmafia/fast"
 

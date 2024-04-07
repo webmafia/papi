@@ -2,12 +2,11 @@ package fastapi
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/router"
 )
 
 type Ctx[U any] struct {
 	ctx    *fasthttp.RequestCtx
-	params router.Params
+	params Params
 	User   U
 }
 
