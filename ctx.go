@@ -5,9 +5,9 @@ import (
 )
 
 type Ctx[U any] struct {
-	ctx    *fasthttp.RequestCtx
-	params Params
-	User   U
+	ctx       *fasthttp.RequestCtx
+	paramVals []string
+	User      U
 }
 
 func (api *API[U]) acquireCtx(c *fasthttp.RequestCtx) (ctx *Ctx[U]) {
@@ -24,6 +24,6 @@ func (api *API[U]) acquireCtx(c *fasthttp.RequestCtx) (ctx *Ctx[U]) {
 
 func (api *API[U]) releaseCtx(ctx *Ctx[U]) {
 	ctx.ctx = nil
-	ctx.params.Reset()
+	ctx.paramVals = ctx.paramVals[:0]
 	api.ctxPool.Put(ctx)
 }

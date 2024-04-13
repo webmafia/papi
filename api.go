@@ -3,27 +3,39 @@ package fastapi
 import (
 	"sync"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 )
 
 type API[U any] struct {
-	router  Router[U]
-	ctxPool sync.Pool
+	router   Router[U]
+	ctxPool  sync.Pool
+	jsoniter jsoniter.API
 }
 
 func New[U any]() *API[U] {
-	return &API[U]{}
+	return &API[U]{
+		jsoniter: jsoniter.ConfigFastest,
+	}
 }
 
 func (api *API[U]) handler(c *fasthttp.RequestCtx) {
 	ctx := api.acquireCtx(c)
 	defer api.releaseCtx(ctx)
 
-	cb := api.router.Lookup(c.Method(), c.Path(), &ctx.params)
+	cb, params, ok := api.router.Lookup(c.Method(), c.Path(), &ctx.paramVals)
 
-	if cb == nil {
+	if !ok {
 		// TODO: Proper JSON response
 		c.NotFound()
+		return
+	}
+
+	if len(params) != len(ctx.paramVals) {
+		// TODO: Proper JSON response
+		c.Response.Reset()
+		c.SetStatusCode(fasthttp.StatusInternalServerError)
+		c.SetBodyString("params count mismatch")
 		return
 	}
 

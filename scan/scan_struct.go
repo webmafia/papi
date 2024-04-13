@@ -29,27 +29,34 @@ type fieldScanner struct {
 	scan   Scanner
 }
 
-func (b *StructScannerBuilder) Add(tag string, val string) (err error) {
+func (b *StructScannerBuilder) AddByTag(tag string, val string) (err error) {
 	for i := 0; i < b.numFields; i++ {
 		fld := b.typ.Field(i)
+		tagVal := fld.Tag.Get(tag)
 
-		if fld.Tag.Get(tag) != val {
+		if tagVal != val {
 			continue
 		}
 
-		scan, err := CreateScanner(fld.Type)
-
-		if err != nil {
-			return err
-		}
-
-		b.fields = append(b.fields, fieldScanner{
-			offset: fld.Offset,
-			scan:   scan,
-		})
+		return b.AddField(fld)
 	}
 
 	return fmt.Errorf("tag '%s' of value '%s' not found", tag, val)
+}
+
+func (b *StructScannerBuilder) AddField(fld reflect.StructField) (err error) {
+	scan, err := CreateScanner(fld.Type)
+
+	if err != nil {
+		return err
+	}
+
+	b.fields = append(b.fields, fieldScanner{
+		offset: fld.Offset,
+		scan:   scan,
+	})
+
+	return
 }
 
 func (b *StructScannerBuilder) Compile() StructScanner {
