@@ -15,7 +15,8 @@ type API[U any] struct {
 func New[U any]() *API[U] {
 	api := &API[U]{
 		server: fasthttp.Server{
-			StreamRequestBody: true,
+			StreamRequestBody:            true,
+			DisablePreParseMultipartForm: true,
 		},
 	}
 

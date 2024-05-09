@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"reflect"
 	"slices"
 	"unsafe"
@@ -13,7 +14,10 @@ import (
 	"github.com/webmafia/fastapi/internal/jsonpool"
 )
 
+const defaultMaxInMemoryFileSize = 16 * 1024 * 1024
+
 var ioReader = reflect.TypeOf((*io.Reader)(nil)).Elem()
+var multipartForm = reflect.TypeOf((*multipart.Form)(nil))
 
 func CreateStructScanner(typ reflect.Type, params []string) (scan StructScanner, err error) {
 	if typ.Kind() != reflect.Struct {
@@ -85,6 +89,19 @@ func createBodyScanner(typ reflect.Type) (scan StructScanner, err error) {
 			*(*io.Reader)(p) = reqCtx.RequestBodyStream()
 			return nil
 		}
+	} else if typ == multipartForm {
+		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
+			bounds := fast.BytesToString(reqCtx.Request.Header.MultipartFormBoundary())
+
+			if len(bounds) > 0 && len(reqCtx.Request.Header.Peek(fasthttp.HeaderContentEncoding)) == 0 {
+				form, err := readMultipartForm(reqCtx.RequestBodyStream(), bounds, reqCtx.Request.Header.ContentLength(), defaultMaxInMemoryFileSize)
+				_, _ = form, err
+				// TODO: Continue here
+			}
+
+			// TODO: Return error of missing file
+			return nil
+		}
 	} else {
 		dec := jsonpool.DecoderOf(typ)
 		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
@@ -127,6 +144,23 @@ func createQueryScanner(typ reflect.Type, key string) (scan StructScanner, err e
 
 		return nil
 	}, nil
+}
+
+func readMultipartForm(r io.Reader, boundary string, size, maxInMemoryFileSize int) (*multipart.Form, error) {
+	// Do not care about memory allocations here, since they are tiny
+	// compared to multipart data (aka multi-MB files) usually sent
+	// in multipart/form-data requests.
+
+	if size <= 0 {
+		return nil, fmt.Errorf("form size must be greater than 0. Given %d", size)
+	}
+	lr := io.LimitReader(r, int64(size))
+	mr := multipart.NewReader(lr, boundary)
+	f, err := mr.ReadForm(int64(maxInMemoryFileSize))
+	if err != nil {
+		return nil, fmt.Errorf("cannot read multipart/form-data body: %w", err)
+	}
+	return f, nil
 }
 
 type fieldScanner struct {
