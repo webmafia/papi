@@ -65,10 +65,12 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 			outAny any = &out
 		)
 
+		// Scan the request's path parameters into I
 		if err = scanStruct(unsafe.Pointer(&in), ctx.paramVals...); err != nil {
 			return
 		}
 
+		// Scan the request's query arguments into I
 		if err = scanArgs(unsafe.Pointer(&in), ctx.ctx.QueryArgs()); err != nil {
 			return
 		}

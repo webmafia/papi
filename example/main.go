@@ -48,6 +48,27 @@ func (r userRoutes) ListUsers(api *fastapi.API[User]) (err error) {
 	})
 }
 
+func (r userRoutes) CreateUser(api *fastapi.API[User]) (err error) {
+	type req struct {
+		Id    int `param:"id"`
+		Limit int `query:"limit"`
+		Body  User
+	}
+
+	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{
+		Method:  "POST",
+		Path:    "/users",
+		Summary: "Create user",
+
+		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *User) (err error) {
+			*resp = req.Body
+			resp.ID = 101
+
+			return
+		},
+	})
+}
+
 func main() {
 	api := fastapi.New[User]()
 
