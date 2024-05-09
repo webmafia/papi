@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/webmafia/fastapi/internal/jsonpool"
 	"github.com/webmafia/fastapi/scan"
 )
 
@@ -32,22 +33,12 @@ func (api *API[U]) RegisterRoutes(types ...any) (err error) {
 func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 	var in I
 	inTyp := reflect.TypeOf(in)
-	sc, err := scan.CreateStructScanner(inTyp)
+	route := api.router.Add(string(r.Method), r.Path)
+	sc, err := scan.CreateStructScanner(inTyp, route.params)
 
 	if err != nil {
 		return
 	}
-
-	route := api.router.Add(string(r.Method), r.Path)
-
-	for i := range route.params {
-		if err = sc.AddByTag("param", route.params[i]); err != nil {
-			return
-		}
-	}
-
-	scanStruct := sc.Compile()
-	scanArgs, err := scan.CreateArgsScanner(inTyp)
 
 	if err != nil {
 		return
@@ -56,8 +47,8 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 	route.cb = func(ctx *Ctx[U]) (err error) {
 		ctx.ctx.SetContentType("application/json; charset=utf-8")
 
-		s := api.jsoniter.BorrowStream(ctx.ctx.Response.BodyWriter())
-		defer api.jsoniter.ReturnStream(s)
+		s := jsonpool.AcquireStream(ctx.ctx.Response.BodyWriter())
+		defer jsonpool.ReleaseStream(s)
 
 		var (
 			in     I
@@ -65,13 +56,7 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 			outAny any = &out
 		)
 
-		// Scan the request's path parameters into I
-		if err = scanStruct(unsafe.Pointer(&in), ctx.paramVals...); err != nil {
-			return
-		}
-
-		// Scan the request's query arguments into I
-		if err = scanArgs(unsafe.Pointer(&in), ctx.ctx.QueryArgs()); err != nil {
+		if err = sc(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
 			return
 		}
 

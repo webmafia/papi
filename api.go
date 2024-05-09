@@ -3,20 +3,25 @@ package fastapi
 import (
 	"sync"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 )
 
 type API[U any] struct {
-	router   Router[U]
-	ctxPool  sync.Pool
-	jsoniter jsoniter.API
+	router  Router[U]
+	ctxPool sync.Pool
+	server  fasthttp.Server
 }
 
 func New[U any]() *API[U] {
-	return &API[U]{
-		jsoniter: jsoniter.ConfigFastest,
+	api := &API[U]{
+		server: fasthttp.Server{
+			StreamRequestBody: true,
+		},
 	}
+
+	api.server.Handler = api.handler
+
+	return api
 }
 
 func (api *API[U]) handler(c *fasthttp.RequestCtx) {
@@ -46,5 +51,5 @@ func (api *API[U]) handler(c *fasthttp.RequestCtx) {
 }
 
 func (api *API[U]) ListenAndServe(addr string) error {
-	return fasthttp.ListenAndServe(addr, api.handler)
+	return api.server.ListenAndServe(addr)
 }
