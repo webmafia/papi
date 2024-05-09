@@ -7,6 +7,7 @@ import (
 	"testing"
 	"unsafe"
 
+	"github.com/modern-go/reflect2"
 	"github.com/webmafia/fastapi"
 )
 
@@ -115,4 +116,18 @@ func BenchmarkReflect_MethodCall_Unsafe(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		cb(nil)
 	}
+}
+
+func BenchmarkType(b *testing.B) {
+	b.Run("reflect", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = reflect.TypeOf(User{})
+		}
+	})
+
+	b.Run("reflect2", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = reflect2.TypeOf(User{})
+		}
+	})
 }
