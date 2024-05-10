@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"mime/multipart"
 
 	"github.com/webmafia/fastapi"
 )
@@ -64,6 +66,25 @@ func (r userRoutes) CreateUser(api *fastapi.API[User]) (err error) {
 			// _ = buf
 			*resp = req.Body
 			resp.ID = 101
+
+			return
+		},
+	})
+}
+
+func (r userRoutes) UploadFile(api *fastapi.API[User]) (err error) {
+	type req struct {
+		Body *multipart.Form // TODO: Also accept *multipart.File
+	}
+
+	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{
+		Method:  "POST",
+		Path:    "/files",
+		Summary: "Upload file",
+
+		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *User) (err error) {
+			f := req.Body.File
+			fmt.Printf("%#v\n", f)
 
 			return
 		},

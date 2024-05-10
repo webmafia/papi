@@ -16,8 +16,11 @@ import (
 
 const defaultMaxInMemoryFileSize = 16 * 1024 * 1024
 
-var ioReader = reflect.TypeOf((*io.Reader)(nil)).Elem()
-var multipartForm = reflect.TypeOf((*multipart.Form)(nil))
+var (
+	ioReader            = reflect.TypeOf((*io.Reader)(nil)).Elem()
+	multipartForm       = reflect.TypeOf((*multipart.Form)(nil))
+	multipartFileHeader = reflect.TypeOf((*multipart.FileHeader)(nil))
+)
 
 func CreateStructScanner(typ reflect.Type, params []string) (scan StructScanner, err error) {
 	if typ.Kind() != reflect.Struct {
@@ -84,25 +87,47 @@ func CreateStructScanner(typ reflect.Type, params []string) (scan StructScanner,
 }
 
 func createBodyScanner(typ reflect.Type) (scan StructScanner, err error) {
-	if typ == ioReader {
+	switch typ {
+
+	case ioReader:
 		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
 			*(*io.Reader)(p) = reqCtx.RequestBodyStream()
 			return nil
 		}
-	} else if typ == multipartForm {
-		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
-			bounds := fast.BytesToString(reqCtx.Request.Header.MultipartFormBoundary())
 
-			if len(bounds) > 0 && len(reqCtx.Request.Header.Peek(fasthttp.HeaderContentEncoding)) == 0 {
-				form, err := readMultipartForm(reqCtx.RequestBodyStream(), bounds, reqCtx.Request.Header.ContentLength(), defaultMaxInMemoryFileSize)
-				_, _ = form, err
-				// TODO: Continue here
+	case multipartForm:
+		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) (err error) {
+			form, err := parseMultipartForm(reqCtx)
+
+			if err != nil {
+				return
 			}
 
-			// TODO: Return error of missing file
-			return nil
+			*(*multipart.Form)(p) = *form
+			return
 		}
-	} else {
+
+	case multipartFileHeader:
+		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) (err error) {
+			form, err := parseMultipartForm(reqCtx)
+
+			if err != nil {
+				return
+			}
+
+			for _, files := range form.File {
+				if len(files) == 0 {
+					continue
+				}
+
+				*(*multipart.FileHeader)(p) = *files[0]
+				return
+			}
+
+			return errors.New("missing file")
+		}
+
+	default:
 		dec := jsonpool.DecoderOf(typ)
 		scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
 			iter := jsonpool.AcquireIterator(reqCtx.Request.BodyStream())
@@ -144,6 +169,18 @@ func createQueryScanner(typ reflect.Type, key string) (scan StructScanner, err e
 
 		return nil
 	}, nil
+}
+
+func parseMultipartForm(reqCtx *fasthttp.RequestCtx) (form *multipart.Form, err error) {
+	bounds := fast.BytesToString(reqCtx.Request.Header.MultipartFormBoundary())
+
+	if len(bounds) > 0 && len(reqCtx.Request.Header.Peek(fasthttp.HeaderContentEncoding)) == 0 {
+		form, err = readMultipartForm(reqCtx.RequestBodyStream(), bounds, reqCtx.Request.Header.ContentLength(), defaultMaxInMemoryFileSize)
+	} else {
+		err = errors.New("expected multipart upload")
+	}
+
+	return
 }
 
 func readMultipartForm(r io.Reader, boundary string, size, maxInMemoryFileSize int) (*multipart.Form, error) {

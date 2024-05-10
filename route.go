@@ -40,10 +40,6 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 		return
 	}
 
-	if err != nil {
-		return
-	}
-
 	route.cb = func(ctx *Ctx[U]) (err error) {
 		ctx.ctx.SetContentType("application/json; charset=utf-8")
 
