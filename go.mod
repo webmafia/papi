@@ -5,6 +5,8 @@ go 1.21.3
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/fasthttp/router v1.5.0 // indirect
+	github.com/gosimple/slug v1.14.0 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect

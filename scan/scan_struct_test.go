@@ -4,6 +4,8 @@ import (
 	"log"
 	"reflect"
 	"testing"
+
+	"github.com/webmafia/fastapi/internal"
 )
 
 func Example_iterateStructTags() {
@@ -18,7 +20,7 @@ func Example_iterateStructTags() {
 	for i := 0; i < l; i++ {
 		fld := typ.Field(i)
 
-		iterateStructTags(fld.Tag, func(key, val string) bool {
+		internal.IterateStructTags(fld.Tag, func(key, val string) bool {
 			log.Println(key, "is", val)
 			return false
 		})
@@ -39,7 +41,7 @@ func Benchmark_iterateStructTags(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = iterateStructTags(fld.Tag, func(key, val string) bool {
+		_ = internal.IterateStructTags(fld.Tag, func(key, val string) bool {
 			_ = key
 			_ = val
 			return false

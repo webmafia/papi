@@ -1,26 +1,44 @@
 package fastapi
 
 import (
+	"io"
 	"sync"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/internal/jsonpool"
+	"github.com/webmafia/fastapi/spec"
 )
 
 type API[U any] struct {
 	router  Router[U]
 	ctxPool sync.Pool
 	server  fasthttp.Server
+	docs    *spec.Document
+	opt     Options
 }
 
-func New[U any]() *API[U] {
+type Options struct {
+	OpenAPI spec.OpenAPI
+}
+
+func New[U any](opt ...Options) *API[U] {
 	api := &API[U]{
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
 		},
+		docs: &spec.Document{
+			OpenAPI: "3.0.0",
+		},
+	}
+
+	if len(opt) > 0 {
+		api.opt = opt[0]
 	}
 
 	api.server.Handler = api.handler
+	api.docs.Info = api.opt.OpenAPI.Info
+	api.docs.Servers = api.opt.OpenAPI.Servers
 
 	return api
 }
@@ -53,4 +71,17 @@ func (api *API[U]) handler(c *fasthttp.RequestCtx) {
 
 func (api *API[U]) ListenAndServe(addr string) error {
 	return api.server.ListenAndServe(addr)
+}
+
+func (api *API[U]) WriteOpenAPI(w io.Writer) error {
+	s := jsonpool.AcquireStream(w)
+	defer jsonpool.ReleaseStream(s)
+
+	api.docs.JsonEncode(s)
+
+	if err := s.Error; err != nil {
+		return err
+	}
+
+	return s.Flush()
 }
