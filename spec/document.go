@@ -1,12 +1,17 @@
 package spec
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	"reflect"
+
+	jsoniter "github.com/json-iterator/go"
+)
 
 type Document struct {
 	OpenAPI string
 	Info    Info
 	Servers []Server
 	Paths   Paths
+	Schemas map[reflect.Type]*Schema
 }
 
 func (d *Document) JsonEncode(s *jsoniter.Stream) {

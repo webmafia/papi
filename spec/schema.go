@@ -39,7 +39,6 @@ type Schema struct {
 	Min         int
 	Max         int
 	Items       *Schema
-	Ref         *Schema
 	Properties  map[string]*Schema
 	Nullable    bool
 	ReadOnly    bool
@@ -47,16 +46,27 @@ type Schema struct {
 	UniqueItems bool
 }
 
-func (sch *Schema) FromStruct(v any, schemas map[string]Schema) (err error) {
-	typ := reflect.TypeOf(v)
-
+func SchemaFromStruct(typ reflect.Type, schemas map[reflect.Type]*Schema) (sch *Schema, err error) {
 	if typ.Kind() != reflect.Struct {
-		return errors.New("expected struct")
+		return nil, errors.New("expected struct")
 	}
 
-	name := typ.Name()
+	if sch, ok := schemas[typ]; ok {
+		return sch, nil
+	}
+
+	sch = &Schema{
+		Title: typ.Name(),
+		Type:  Object,
+	}
+
 	numFld := typ.NumField()
-	_, _ = name, numFld
+
+	for i := 0; i < numFld; i++ {
+		fld := typ.Field(i)
+
+	}
+
 	return
 }
 

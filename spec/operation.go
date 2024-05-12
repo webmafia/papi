@@ -1,11 +1,7 @@
 package spec
 
 import (
-	"errors"
-	"reflect"
-
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/fastapi/internal"
 )
 
 type Operation struct {
@@ -19,44 +15,44 @@ type Operation struct {
 	Tags           []*Tag
 }
 
-func (op *Operation) ParamsFromStruct(v any) (err error) {
-	typ := reflect.TypeOf(v)
+// func (op *Operation) ParamsFromStruct(v any) (err error) {
+// 	typ := reflect.TypeOf(v)
 
-	if typ.Kind() != reflect.Struct {
-		return errors.New("expected struct")
-	}
+// 	if typ.Kind() != reflect.Struct {
+// 		return errors.New("expected struct")
+// 	}
 
-	numFld := typ.NumField()
+// 	numFld := typ.NumField()
 
-	for i := 0; i < numFld; i++ {
-		fld := typ.Field(i)
+// 	for i := 0; i < numFld; i++ {
+// 		fld := typ.Field(i)
 
-		internal.IterateStructTags(fld.Tag, func(key, val string) bool {
-			switch key {
+// 		internal.IterateStructTags(fld.Tag, func(key, val string) bool {
+// 			switch key {
 
-			case "param":
-				op.Parameters = append(op.Parameters, Parameter{
-					Name:        val,
-					In:          InPath,
-					Description: fld.Tag.Get("docs"),
-					Required:    true,
-				})
+// 			case "param":
+// 				op.Parameters = append(op.Parameters, Parameter{
+// 					Name:        val,
+// 					In:          InPath,
+// 					Description: fld.Tag.Get("docs"),
+// 					Required:    true,
+// 				})
 
-			case "query":
-				op.Parameters = append(op.Parameters, Parameter{
-					Name:        val,
-					In:          InQuery,
-					Description: fld.Tag.Get("docs"),
-					// TODO: Required
-				})
+// 			case "query":
+// 				op.Parameters = append(op.Parameters, Parameter{
+// 					Name:        val,
+// 					In:          InQuery,
+// 					Description: fld.Tag.Get("docs"),
+// 					// TODO: Required
+// 				})
 
-			}
-			return true
-		})
-	}
+// 			}
+// 			return true
+// 		})
+// 	}
 
-	return
-}
+// 	return
+// }
 
 func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectStart()
