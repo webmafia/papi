@@ -2,8 +2,10 @@ package spec
 
 import (
 	"reflect"
+	"sync"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/webmafia/fastapi/spec/schema"
 )
 
 type Document struct {
@@ -11,7 +13,8 @@ type Document struct {
 	Info    Info
 	Servers []Server
 	Paths   Paths
-	Schemas map[reflect.Type]*Schema
+	Schemas map[reflect.Type]schema.Schema
+	mu      sync.Mutex
 }
 
 func (d *Document) JsonEncode(s *jsoniter.Stream) {
@@ -45,6 +48,30 @@ func (d *Document) JsonEncode(s *jsoniter.Stream) {
 	s.WriteMore()
 	s.WriteObjectField("paths")
 	d.Paths.JsonEncode(ctx, s)
+
+	s.WriteMore()
+	s.WriteObjectField("components")
+	s.WriteObjectStart()
+
+	s.WriteObjectField("schemas")
+	s.WriteObjectStart()
+
+	var written bool
+
+	for _, sch := range d.Schemas {
+		if written {
+			s.WriteMore()
+		} else {
+			written = true
+		}
+
+		s.WriteObjectField(sch.Name())
+		sch.EncodeSchema(s)
+	}
+
+	s.WriteObjectEnd()
+
+	s.WriteObjectEnd()
 
 	// TODO: Add "security"
 

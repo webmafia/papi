@@ -37,7 +37,9 @@ func addRouteDocs[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 		fld := typ.Field(i)
 
 		if fld.Name == "Body" {
-			spec.SchemaFromStruct(fld.Type, api.docs.Schemas)
+			if op.RequestBodyRef, err = api.docs.SchemaOf(fld.Type); err != nil {
+				return
+			}
 		}
 
 		internal.IterateStructTags(fld.Tag, func(key, val string) bool {

@@ -1,9 +1,6 @@
 package spec
 
 import (
-	"errors"
-	"reflect"
-
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -44,30 +41,6 @@ type Schema struct {
 	ReadOnly    bool
 	WriteOnly   bool
 	UniqueItems bool
-}
-
-func SchemaFromStruct(typ reflect.Type, schemas map[reflect.Type]*Schema) (sch *Schema, err error) {
-	if typ.Kind() != reflect.Struct {
-		return nil, errors.New("expected struct")
-	}
-
-	if sch, ok := schemas[typ]; ok {
-		return sch, nil
-	}
-
-	sch = &Schema{
-		Title: typ.Name(),
-		Type:  Object,
-	}
-
-	numFld := typ.NumField()
-
-	for i := 0; i < numFld; i++ {
-		fld := typ.Field(i)
-
-	}
-
-	return
 }
 
 func (sch *Schema) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {

@@ -2,11 +2,13 @@ package fastapi
 
 import (
 	"io"
+	"reflect"
 	"sync"
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/internal/jsonpool"
 	"github.com/webmafia/fastapi/spec"
+	"github.com/webmafia/fastapi/spec/schema"
 )
 
 type API[U any] struct {
@@ -29,6 +31,7 @@ func New[U any](opt ...Options) *API[U] {
 		},
 		docs: &spec.Document{
 			OpenAPI: "3.0.0",
+			Schemas: make(map[reflect.Type]schema.Schema),
 		},
 	}
 

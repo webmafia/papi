@@ -4,7 +4,6 @@ import jsoniter "github.com/json-iterator/go"
 
 type Info struct {
 	Title          string
-	Summary        string
 	Description    string
 	TermsOfService string
 	Contact        Contact
@@ -17,10 +16,6 @@ func (i *Info) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 	s.WriteObjectField("title")
 	s.WriteString(i.Title)
-
-	s.WriteMore()
-	s.WriteObjectField("summary")
-	s.WriteString(i.Summary)
 
 	s.WriteMore()
 	s.WriteObjectField("description")

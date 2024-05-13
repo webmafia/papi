@@ -56,8 +56,8 @@ func CreateScanner(typ reflect.Type) (scan Scanner, err error) {
 	case reflect.Complex128:
 		return scanComplex128, nil
 
-	case reflect.Array:
-	case reflect.Slice:
+	// case reflect.Array:
+	// case reflect.Slice:
 
 	case reflect.String:
 		return scanString, nil
