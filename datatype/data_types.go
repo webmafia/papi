@@ -11,8 +11,12 @@ type DataTypes struct {
 }
 
 func NewDataTypes() *DataTypes {
-	return &DataTypes{
+	d := &DataTypes{
 		scanners: make(map[reflect.Type]func(unsafe.Pointer, string) error),
 		encoders: make(map[reflect.Type]func(unsafe.Pointer, string) error),
 	}
+
+	registerStandardScanners(d)
+
+	return d
 }

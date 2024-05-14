@@ -3,10 +3,9 @@ package datatype
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
-func RegisterStandardScanners(d *DataTypes) {
+func registerStandardScanners(d *DataTypes) {
 	RegisterScanner(d, func(ptr *bool, str string) (err error) {
 		switch str {
 		case "1", "t", "T", "true", "TRUE", "True", "yes", "YES", "Yes":
@@ -141,8 +140,8 @@ func RegisterStandardScanners(d *DataTypes) {
 		return
 	})
 
-	RegisterScanner(d, func(ptr *string, str string) (err error) {
-		*ptr = strings.Clone(str)
-		return
-	})
+	// RegisterScanner(d, func(ptr *string, str string) (err error) {
+	// 	*ptr = strings.Clone(str)
+	// 	return
+	// })
 }

@@ -7,7 +7,6 @@ import (
 
 func ExampleScan() {
 	d := NewDataTypes()
-	RegisterStandardScanners(d)
 
 	var b bool
 
@@ -24,13 +23,11 @@ func ExampleScan() {
 
 func BenchmarkScan(b *testing.B) {
 	d := NewDataTypes()
-	RegisterStandardScanners(d)
 
 	b.ResetTimer()
 
-	var foo bool
-
 	for i := 0; i < b.N; i++ {
+		var foo bool
 		err := Scan(d, &foo, "true")
 
 		if err != nil {

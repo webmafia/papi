@@ -60,7 +60,7 @@ func (r userRoutes) ListUsers(api *fastapi.API[User]) (err error) {
 func (r userRoutes) CreateUser(api *fastapi.API[User]) (err error) {
 	type req struct {
 		// Body io.Reader
-		Body User
+		Body User `body:"json"`
 	}
 
 	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{

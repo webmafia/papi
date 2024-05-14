@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
+
+	"github.com/webmafia/fast"
 )
 
 func Scan[T any](d *DataTypes, v *T, str string) (err error) {
@@ -14,5 +16,5 @@ func Scan[T any](d *DataTypes, v *T, str string) (err error) {
 		return fmt.Errorf("missing scanner for type: %s", typ)
 	}
 
-	return scan(unsafe.Pointer(v), str)
+	return scan(fast.Noescape(unsafe.Pointer(v)), str)
 }
