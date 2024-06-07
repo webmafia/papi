@@ -49,3 +49,25 @@ func BenchmarkInterface(b *testing.B) {
 		doInterface(f)
 	}
 }
+
+//go:noinline
+func cb1(data []int) {
+	_ = data
+}
+
+//go:noinline
+func cb2(data ...int) {
+	_ = data
+}
+
+func BenchmarkSliceCB(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		cb1([]int{1, 2, 3, 4, 5, 6, 7, 8})
+	}
+}
+
+func BenchmarkSliceRest(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		cb2(1, 2, 3, 4, 5, 6, 7, 8)
+	}
+}
