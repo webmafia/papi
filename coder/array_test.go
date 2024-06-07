@@ -1,4 +1,4 @@
-package datatype
+package coder
 
 import (
 	"fmt"

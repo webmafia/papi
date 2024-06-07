@@ -1,4 +1,4 @@
-package datatype
+package coder
 
 import (
 	"reflect"
@@ -7,7 +7,7 @@ import (
 	"github.com/webmafia/fastapi/scan"
 )
 
-var _ Type = (*Object)(nil)
+var _ Coder = (*Object)(nil)
 
 type Object struct {
 	General
@@ -17,14 +17,14 @@ type Object struct {
 
 type ObjectProp struct {
 	Name   string
-	Schema Type
+	Schema Coder
 }
 
 func (o *Object) ScanTags(tags reflect.StructTag) error {
 	return scan.ScanTags(o, tags)
 }
 
-// EncodeSchema implements Type.
+// EncodeSchema implements Coder.
 func (o Object) EncodeSchema(s *jsoniter.Stream) {
 	s.WriteObjectStart()
 

@@ -1,4 +1,4 @@
-package datatype
+package coder
 
 import jsoniter "github.com/json-iterator/go"
 

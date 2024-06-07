@@ -1,27 +1,20 @@
-package datatype
+package coder
 
 import (
-	"reflect"
-
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/fastapi/scan"
 )
 
-var _ Type = (*Array)(nil)
+var _ Coder = (*Array)(nil)
 
 type Array struct {
 	General
 	Min         int `tag:"min"`
 	Max         int `tag:"max"`
-	Items       Type
+	Items       Coder
 	UniqueItems bool `tag:"unique"`
 }
 
-func (a *Array) ScanTags(tags reflect.StructTag) error {
-	return scan.ScanTags(a, tags)
-}
-
-// EncodeSchema implements Type.
+// EncodeSchema implements Coder.
 func (a Array) EncodeSchema(s *jsoniter.Stream) {
 	s.WriteObjectStart()
 

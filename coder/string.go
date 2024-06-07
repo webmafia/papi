@@ -1,13 +1,10 @@
-package datatype
+package coder
 
 import (
-	"reflect"
-
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/fastapi/scan"
 )
 
-var _ Type = (*String)(nil)
+var _ ParamCoder[string] = (*String)(nil)
 
 type String struct {
 	General
@@ -18,11 +15,13 @@ type String struct {
 	Max     int      `tag:"max"`
 }
 
-func (s *String) ScanTags(tags reflect.StructTag) error {
-	return scan.ScanTags(s, tags)
+// ScanParam implements ParamCoder.
+func (s *String) ScanParam(ptr *string, str string) error {
+	*ptr = str
+	return nil
 }
 
-// EncodeSchema implements Type.
+// EncodeSchema implements Coder.
 func (str String) EncodeSchema(s *jsoniter.Stream) {
 	s.WriteObjectStart()
 
