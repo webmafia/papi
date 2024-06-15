@@ -30,5 +30,5 @@ func RegisterRequestCoder[T any](cs *Coders, c RequestCoder[T]) {
 }
 
 func (cs *Coders) registerStandardCoders() {
-	RegisterParamCoder(cs, &Boolean{})
+	RegisterParamCoder(cs, Boolean{})
 }

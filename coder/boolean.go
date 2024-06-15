@@ -2,18 +2,18 @@ package coder
 
 import (
 	"fmt"
+	"reflect"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/webmafia/fastapi/scan"
 )
 
-var _ ParamCoder[bool] = (*Boolean)(nil)
+var _ ParamCoder[bool] = Boolean{}
 
-type Boolean struct {
-	General
-}
+type Boolean struct{}
 
 // ScanParam implements ParamCoder.
-func (b *Boolean) ScanParam(ptr *bool, str string) error {
+func (Boolean) ScanParam(ptr *bool, str string) error {
 	switch str {
 	case "1", "t", "T", "true", "TRUE", "True", "yes", "YES", "Yes":
 		*ptr = true
@@ -27,12 +27,18 @@ func (b *Boolean) ScanParam(ptr *bool, str string) error {
 }
 
 // EncodeSchema implements Coder.
-func (b Boolean) EncodeSchema(s *jsoniter.Stream) {
-	s.WriteObjectStart()
+func (Boolean) Encoder(tag reflect.StructTag) func(s *jsoniter.Stream) {
+	var tags General
 
-	s.WriteObjectField("type")
-	s.WriteString("boolean")
+	scan.ScanTags(&tags, tag)
 
-	b.General.EncodeSchema(s)
-	s.WriteObjectEnd()
+	return func(s *jsoniter.Stream) {
+		s.WriteObjectStart()
+
+		s.WriteObjectField("type")
+		s.WriteString("boolean")
+
+		tags.EncodeSchema(s)
+		s.WriteObjectEnd()
+	}
 }

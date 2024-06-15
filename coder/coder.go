@@ -1,6 +1,7 @@
 package coder
 
 import (
+	"reflect"
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
@@ -8,7 +9,7 @@ import (
 )
 
 type Coder interface {
-	EncodeSchema(*jsoniter.Stream)
+	Encoder(reflect.StructTag) func(*jsoniter.Stream)
 }
 
 type paramCoder interface {
