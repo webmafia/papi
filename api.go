@@ -2,21 +2,19 @@ package fastapi
 
 import (
 	"io"
-	"reflect"
 	"sync"
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/internal/jsonpool"
 	"github.com/webmafia/fastapi/spec"
-	"github.com/webmafia/fastapi/spec/schema"
 )
 
 type API[U any] struct {
 	router  Router[U]
 	ctxPool sync.Pool
 	server  fasthttp.Server
-	docs    *spec.Document
-	opt     Options
+	// docs    *spec.Document
+	opt Options
 }
 
 type Options struct {
@@ -29,10 +27,10 @@ func New[U any](opt ...Options) *API[U] {
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
 		},
-		docs: &spec.Document{
-			OpenAPI: "3.0.0",
-			Schemas: make(map[reflect.Type]schema.Schema),
-		},
+		// docs: &spec.Document{
+		// 	OpenAPI: "3.0.0",
+		// 	Schemas: make(map[reflect.Type]schema.Schema),
+		// },
 	}
 
 	if len(opt) > 0 {
@@ -40,8 +38,8 @@ func New[U any](opt ...Options) *API[U] {
 	}
 
 	api.server.Handler = api.handler
-	api.docs.Info = api.opt.OpenAPI.Info
-	api.docs.Servers = api.opt.OpenAPI.Servers
+	// api.docs.Info = api.opt.OpenAPI.Info
+	// api.docs.Servers = api.opt.OpenAPI.Servers
 
 	return api
 }
@@ -80,7 +78,7 @@ func (api *API[U]) WriteOpenAPI(w io.Writer) error {
 	s := jsonpool.AcquireStream(w)
 	defer jsonpool.ReleaseStream(s)
 
-	api.docs.JsonEncode(s)
+	// api.docs.JsonEncode(s)
 
 	if err := s.Error; err != nil {
 		return err

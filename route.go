@@ -3,10 +3,8 @@ package fastapi
 import (
 	"errors"
 	"reflect"
-	"unsafe"
 
 	"github.com/webmafia/fastapi/internal/jsonpool"
-	"github.com/webmafia/fastapi/scan"
 )
 
 func (api *API[U]) RegisterRoutes(types ...any) (err error) {
@@ -33,16 +31,8 @@ func (api *API[U]) RegisterRoutes(types ...any) (err error) {
 func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 	var in I
 	inTyp := reflect.TypeOf(in)
+	_ = inTyp
 	route := api.router.Add(string(r.Method), r.Path)
-	sc, err := scan.CreateStructScanner(inTyp, route.params)
-
-	if err != nil {
-		return
-	}
-
-	if err = addRouteDocs(api, r); err != nil {
-		return
-	}
 
 	route.cb = func(ctx *Ctx[U]) (err error) {
 		ctx.ctx.SetContentType("application/json; charset=utf-8")
@@ -56,9 +46,9 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 			outAny any = &out
 		)
 
-		if err = sc(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
-			return
-		}
+		// if err = sc(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
+		// 	return
+		// }
 
 		if enc, ok := outAny.(Lister); ok {
 			s.WriteObjectStart()
