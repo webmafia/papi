@@ -13,6 +13,14 @@ import (
 	"github.com/webmafia/fastapi/internal/jsonpool"
 )
 
+type inputTags struct {
+	Body  string `tag:"body" eq:"json"`
+	Param string `tag:"param"`
+	Query string `tag:"query"`
+}
+
+var scanInputTags internal.StructTagScanner = internal.Must(internal.CreateStructTagScanner(internal.ReflectType[inputTags]()))
+
 type fieldScanner struct {
 	offset uintptr
 	scan   StructScanner
@@ -30,39 +38,48 @@ func createInputScanner(typ reflect.Type, params []string) (scan StructScanner, 
 
 	for i := 0; i < numFields; i++ {
 		var sc StructScanner
+		var tags inputTags
+
 		fld := typ.Field(i)
 
-		if fld.Name == "Body" {
-			sc, err = createJsonScanner(fld.Type)
-		} else {
-			internal.IterateStructTags(fld.Tag, func(key, val string) (stop bool) {
-				switch key {
-
-				case "param":
-					idx := slices.Index(params, val)
-
-					if idx < 0 {
-						err = fmt.Errorf("unknown param '%s'", val)
-					} else {
-						sc, err = createParamScanner(fld.Type, idx)
-					}
-
-				case "query":
-					sc, err = createQueryScanner(fld.Type, val)
-
-				default:
-					return false
-				}
-
-				return true
-			})
-		}
-
-		if err != nil {
+		if err = scanInputTags(unsafe.Pointer(&tags), fld.Tag); err != nil {
 			return
 		}
 
-		if sc != nil {
+		if tags.Body == "json" {
+			if sc, err = createJsonScanner(fld.Type); err != nil {
+				return
+			}
+
+			flds = append(flds, fieldScanner{
+				offset: fld.Offset,
+				scan:   sc,
+			})
+		}
+
+		if tags.Param != "" {
+			idx := slices.Index(params, tags.Param)
+
+			if idx < 0 {
+				err = fmt.Errorf("unknown param '%s'", tags.Param)
+				return
+			}
+
+			if sc, err = createParamScanner(fld.Type, idx); err != nil {
+				return
+			}
+
+			flds = append(flds, fieldScanner{
+				offset: fld.Offset,
+				scan:   sc,
+			})
+		}
+
+		if tags.Query != "" {
+			if sc, err = createQueryScanner(fld.Type, tags.Query); err != nil {
+				return
+			}
+
 			flds = append(flds, fieldScanner{
 				offset: fld.Offset,
 				scan:   sc,
