@@ -15,19 +15,19 @@ var (
 
 type userRoutes struct{}
 
-func (r userRoutes) GetUser(api *fastapi.API[User]) (err error) {
+func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 	type req struct {
 		Id    int `param:"id"`
 		Limit int `query:"limit"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{
+	return fastapi.AddRoute(api, fastapi.Route[req, User]{
 		Method:  "GET",
 		Path:    "/users/{id}",
 		Summary: "Get user by ID",
 		Tags:    []*spec.Tag{Users},
 
-		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *User) (err error) {
+		Handler: func(ctx *fastapi.Ctx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
 			resp.Name = "helluuu"
 
@@ -36,18 +36,18 @@ func (r userRoutes) GetUser(api *fastapi.API[User]) (err error) {
 	})
 }
 
-func (r userRoutes) ListUsers(api *fastapi.API[User]) (err error) {
+func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 	type req struct {
 		Status string `query:"status"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[User, req, fastapi.List[User]]{
+	return fastapi.AddRoute(api, fastapi.Route[req, fastapi.List[User]]{
 		Method:  "GET",
 		Path:    "/users",
 		Summary: "List all users",
 		Tags:    []*spec.Tag{Users},
 
-		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *fastapi.List[User]) (err error) {
+		Handler: func(ctx *fastapi.Ctx, req *req, resp *fastapi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status})
 			resp.Write(&User{ID: 998, Name: "Foobaz"})
 			resp.Meta.Total = 123
@@ -57,19 +57,19 @@ func (r userRoutes) ListUsers(api *fastapi.API[User]) (err error) {
 	})
 }
 
-func (r userRoutes) CreateUser(api *fastapi.API[User]) (err error) {
+func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 	type req struct {
 		// Body io.Reader
 		Body User `body:"json"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{
+	return fastapi.AddRoute(api, fastapi.Route[req, User]{
 		Method:  "POST",
 		Path:    "/users",
 		Summary: "Create user",
 		Tags:    []*spec.Tag{Users},
 
-		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *User) (err error) {
+		Handler: func(ctx *fastapi.Ctx, req *req, resp *User) (err error) {
 			// buf, err := io.ReadAll(req.Body)
 			// _ = buf
 			*resp = req.Body
@@ -101,7 +101,7 @@ func (r userRoutes) CreateUser(api *fastapi.API[User]) (err error) {
 // }
 
 func main() {
-	api := fastapi.New[User](fastapi.Options{
+	api := fastapi.New(fastapi.Options{
 		OpenAPI: spec.OpenAPI{
 			Info: spec.Info{
 				Title: "Demo API",
@@ -133,7 +133,7 @@ func main() {
 	}
 }
 
-func dumpSpecToFile(api *fastapi.API[User]) (err error) {
+func dumpSpecToFile(api *fastapi.API) (err error) {
 	log.Println("Dumping OpenAPI spec to file...")
 	f, err := os.Create("openapi.json")
 

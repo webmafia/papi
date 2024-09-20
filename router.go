@@ -6,26 +6,26 @@ import (
 	"github.com/webmafia/fast"
 )
 
-type Router[U any] struct {
-	tree node[U]
+type Router struct {
+	tree node
 }
 
-type node[U any] struct {
-	nodes []*node[U]
+type node struct {
+	nodes []*node
 	value []byte
-	route *route[U]
+	route *route
 }
 
-type route[U any] struct {
-	params []string
-	cb     func(ctx *Ctx[U]) error
+type route struct {
+	params  []string
+	handler func(ctx *Ctx) error
 }
 
-func (r *Router[U]) Clear() {
+func (r *Router) Clear() {
 	r.tree.nodes = r.tree.nodes[:0]
 }
 
-func (r *Router[U]) Add(method string, path string) *route[U] {
+func (r *Router) Add(method string, path string) *route {
 	var params []string
 	p := fast.StringToBytes(path)
 	n := r.add(&r.tree, fast.StringToBytes(method), &params)
@@ -42,14 +42,14 @@ func (r *Router[U]) Add(method string, path string) *route[U] {
 	}
 
 	n = r.add(n, p, &params)
-	n.route = &route[U]{
+	n.route = &route{
 		params: params,
 	}
 
 	return n.route
 }
 
-func (r *Router[U]) add(n *node[U], part []byte, params *[]string) *node[U] {
+func (r *Router) add(n *node, part []byte, params *[]string) *node {
 	if len(part) == 0 {
 		return n
 	}
@@ -64,7 +64,7 @@ func (r *Router[U]) add(n *node[U], part []byte, params *[]string) *node[U] {
 		}
 	}
 
-	nn := &node[U]{
+	nn := &node{
 		value: part,
 	}
 
@@ -72,17 +72,17 @@ func (r *Router[U]) add(n *node[U], part []byte, params *[]string) *node[U] {
 	if len(n.nodes) == 0 || nn.value[0] == '{' {
 		n.nodes = append(n.nodes, nn)
 	} else {
-		n.nodes = append([]*node[U]{nn}, n.nodes...)
+		n.nodes = append([]*node{nn}, n.nodes...)
 	}
 
 	return nn
 }
 
-func (r *Router[U]) LookupString(method string, path string, paramVals *[]string) (cb func(ctx *Ctx[U]) error, params []string, ok bool) {
+func (r *Router) LookupString(method string, path string, paramVals *[]string) (cb func(ctx *Ctx) error, params []string, ok bool) {
 	return r.Lookup(fast.StringToBytes(method), fast.StringToBytes(path), paramVals)
 }
 
-func (r *Router[U]) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(ctx *Ctx[U]) error, params []string, ok bool) {
+func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(ctx *Ctx) error, params []string, ok bool) {
 	if p[0] == '/' {
 		p = p[1:]
 	}
@@ -115,10 +115,10 @@ func (r *Router[U]) Lookup(method []byte, p []byte, paramVals *[]string) (cb fun
 		return
 	}
 
-	return n.route.cb, n.route.params, true
+	return n.route.handler, n.route.params, true
 }
 
-func (r *Router[U]) lookup(n *node[U], part []byte, paramVals *[]string) *node[U] {
+func (r *Router) lookup(n *node, part []byte, paramVals *[]string) *node {
 	if len(part) == 0 {
 		return n
 	}

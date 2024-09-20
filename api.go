@@ -9,8 +9,8 @@ import (
 	"github.com/webmafia/fastapi/spec"
 )
 
-type API[U any] struct {
-	router  Router[U]
+type API struct {
+	router  Router
 	ctxPool sync.Pool
 	server  fasthttp.Server
 	// docs    *spec.Document
@@ -21,8 +21,8 @@ type Options struct {
 	OpenAPI spec.OpenAPI
 }
 
-func New[U any](opt ...Options) *API[U] {
-	api := &API[U]{
+func New(opt ...Options) *API {
+	api := &API{
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
@@ -44,7 +44,7 @@ func New[U any](opt ...Options) *API[U] {
 	return api
 }
 
-func (api *API[U]) handler(c *fasthttp.RequestCtx) {
+func (api *API) handler(c *fasthttp.RequestCtx) {
 	ctx := api.acquireCtx(c)
 	defer api.releaseCtx(ctx)
 
@@ -70,11 +70,11 @@ func (api *API[U]) handler(c *fasthttp.RequestCtx) {
 	}
 }
 
-func (api *API[U]) ListenAndServe(addr string) error {
+func (api *API) ListenAndServe(addr string) error {
 	return api.server.ListenAndServe(addr)
 }
 
-func (api *API[U]) WriteOpenAPI(w io.Writer) error {
+func (api *API) WriteOpenAPI(w io.Writer) error {
 	s := jsonpool.AcquireStream(w)
 	defer jsonpool.ReleaseStream(s)
 

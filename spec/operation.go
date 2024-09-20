@@ -2,18 +2,18 @@ package spec
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/fastapi/spec/schema"
+	// "github.com/webmafia/fastapi/spec/schema"
 )
 
 type Operation struct {
-	Id             string
-	Path           string
-	Method         string
-	Summary        string
-	Description    string
-	Parameters     []Parameter
-	RequestBodyRef schema.Schema
-	Tags           []*Tag
+	Id          string
+	Path        string
+	Method      string
+	Summary     string
+	Description string
+	Parameters  []Parameter
+	// RequestBodyRef schema.Schema
+	Tags []*Tag
 }
 
 // func (op *Operation) ParamsFromStruct(v any) (err error) {
@@ -105,33 +105,33 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteArrayEnd()
 	}
 
-	if op.RequestBodyRef != nil {
-		s.WriteMore()
-		s.WriteObjectField("requestBody")
-		s.WriteObjectStart()
+	// if op.RequestBodyRef != nil {
+	// 	s.WriteMore()
+	// 	s.WriteObjectField("requestBody")
+	// 	s.WriteObjectStart()
 
-		s.WriteObjectField("content")
-		s.WriteObjectStart()
+	// 	s.WriteObjectField("content")
+	// 	s.WriteObjectStart()
 
-		s.WriteObjectField("application/json")
-		s.WriteObjectStart()
+	// 	s.WriteObjectField("application/json")
+	// 	s.WriteObjectStart()
 
-		s.WriteObjectField("schema")
-		s.WriteObjectStart()
+	// 	s.WriteObjectField("schema")
+	// 	s.WriteObjectStart()
 
-		s.WriteObjectField("$ref")
-		s.WriteRaw(`"#/components/schemas/`)
-		s.WriteRaw(op.RequestBodyRef.Name())
-		s.WriteRaw(`"`)
+	// 	s.WriteObjectField("$ref")
+	// 	s.WriteRaw(`"#/components/schemas/`)
+	// 	s.WriteRaw(op.RequestBodyRef.Name())
+	// 	s.WriteRaw(`"`)
 
-		s.WriteObjectEnd()
+	// 	s.WriteObjectEnd()
 
-		s.WriteObjectEnd()
+	// 	s.WriteObjectEnd()
 
-		s.WriteObjectEnd()
+	// 	s.WriteObjectEnd()
 
-		s.WriteObjectEnd()
-	}
+	// 	s.WriteObjectEnd()
+	// }
 
 	s.WriteObjectEnd()
 }

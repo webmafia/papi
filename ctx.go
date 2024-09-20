@@ -4,17 +4,16 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type Ctx[U any] struct {
+type Ctx struct {
 	ctx       *fasthttp.RequestCtx
 	paramVals []string
-	User      U
 }
 
-func (api *API[U]) acquireCtx(c *fasthttp.RequestCtx) (ctx *Ctx[U]) {
+func (api *API) acquireCtx(c *fasthttp.RequestCtx) (ctx *Ctx) {
 	var ok bool
 
-	if ctx, ok = api.ctxPool.Get().(*Ctx[U]); !ok {
-		ctx = new(Ctx[U])
+	if ctx, ok = api.ctxPool.Get().(*Ctx); !ok {
+		ctx = new(Ctx)
 	}
 
 	ctx.ctx = c
@@ -22,7 +21,7 @@ func (api *API[U]) acquireCtx(c *fasthttp.RequestCtx) (ctx *Ctx[U]) {
 	return
 }
 
-func (api *API[U]) releaseCtx(ctx *Ctx[U]) {
+func (api *API) releaseCtx(ctx *Ctx) {
 	ctx.ctx = nil
 	ctx.paramVals = ctx.paramVals[:0]
 	api.ctxPool.Put(ctx)

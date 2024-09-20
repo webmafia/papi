@@ -3,17 +3,18 @@ package fastapi
 import (
 	"errors"
 	"reflect"
+	"unsafe"
 
 	"github.com/webmafia/fastapi/internal/jsonpool"
 )
 
-func (api *API[U]) RegisterRoutes(types ...any) (err error) {
+func (api *API) RegisterRoutes(types ...any) (err error) {
 	for i := range types {
 		val := reflect.ValueOf(types[i])
 		numMethods := val.NumMethod()
 
 		for i := 0; i < numMethods; i++ {
-			cb, ok := val.Method(i).Interface().(func(api *API[U]) error)
+			cb, ok := val.Method(i).Interface().(func(api *API) error)
 
 			if !ok {
 				return errors.New("invalid handler")
@@ -28,13 +29,19 @@ func (api *API[U]) RegisterRoutes(types ...any) (err error) {
 	return
 }
 
-func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
-	var in I
-	inTyp := reflect.TypeOf(in)
-	_ = inTyp
+func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
+	iTyp := reflect.TypeOf((*I)(nil)).Elem()
+	oTyp := reflect.TypeOf((*O)(nil)).Elem()
+	_ = oTyp
 	route := api.router.Add(string(r.Method), r.Path)
 
-	route.cb = func(ctx *Ctx[U]) (err error) {
+	cb, err := createInputScanner(iTyp, route.params)
+
+	if err != nil {
+		return
+	}
+
+	route.handler = func(ctx *Ctx) (err error) {
 		ctx.ctx.SetContentType("application/json; charset=utf-8")
 
 		s := jsonpool.AcquireStream(ctx.ctx.Response.BodyWriter())
@@ -46,9 +53,9 @@ func AddRoute[U, I, O any](api *API[U], r Route[U, I, O]) (err error) {
 			outAny any = &out
 		)
 
-		// if err = sc(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
-		// 	return
-		// }
+		if err = cb(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
+			return
+		}
 
 		if enc, ok := outAny.(Lister); ok {
 			s.WriteObjectStart()
