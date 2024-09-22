@@ -1,12 +1,15 @@
-package internal
+package structs
 
 import (
 	"fmt"
 	"reflect"
 	"unsafe"
+
+	"github.com/webmafia/fastapi/internal"
+	"github.com/webmafia/fastapi/scanner/strings"
 )
 
-func ExampleCreateStructTagScanner() {
+func ExampleCreateTagScanner() {
 	type Foo struct {
 		A string  `tag:"a"`
 		B int     `tag:"b"`
@@ -14,7 +17,7 @@ func ExampleCreateStructTagScanner() {
 		D bool    `tag:"d"`
 	}
 
-	scan, err := CreateStructTagScanner(ReflectType[Foo]())
+	scan, err := CreateTagScanner(strings.NewFactory(), internal.ReflectType[Foo]())
 
 	if err != nil {
 		panic(err)
@@ -30,5 +33,5 @@ func ExampleCreateStructTagScanner() {
 
 	fmt.Printf("%#v\n", foo)
 
-	// Output: internal.Foo{A:"foobar", B:123, C:456.789, D:true}
+	// Output: structs.Foo{A:"foobar", B:123, C:456.789, D:true}
 }

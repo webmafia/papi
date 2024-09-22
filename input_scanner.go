@@ -9,8 +9,6 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
-	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/internal/jsonpool"
 )
 
 type inputTags struct {
@@ -18,9 +16,6 @@ type inputTags struct {
 	Param string `tag:"param"`
 	Query string `tag:"query"`
 }
-
-var scanInputTags internal.StructTagScanner = internal.Must(internal.CreateStructTagScanner(internal.ReflectType[inputTags]()))
-
 type fieldScanner struct {
 	offset uintptr
 	scan   RequestScanner
@@ -54,12 +49,12 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 			continue
 		}
 
-		if err = scanInputTags(unsafe.Pointer(&tags), fld.Tag); err != nil {
+		if err = api.scanInputTags(unsafe.Pointer(&tags), fld.Tag); err != nil {
 			return
 		}
 
 		if tags.Body == "json" {
-			if sc, err = createJsonScanner(fld.Type); err != nil {
+			if sc, err = createJsonScanner(api, fld.Type); err != nil {
 				return
 			}
 
@@ -77,7 +72,7 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 				return
 			}
 
-			if sc, err = createParamScanner(fld.Type, idx); err != nil {
+			if sc, err = createParamScanner(api, fld.Type, idx); err != nil {
 				return
 			}
 
@@ -88,7 +83,7 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 		}
 
 		if tags.Query != "" {
-			if sc, err = createQueryScanner(fld.Type, tags.Query); err != nil {
+			if sc, err = createQueryScanner(api, fld.Type, tags.Query); err != nil {
 				return
 			}
 
@@ -110,11 +105,11 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 	}, nil
 }
 
-func createJsonScanner(typ reflect.Type) (scan RequestScanner, err error) {
-	dec := jsonpool.DecoderOf(typ)
+func createJsonScanner(api *API, typ reflect.Type) (scan RequestScanner, err error) {
+	dec := api.opt.JsonPool.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
-		iter := jsonpool.AcquireIterator(reqCtx.Request.BodyStream())
-		defer jsonpool.ReleaseIterator(iter)
+		iter := api.opt.JsonPool.AcquireIterator(reqCtx.Request.BodyStream())
+		defer api.opt.JsonPool.ReleaseIterator(iter)
 
 		dec.Decode(p, iter)
 		return iter.Error
@@ -123,8 +118,8 @@ func createJsonScanner(typ reflect.Type) (scan RequestScanner, err error) {
 	return
 }
 
-func createParamScanner(typ reflect.Type, idx int) (scan RequestScanner, err error) {
-	sc, err := internal.CreateScanner(typ)
+func createParamScanner(api *API, typ reflect.Type, idx int) (scan RequestScanner, err error) {
+	sc, err := api.opt.StringScan.Scanner(typ)
 
 	if err != nil {
 		return
@@ -135,8 +130,8 @@ func createParamScanner(typ reflect.Type, idx int) (scan RequestScanner, err err
 	}, nil
 }
 
-func createQueryScanner(typ reflect.Type, key string) (scan RequestScanner, err error) {
-	sc, err := internal.CreateScanner(typ)
+func createQueryScanner(api *API, typ reflect.Type, key string) (scan RequestScanner, err error) {
+	sc, err := api.opt.StringScan.Scanner(typ)
 
 	if err != nil {
 		return

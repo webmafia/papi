@@ -1,14 +1,16 @@
-package internal
+package structs
 
 import (
 	"errors"
 	"reflect"
 	"unsafe"
+
+	"github.com/webmafia/fastapi/scanner/strings"
 )
 
-type StructTagScanner func(dst unsafe.Pointer, src reflect.StructTag) error
+type TagScanner func(dst unsafe.Pointer, src reflect.StructTag) error
 
-func CreateStructTagScanner(typ reflect.Type) (scan StructTagScanner, err error) {
+func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan TagScanner, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -16,11 +18,11 @@ func CreateStructTagScanner(typ reflect.Type) (scan StructTagScanner, err error)
 	numFields := typ.NumField()
 
 	type field struct {
-		scan   Scanner
+		scan   strings.Scanner
 		offset uintptr
 	}
 
-	var fldScan Scanner
+	var fldScan strings.Scanner
 
 	tagScanners := make(map[string]field, numFields)
 
@@ -32,7 +34,7 @@ func CreateStructTagScanner(typ reflect.Type) (scan StructTagScanner, err error)
 				continue
 			}
 
-			if fldScan, err = CreateScanner(fld.Type); err != nil {
+			if fldScan, err = f.Scanner(fld.Type); err != nil {
 				return
 			}
 

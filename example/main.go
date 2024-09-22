@@ -101,7 +101,7 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 // }
 
 func main() {
-	api := fastapi.New(fastapi.Options{
+	api, err := fastapi.New(fastapi.Options{
 		OpenAPI: spec.OpenAPI{
 			Info: spec.Info{
 				Title: "Demo API",
@@ -117,6 +117,10 @@ func main() {
 			},
 		},
 	})
+
+	if err != nil {
+		panic(err)
+	}
 
 	if err := api.RegisterRoutes(userRoutes{}); err != nil {
 		panic(err)

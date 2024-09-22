@@ -4,8 +4,12 @@ import (
 	"io"
 	"sync"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/internal/jsonpool"
+	"github.com/webmafia/fastapi/internal"
+	"github.com/webmafia/fastapi/json"
+	"github.com/webmafia/fastapi/scanner/strings"
+	"github.com/webmafia/fastapi/scanner/structs"
 	"github.com/webmafia/fastapi/spec"
 )
 
@@ -15,15 +19,18 @@ type API struct {
 	server   fasthttp.Server
 	scanners scanners
 	// docs    *spec.Document
-	opt Options
+	opt           Options
+	scanInputTags structs.TagScanner
 }
 
 type Options struct {
-	OpenAPI spec.OpenAPI
+	OpenAPI    spec.OpenAPI
+	StringScan *strings.Factory
+	JsonPool   *json.Pool
 }
 
-func New(opt ...Options) *API {
-	api := &API{
+func New(opt ...Options) (api *API, err error) {
+	api = &API{
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
@@ -38,11 +45,23 @@ func New(opt ...Options) *API {
 		api.opt = opt[0]
 	}
 
+	if api.opt.StringScan == nil {
+		api.opt.StringScan = strings.NewFactory()
+	}
+
+	if api.opt.JsonPool == nil {
+		api.opt.JsonPool = json.NewPool(jsoniter.ConfigFastest)
+	}
+
+	if api.scanInputTags, err = structs.CreateTagScanner(api.opt.StringScan, internal.ReflectType[inputTags]()); err != nil {
+		return
+	}
+
 	api.server.Handler = api.handler
 	// api.docs.Info = api.opt.OpenAPI.Info
 	// api.docs.Servers = api.opt.OpenAPI.Servers
 
-	return api
+	return
 }
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
@@ -76,8 +95,8 @@ func (api *API) ListenAndServe(addr string) error {
 }
 
 func (api *API) WriteOpenAPI(w io.Writer) error {
-	s := jsonpool.AcquireStream(w)
-	defer jsonpool.ReleaseStream(s)
+	s := api.opt.JsonPool.AcquireStream(w)
+	defer api.opt.JsonPool.ReleaseStream(s)
 
 	// api.docs.JsonEncode(s)
 

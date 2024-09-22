@@ -1,14 +1,26 @@
-package internal
+package strings
 
 import (
 	"fmt"
 	"reflect"
-	"unsafe"
+	"sync"
 )
 
-type Scanner func(unsafe.Pointer, string) error
+type Factory struct {
+	types sync.Map
+}
 
-func CreateScanner(typ reflect.Type) (scan Scanner, err error) {
+func NewFactory() *Factory {
+	return &Factory{}
+}
+
+func (f *Factory) Scanner(typ reflect.Type) (scan Scanner, err error) {
+	if val, ok := f.types.Load(typ); ok {
+		if scan, ok := val.(Scanner); ok {
+			return scan, nil
+		}
+	}
+
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:
@@ -68,4 +80,13 @@ func CreateScanner(typ reflect.Type) (scan Scanner, err error) {
 	default:
 		return nil, fmt.Errorf("cannot scan to type: %s", kind.String())
 	}
+}
+
+func (f *Factory) RegisterScanner(typ reflect.Type, scan Scanner) {
+	if scan == nil {
+		f.types.Delete(typ)
+		return
+	}
+
+	f.types.Store(typ, scan)
 }

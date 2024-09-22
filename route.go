@@ -3,8 +3,6 @@ package fastapi
 import (
 	"reflect"
 	"unsafe"
-
-	"github.com/webmafia/fastapi/internal/jsonpool"
 )
 
 func (api *API) RegisterRoutes(types ...any) (err error) {
@@ -43,8 +41,8 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	route.handler = func(ctx *Ctx) (err error) {
 		ctx.ctx.SetContentType("application/json; charset=utf-8")
 
-		s := jsonpool.AcquireStream(ctx.ctx.Response.BodyWriter())
-		defer jsonpool.ReleaseStream(s)
+		s := api.opt.JsonPool.AcquireStream(ctx.ctx.Response.BodyWriter())
+		defer api.opt.JsonPool.ReleaseStream(s)
 
 		var (
 			in     I
