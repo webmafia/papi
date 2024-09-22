@@ -23,12 +23,16 @@ var scanInputTags internal.StructTagScanner = internal.Must(internal.CreateStruc
 
 type fieldScanner struct {
 	offset uintptr
-	scan   StructScanner
+	scan   RequestScanner
 }
 
-type StructScanner func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error
+type RequestScanner func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error
 
-func createInputScanner(typ reflect.Type, params []string) (scan StructScanner, err error) {
+func createInputScanner(api *API, typ reflect.Type, params []string) (scan RequestScanner, err error) {
+	if scan, ok := api.scanners.get(typ); ok {
+		return scan, nil
+	}
+
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -37,10 +41,18 @@ func createInputScanner(typ reflect.Type, params []string) (scan StructScanner, 
 	flds := make([]fieldScanner, 0, numFields)
 
 	for i := 0; i < numFields; i++ {
-		var sc StructScanner
+		var sc RequestScanner
 		var tags inputTags
 
 		fld := typ.Field(i)
+
+		if sc, ok := api.scanners.get(fld.Type); ok {
+			flds = append(flds, fieldScanner{
+				offset: fld.Offset,
+				scan:   sc,
+			})
+			continue
+		}
 
 		if err = scanInputTags(unsafe.Pointer(&tags), fld.Tag); err != nil {
 			return
@@ -98,7 +110,7 @@ func createInputScanner(typ reflect.Type, params []string) (scan StructScanner, 
 	}, nil
 }
 
-func createJsonScanner(typ reflect.Type) (scan StructScanner, err error) {
+func createJsonScanner(typ reflect.Type) (scan RequestScanner, err error) {
 	dec := jsonpool.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
 		iter := jsonpool.AcquireIterator(reqCtx.Request.BodyStream())
@@ -111,7 +123,7 @@ func createJsonScanner(typ reflect.Type) (scan StructScanner, err error) {
 	return
 }
 
-func createParamScanner(typ reflect.Type, idx int) (scan StructScanner, err error) {
+func createParamScanner(typ reflect.Type, idx int) (scan RequestScanner, err error) {
 	sc, err := CreateScanner(typ)
 
 	if err != nil {
@@ -123,7 +135,7 @@ func createParamScanner(typ reflect.Type, idx int) (scan StructScanner, err erro
 	}, nil
 }
 
-func createQueryScanner(typ reflect.Type, key string) (scan StructScanner, err error) {
+func createQueryScanner(typ reflect.Type, key string) (scan RequestScanner, err error) {
 	sc, err := CreateScanner(typ)
 
 	if err != nil {

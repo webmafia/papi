@@ -1,7 +1,6 @@
 package fastapi
 
 import (
-	"errors"
 	"reflect"
 	"unsafe"
 
@@ -17,7 +16,7 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 			cb, ok := val.Method(i).Interface().(func(api *API) error)
 
 			if !ok {
-				return errors.New("invalid handler")
+				continue
 			}
 
 			if err = cb(api); err != nil {
@@ -35,7 +34,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	_ = oTyp
 	route := api.router.Add(string(r.Method), r.Path)
 
-	cb, err := createInputScanner(iTyp, route.params)
+	cb, err := createInputScanner(api, iTyp, route.params)
 
 	if err != nil {
 		return

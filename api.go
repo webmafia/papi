@@ -10,9 +10,10 @@ import (
 )
 
 type API struct {
-	router  Router
-	ctxPool sync.Pool
-	server  fasthttp.Server
+	router   Router
+	ctxPool  sync.Pool
+	server   fasthttp.Server
+	scanners scanners
 	// docs    *spec.Document
 	opt Options
 }
