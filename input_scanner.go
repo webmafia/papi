@@ -124,7 +124,7 @@ func createJsonScanner(typ reflect.Type) (scan RequestScanner, err error) {
 }
 
 func createParamScanner(typ reflect.Type, idx int) (scan RequestScanner, err error) {
-	sc, err := CreateScanner(typ)
+	sc, err := internal.CreateScanner(typ)
 
 	if err != nil {
 		return
@@ -136,7 +136,7 @@ func createParamScanner(typ reflect.Type, idx int) (scan RequestScanner, err err
 }
 
 func createQueryScanner(typ reflect.Type, key string) (scan RequestScanner, err error) {
-	sc, err := CreateScanner(typ)
+	sc, err := internal.CreateScanner(typ)
 
 	if err != nil {
 		return

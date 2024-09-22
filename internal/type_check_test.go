@@ -45,16 +45,3 @@ func Example_ptrToInterface() {
 
 	// Output: TODO
 }
-
-func Benchmark_ptrToInterface(b *testing.B) {
-	v := &bytes.Buffer{}
-	ptr := unsafe.Pointer(v)
-
-	b.ResetTimer()
-
-	for range b.N {
-		var str fmt.Stringer
-		ptrToInterface(&str, ptr)
-		_ = str
-	}
-}
