@@ -2,20 +2,19 @@ package fastapi
 
 import (
 	"io"
-	"log"
-	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/internal"
 	"github.com/webmafia/fastapi/pool/json"
+	"github.com/webmafia/fastapi/route"
 	"github.com/webmafia/fastapi/scanner/strings"
 	"github.com/webmafia/fastapi/scanner/structs"
 	"github.com/webmafia/fastapi/spec"
 )
 
 type API struct {
-	router   Router
+	router   route.Router
 	server   fasthttp.Server
 	scanners scanners
 	// docs    *spec.Document
@@ -65,8 +64,8 @@ func New(opt ...Options) (api *API, err error) {
 }
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
-	params := RequestParams(c)
-	cb, paramKeys, ok := api.router.Lookup(c.Method(), c.Path(), &params.vals)
+	cb, params, ok := api.router.Lookup(c.Method(), c.Path())
+	defer api.router.ReleaseParams(params)
 
 	if !ok {
 		// TODO: Proper JSON response
@@ -74,9 +73,7 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	params.keys = paramKeys
-
-	if len(params.keys) != len(params.vals) {
+	if !params.Valid() {
 		// TODO: Proper JSON response
 		c.Response.Reset()
 		c.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -84,7 +81,7 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	log.Println(uintptr(unsafe.Pointer(c)), *params, cap(params.vals))
+	setRequestParams(c, params)
 
 	if err := cb(c); err != nil {
 		// TODO: Proper error message

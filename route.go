@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/route"
 )
 
 func (api *API) RegisterRoutes(types ...any) (err error) {
@@ -32,64 +33,65 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	iTyp := reflect.TypeOf((*I)(nil)).Elem()
 	oTyp := reflect.TypeOf((*O)(nil)).Elem()
 	_ = oTyp
-	route := api.router.Add(string(r.Method), r.Path)
 
-	cb, err := createInputScanner(api, iTyp, route.params)
+	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
+		cb, err := createInputScanner(api, iTyp, route.Params)
 
-	if err != nil {
-		return
-	}
-
-	route.handler = func(c *fasthttp.RequestCtx) (err error) {
-		c.SetContentType("application/json; charset=utf-8")
-
-		s := api.opt.JsonPool.AcquireStream(c.Response.BodyWriter())
-		defer api.opt.JsonPool.ReleaseStream(s)
-
-		var (
-			in     I
-			out    O
-			outAny any = &out
-		)
-
-		if err = cb(unsafe.Pointer(&in), c); err != nil {
+		if err != nil {
 			return
 		}
 
-		if enc, ok := outAny.(Lister); ok {
-			s.WriteObjectStart()
-			s.WriteObjectField("items")
-			s.WriteArrayStart()
+		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
+			c.SetContentType("application/json; charset=utf-8")
 
-			enc.setStream(s)
+			s := api.opt.JsonPool.AcquireStream(c.Response.BodyWriter())
+			defer api.opt.JsonPool.ReleaseStream(s)
 
-			if err = r.Handler(c, &in, &out); err != nil {
+			var (
+				in     I
+				out    O
+				outAny any = &out
+			)
+
+			if err = cb(unsafe.Pointer(&in), c); err != nil {
 				return
 			}
 
-			s.WriteArrayEnd()
-			s.WriteMore()
+			if enc, ok := outAny.(Lister); ok {
+				s.WriteObjectStart()
+				s.WriteObjectField("items")
+				s.WriteArrayStart()
 
-			s.WriteObjectField("meta")
-			enc.encodeMeta(s)
+				enc.setStream(s)
 
-			s.WriteObjectEnd()
-		} else {
-			if err = r.Handler(c, &in, &out); err != nil {
-				return
-			}
-
-			if enc, ok := outAny.(JsonEncoder); ok {
-				if err = enc.EncodeJson(s); err != nil {
+				if err = r.Handler(c, &in, &out); err != nil {
 					return
 				}
+
+				s.WriteArrayEnd()
+				s.WriteMore()
+
+				s.WriteObjectField("meta")
+				enc.encodeMeta(s)
+
+				s.WriteObjectEnd()
 			} else {
-				s.WriteVal(out)
+				if err = r.Handler(c, &in, &out); err != nil {
+					return
+				}
+
+				if enc, ok := outAny.(JsonEncoder); ok {
+					if err = enc.EncodeJson(s); err != nil {
+						return
+					}
+				} else {
+					s.WriteVal(out)
+				}
 			}
+
+			return s.Flush()
 		}
 
-		return s.Flush()
-	}
-
-	return
+		return
+	})
 }

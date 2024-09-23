@@ -1,4 +1,4 @@
-package fastapi
+package route
 
 // func Example() {
 // 	var r Router[struct{}]

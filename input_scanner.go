@@ -127,7 +127,7 @@ func createParamScanner(api *API, typ reflect.Type, idx int) (scan RequestScanne
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
 		params := RequestParams(c)
-		return sc(p, params.vals[idx])
+		return sc(p, params.Value(idx))
 	}, nil
 }
 

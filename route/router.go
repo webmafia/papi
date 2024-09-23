@@ -1,4 +1,4 @@
-package fastapi
+package route
 
 import (
 	"bytes"
@@ -16,19 +16,19 @@ type Router struct {
 type node struct {
 	nodes []*node
 	value []byte
-	route *route
+	route *Route
 }
 
-type route struct {
-	params  []string
-	handler func(c *fasthttp.RequestCtx) error
+type Route struct {
+	Params  []string
+	Handler func(c *fasthttp.RequestCtx) error
 }
 
 func (r *Router) Clear() {
 	r.tree.nodes = r.tree.nodes[:0]
 }
 
-func (r *Router) Add(method string, path string) *route {
+func (r *Router) Add(method string, path string, fn func(*Route) error) error {
 	var params []string
 	p := fast.StringToBytes(path)
 	n := r.add(&r.tree, fast.StringToBytes(method), &params)
@@ -45,11 +45,11 @@ func (r *Router) Add(method string, path string) *route {
 	}
 
 	n = r.add(n, p, &params)
-	n.route = &route{
-		params: params,
+	n.route = &Route{
+		Params: params,
 	}
 
-	return n.route
+	return fn(n.route)
 }
 
 func (r *Router) add(n *node, part []byte, params *[]string) *node {
@@ -81,16 +81,18 @@ func (r *Router) add(n *node, part []byte, params *[]string) *node {
 	return nn
 }
 
-func (r *Router) LookupString(method string, path string, paramVals *[]string) (cb func(c *fasthttp.RequestCtx) error, params []string, ok bool) {
-	return r.Lookup(fast.StringToBytes(method), fast.StringToBytes(path), paramVals)
+func (r *Router) LookupString(method string, path string) (cb func(c *fasthttp.RequestCtx) error, params *Params, ok bool) {
+	return r.Lookup(fast.StringToBytes(method), fast.StringToBytes(path))
 }
 
-func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(c *fasthttp.RequestCtx) error, params []string, ok bool) {
+func (r *Router) Lookup(method []byte, p []byte) (cb func(c *fasthttp.RequestCtx) error, params *Params, ok bool) {
+	params = r.acquireParams()
+
 	if p[0] == '/' {
 		p = p[1:]
 	}
 
-	n := r.lookup(&r.tree, method, paramVals)
+	n := r.lookup(&r.tree, method, params)
 
 	if n == nil {
 		return
@@ -103,7 +105,7 @@ func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(c
 			break
 		}
 
-		n = r.lookup(n, p[:idx], paramVals)
+		n = r.lookup(n, p[:idx], params)
 
 		if n == nil {
 			return
@@ -112,23 +114,25 @@ func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(c
 		p = p[idx+1:]
 	}
 
-	n = r.lookup(n, p, paramVals)
+	n = r.lookup(n, p, params)
 
 	if n == nil {
 		return
 	}
 
-	return n.route.handler, n.route.params, true
+	params.keys = n.route.Params
+
+	return n.route.Handler, params, true
 }
 
-func (r *Router) lookup(n *node, part []byte, paramVals *[]string) *node {
+func (r *Router) lookup(n *node, part []byte, params *Params) *node {
 	if len(part) == 0 {
 		return n
 	}
 
 	for i := range n.nodes {
 		if n.nodes[i].value[0] == '{' {
-			*paramVals = append(*paramVals, fast.BytesToString(part))
+			params.addValue(part)
 			return n.nodes[i]
 		}
 
@@ -138,4 +142,21 @@ func (r *Router) lookup(n *node, part []byte, paramVals *[]string) *node {
 	}
 
 	return nil
+}
+
+func (r *Router) acquireParams() (p *Params) {
+	var ok bool
+
+	if p, ok = r.paramPool.Get().(*Params); !ok {
+		p = newParams(4)
+	}
+
+	return
+}
+
+func (r *Router) ReleaseParams(p *Params) {
+	if p != nil {
+		p.Reset()
+		r.paramPool.Put(p)
+	}
 }
