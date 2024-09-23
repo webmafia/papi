@@ -1,31 +1,50 @@
 package fastapi
 
-import "github.com/webmafia/fast"
+import (
+	"io"
+	"log"
+	"unsafe"
 
-type Params []kv
+	"github.com/valyala/fasthttp"
+)
+
+var _ io.Closer = (*Params)(nil)
+
+type Params struct {
+	keys []string
+	vals []string
+}
+
+// Implements io.Closer, so that fasthttp automatically resets this on release of RequestCtx.
+func (p *Params) Close() error {
+	p.Reset()
+	return nil
+}
 
 func (p *Params) Reset() {
-	*p = (*p)[:0]
+	p.keys = nil
+	p.vals = p.vals[:0]
 }
 
-func (p *Params) add(key, value []byte) {
-	*p = append(*p, kv{
-		key:   fast.BytesToString(key),
-		value: fast.BytesToString(value),
-	})
-}
-
-func (p Params) Get(key string) (val string, ok bool) {
-	for i := range p {
-		if p[i].key == key {
-			return p[i].value, true
+func (p *Params) Get(key string) (val string, ok bool) {
+	for i := range p.keys {
+		if p.keys[i] == key {
+			return p.vals[i], true
 		}
 	}
 
 	return
 }
 
-type kv struct {
-	key   string
-	value string
+func RequestParams(c *fasthttp.RequestCtx) (params *Params) {
+	var ok bool
+
+	if params, ok = c.UserValue("params").(*Params); !ok {
+		params = new(Params)
+		c.SetUserValue("params", params)
+	}
+
+	log.Println(uintptr(unsafe.Pointer(c)), "got", uintptr(unsafe.Pointer(params)))
+
+	return
 }

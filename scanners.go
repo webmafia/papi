@@ -9,7 +9,7 @@ import (
 	"github.com/webmafia/fastapi/internal"
 )
 
-func RegisterRequestScanner[T any](api *API, fn func(v *T, reqCtx *fasthttp.RequestCtx, paramVals []string) error) {
+func RegisterRequestScanner[T any](api *API, fn func(v *T, c *fasthttp.RequestCtx) error) {
 	typ := internal.ReflectType[T]()
 
 	if fn == nil {
@@ -17,8 +17,8 @@ func RegisterRequestScanner[T any](api *API, fn func(v *T, reqCtx *fasthttp.Requ
 		return
 	}
 
-	api.scanners.set(typ, func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error {
-		return fn((*T)(p), reqCtx, paramVals)
+	api.scanners.set(typ, func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		return fn((*T)(p), c)
 	})
 }
 

@@ -2,12 +2,15 @@ package fastapi
 
 import (
 	"bytes"
+	"sync"
 
+	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
 )
 
 type Router struct {
-	tree node
+	tree      node
+	paramPool sync.Pool
 }
 
 type node struct {
@@ -18,7 +21,7 @@ type node struct {
 
 type route struct {
 	params  []string
-	handler func(ctx *Ctx) error
+	handler func(c *fasthttp.RequestCtx) error
 }
 
 func (r *Router) Clear() {
@@ -78,11 +81,11 @@ func (r *Router) add(n *node, part []byte, params *[]string) *node {
 	return nn
 }
 
-func (r *Router) LookupString(method string, path string, paramVals *[]string) (cb func(ctx *Ctx) error, params []string, ok bool) {
+func (r *Router) LookupString(method string, path string, paramVals *[]string) (cb func(c *fasthttp.RequestCtx) error, params []string, ok bool) {
 	return r.Lookup(fast.StringToBytes(method), fast.StringToBytes(path), paramVals)
 }
 
-func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(ctx *Ctx) error, params []string, ok bool) {
+func (r *Router) Lookup(method []byte, p []byte, paramVals *[]string) (cb func(c *fasthttp.RequestCtx) error, params []string, ok bool) {
 	if p[0] == '/' {
 		p = p[1:]
 	}

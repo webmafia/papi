@@ -1,6 +1,9 @@
 package fastapi
 
-import "github.com/webmafia/fastapi/spec"
+import (
+	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/spec"
+)
 
 type Route[I any, O any] struct {
 	Method      Method
@@ -8,5 +11,5 @@ type Route[I any, O any] struct {
 	Summary     string
 	Description string
 	Tags        []*spec.Tag
-	Handler     func(ctx *Ctx, in *I, out *O) error
+	Handler     func(c *fasthttp.RequestCtx, in *I, out *O) error
 }

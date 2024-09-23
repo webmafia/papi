@@ -3,6 +3,8 @@ package fastapi
 import (
 	"reflect"
 	"unsafe"
+
+	"github.com/valyala/fasthttp"
 )
 
 func (api *API) RegisterRoutes(types ...any) (err error) {
@@ -38,10 +40,10 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 		return
 	}
 
-	route.handler = func(ctx *Ctx) (err error) {
-		ctx.ctx.SetContentType("application/json; charset=utf-8")
+	route.handler = func(c *fasthttp.RequestCtx) (err error) {
+		c.SetContentType("application/json; charset=utf-8")
 
-		s := api.opt.JsonPool.AcquireStream(ctx.ctx.Response.BodyWriter())
+		s := api.opt.JsonPool.AcquireStream(c.Response.BodyWriter())
 		defer api.opt.JsonPool.ReleaseStream(s)
 
 		var (
@@ -50,7 +52,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 			outAny any = &out
 		)
 
-		if err = cb(unsafe.Pointer(&in), ctx.ctx, ctx.paramVals); err != nil {
+		if err = cb(unsafe.Pointer(&in), c); err != nil {
 			return
 		}
 
@@ -61,7 +63,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 			enc.setStream(s)
 
-			if err = r.Handler(ctx, &in, &out); err != nil {
+			if err = r.Handler(c, &in, &out); err != nil {
 				return
 			}
 
@@ -73,7 +75,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 			s.WriteObjectEnd()
 		} else {
-			if err = r.Handler(ctx, &in, &out); err != nil {
+			if err = r.Handler(c, &in, &out); err != nil {
 				return
 			}
 

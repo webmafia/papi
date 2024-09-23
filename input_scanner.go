@@ -21,7 +21,7 @@ type fieldScanner struct {
 	scan   RequestScanner
 }
 
-type RequestScanner func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error
+type RequestScanner func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
 
 func createInputScanner(api *API, typ reflect.Type, params []string) (scan RequestScanner, err error) {
 	if scan, ok := api.scanners.get(typ); ok {
@@ -94,9 +94,9 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 		}
 	}
 
-	return func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) (err error) {
+	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
 		for _, fld := range flds {
-			if err = fld.scan(unsafe.Add(p, fld.offset), reqCtx, paramVals); err != nil {
+			if err = fld.scan(unsafe.Add(p, fld.offset), c); err != nil {
 				return
 			}
 		}
@@ -107,8 +107,8 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 
 func createJsonScanner(api *API, typ reflect.Type) (scan RequestScanner, err error) {
 	dec := api.opt.JsonPool.DecoderOf(typ)
-	scan = func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, _ []string) error {
-		iter := api.opt.JsonPool.AcquireIterator(reqCtx.Request.BodyStream())
+	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		iter := api.opt.JsonPool.AcquireIterator(c.Request.BodyStream())
 		defer api.opt.JsonPool.ReleaseIterator(iter)
 
 		dec.Decode(p, iter)
@@ -125,8 +125,9 @@ func createParamScanner(api *API, typ reflect.Type, idx int) (scan RequestScanne
 		return
 	}
 
-	return func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error {
-		return sc(p, paramVals[idx])
+	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		params := RequestParams(c)
+		return sc(p, params.vals[idx])
 	}, nil
 }
 
@@ -137,8 +138,8 @@ func createQueryScanner(api *API, typ reflect.Type, key string) (scan RequestSca
 		return
 	}
 
-	return func(p unsafe.Pointer, reqCtx *fasthttp.RequestCtx, paramVals []string) error {
-		val := reqCtx.QueryArgs().Peek(key)
+	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		val := c.QueryArgs().Peek(key)
 
 		if len(val) > 0 {
 			return sc(p, fast.BytesToString(val))

@@ -2,12 +2,13 @@ package fastapi
 
 import (
 	"io"
-	"sync"
+	"log"
+	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/json"
+	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/scanner/strings"
 	"github.com/webmafia/fastapi/scanner/structs"
 	"github.com/webmafia/fastapi/spec"
@@ -15,7 +16,6 @@ import (
 
 type API struct {
 	router   Router
-	ctxPool  sync.Pool
 	server   fasthttp.Server
 	scanners scanners
 	// docs    *spec.Document
@@ -65,10 +65,8 @@ func New(opt ...Options) (api *API, err error) {
 }
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
-	ctx := api.acquireCtx(c)
-	defer api.releaseCtx(ctx)
-
-	cb, params, ok := api.router.Lookup(c.Method(), c.Path(), &ctx.paramVals)
+	params := RequestParams(c)
+	cb, paramKeys, ok := api.router.Lookup(c.Method(), c.Path(), &params.vals)
 
 	if !ok {
 		// TODO: Proper JSON response
@@ -76,7 +74,9 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	if len(params) != len(ctx.paramVals) {
+	params.keys = paramKeys
+
+	if len(params.keys) != len(params.vals) {
 		// TODO: Proper JSON response
 		c.Response.Reset()
 		c.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -84,7 +84,9 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	if err := cb(ctx); err != nil {
+	log.Println(uintptr(unsafe.Pointer(c)), *params, cap(params.vals))
+
+	if err := cb(c); err != nil {
 		// TODO: Proper error message
 		c.Error(err.Error(), 500)
 	}
