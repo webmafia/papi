@@ -68,8 +68,14 @@ func (f *Factory) Scanner(typ reflect.Type) (scan Scanner, err error) {
 	case reflect.Complex128:
 		return scanComplex128, nil
 
-	// case reflect.Array:
-	// case reflect.Slice:
+	case reflect.Array:
+		return f.createArrayScanner(typ)
+
+	case reflect.Pointer:
+		return f.createPointerScanner(typ)
+
+	case reflect.Slice:
+		return f.createSliceScanner(typ)
 
 	case reflect.String:
 		return scanString, nil
