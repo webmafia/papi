@@ -1,4 +1,4 @@
-package fastapi
+package request
 
 import (
 	"github.com/valyala/fasthttp"
@@ -15,6 +15,6 @@ func RequestParams(c *fasthttp.RequestCtx) *route.Params {
 	return route.NilParams
 }
 
-func setRequestParams(c *fasthttp.RequestCtx, params *route.Params) {
+func SetRequestParams(c *fasthttp.RequestCtx, params *route.Params) {
 	c.SetUserValue(paramsKey, params)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
 	"github.com/webmafia/fastapi/internal"
+	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/scanner"
 	"github.com/webmafia/fastapi/scanner/structs"
 	"github.com/webmafia/fastapi/scanner/value"
@@ -29,10 +30,11 @@ var _ scanner.RequestScannerCreator = (*requestScanner)(nil)
 
 type requestScanner struct {
 	reg     *scanner.Registry
+	json    *json.Pool
 	tagScan value.ValueScanner
 }
 
-func NewRequestScanner(r *scanner.Registry) (creator scanner.RequestScannerCreator, err error) {
+func NewRequestScanner(r *scanner.Registry, json *json.Pool) (creator scanner.RequestScannerCreator, err error) {
 	tagScan, err := structs.CreateTagScanner(r, internal.ReflectType[inputTags]())
 
 	if err != nil {
@@ -41,6 +43,7 @@ func NewRequestScanner(r *scanner.Registry) (creator scanner.RequestScannerCreat
 
 	creator = &requestScanner{
 		reg:     r,
+		json:    json,
 		tagScan: tagScan,
 	}
 
@@ -62,12 +65,11 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 
 		fld := typ.Field(i)
 
-		if sc, ok := api.scanners.get(fld.Type); ok {
+		if sc, err := r.reg.CreateRequestScanner(fld.Type, fld.Tag, paramKeys); err == nil {
 			flds = append(flds, fieldScanner{
 				offset: fld.Offset,
 				scan:   sc,
 			})
-			continue
 		}
 
 		if err = r.tagScan(unsafe.Pointer(&tags), string(fld.Tag)); err != nil {
@@ -75,7 +77,7 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 		}
 
 		if tags.Body == "json" {
-			if sc, err = createJsonScanner(api, fld.Type); err != nil {
+			if sc, err = r.createJsonScanner(fld.Type); err != nil {
 				return
 			}
 
@@ -86,14 +88,14 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 		}
 
 		if tags.Param != "" {
-			idx := slices.Index(params, tags.Param)
+			idx := slices.Index(paramKeys, tags.Param)
 
 			if idx < 0 {
 				err = fmt.Errorf("unknown param '%s'", tags.Param)
 				return
 			}
 
-			if sc, err = createParamScanner(api, fld.Type, idx); err != nil {
+			if sc, err = r.createParamScanner(fld.Type, idx); err != nil {
 				return
 			}
 
@@ -104,7 +106,7 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 		}
 
 		if tags.Query != "" {
-			if sc, err = createQueryScanner(api, fld.Type, tags.Query); err != nil {
+			if sc, err = r.createQueryScanner(fld.Type, tags.Query); err != nil {
 				return
 			}
 
@@ -126,11 +128,11 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 	}, nil
 }
 
-func createJsonScanner(api *API, typ reflect.Type) (scan RequestScanner, err error) {
-	dec := api.opt.JsonPool.DecoderOf(typ)
+func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan scanner.RequestScanner, err error) {
+	dec := r.json.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
-		iter := api.opt.JsonPool.AcquireIterator(c.Request.BodyStream())
-		defer api.opt.JsonPool.ReleaseIterator(iter)
+		iter := r.json.AcquireIterator(c.Request.BodyStream())
+		defer r.json.ReleaseIterator(iter)
 
 		dec.Decode(p, iter)
 		return iter.Error
@@ -139,8 +141,8 @@ func createJsonScanner(api *API, typ reflect.Type) (scan RequestScanner, err err
 	return
 }
 
-func createParamScanner(api *API, typ reflect.Type, idx int) (scan RequestScanner, err error) {
-	sc, err := api.opt.StringScan.Scanner(typ)
+func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan scanner.RequestScanner, err error) {
+	sc, err := r.reg.CreateValueScanner(typ, "")
 
 	if err != nil {
 		return
@@ -152,8 +154,8 @@ func createParamScanner(api *API, typ reflect.Type, idx int) (scan RequestScanne
 	}, nil
 }
 
-func createQueryScanner(api *API, typ reflect.Type, key string) (scan RequestScanner, err error) {
-	sc, err := api.opt.StringScan.Scanner(typ)
+func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan scanner.RequestScanner, err error) {
+	sc, err := r.reg.CreateValueScanner(typ, "")
 
 	if err != nil {
 		return

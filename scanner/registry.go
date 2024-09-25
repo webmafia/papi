@@ -42,7 +42,7 @@ func (s *Registry) RegisterRequestScanner(typ reflect.Type, creator RequestScann
 	}
 }
 
-func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan RequestScanner, err error) {
+func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string, fallback ...bool) (scan RequestScanner, err error) {
 	if v, ok := s.req.Load(typ); ok {
 		if creator, ok := v.(RequestScannerCreator); ok {
 			return creator.CreateScanner(typ, tags, paramKeys)
@@ -51,7 +51,7 @@ func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag
 		return nil, errors.New("invalid request scanner creator - this should not be possible")
 	}
 
-	if s.def != nil {
+	if len(fallback) > 0 && fallback[0] && s.def != nil {
 		return s.def.CreateScanner(typ, tags, paramKeys)
 	}
 

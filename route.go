@@ -35,7 +35,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	_ = oTyp
 
 	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
-		cb, err := createInputScanner(api, iTyp, route.Params)
+		cb, err := api.scanners.CreateRequestScanner(iTyp, "", route.Params, true)
 
 		if err != nil {
 			return
@@ -44,8 +44,8 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
 			c.SetContentType("application/json; charset=utf-8")
 
-			s := api.opt.JsonPool.AcquireStream(c.Response.BodyWriter())
-			defer api.opt.JsonPool.ReleaseStream(s)
+			s := api.json.AcquireStream(c.Response.BodyWriter())
+			defer api.json.ReleaseStream(s)
 
 			var (
 				in     I

@@ -7,22 +7,29 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/route"
-	"github.com/webmafia/fastapi/scanner/strings"
+	"github.com/webmafia/fastapi/scanner"
+	"github.com/webmafia/fastapi/scanner/request"
 	"github.com/webmafia/fastapi/spec"
 )
 
 type API struct {
 	router   route.Router
 	server   fasthttp.Server
-	scanners scanners
+	scanners *scanner.Registry
+	json     *json.Pool
 	// docs    *spec.Document
 	opt Options
 }
 
 type Options struct {
-	OpenAPI    spec.OpenAPI
-	StringScan *strings.Factory
-	JsonPool   *json.Pool
+	OpenAPI spec.OpenAPI
+	JsonAPI jsoniter.API
+}
+
+func (opt *Options) setDefaults() {
+	if opt.JsonAPI == nil {
+		opt.JsonAPI = jsoniter.ConfigFastest
+	}
 }
 
 func New(opt ...Options) (api *API, err error) {
@@ -41,15 +48,20 @@ func New(opt ...Options) (api *API, err error) {
 		api.opt = opt[0]
 	}
 
-	if api.opt.StringScan == nil {
-		api.opt.StringScan = strings.NewFactory()
-	}
+	api.opt.setDefaults()
 
-	if api.opt.JsonPool == nil {
-		api.opt.JsonPool = json.NewPool(jsoniter.ConfigFastest)
-	}
+	api.json = json.NewPool(api.opt.JsonAPI)
+	api.scanners = scanner.NewRegistry(func(r *scanner.Registry) {
+		var creator scanner.RequestScannerCreator
 
-	registerScanners(api.opt.StringScan)
+		if creator, err = request.NewRequestScanner(r, api.json); err == nil {
+			r.RegisterDefaultRequestScanner(creator)
+		}
+	})
+
+	if err != nil {
+		return
+	}
 
 	api.server.Handler = api.handler
 	// api.docs.Info = api.opt.OpenAPI.Info
@@ -76,7 +88,7 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	setRequestParams(c, params)
+	request.SetRequestParams(c, params)
 
 	if err := cb(c); err != nil {
 		// TODO: Proper error message
@@ -89,8 +101,8 @@ func (api *API) ListenAndServe(addr string) error {
 }
 
 func (api *API) WriteOpenAPI(w io.Writer) error {
-	s := api.opt.JsonPool.AcquireStream(w)
-	defer api.opt.JsonPool.ReleaseStream(s)
+	s := api.json.AcquireStream(w)
+	defer api.json.ReleaseStream(s)
 
 	// api.docs.JsonEncode(s)
 
