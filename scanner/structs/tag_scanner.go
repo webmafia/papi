@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webmafia/fastapi/scanner/strings"
+	"github.com/webmafia/fastapi/scanner"
+	"github.com/webmafia/fastapi/scanner/value"
 )
 
-func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan strings.Scanner, err error) {
+func CreateTagScanner(r *scanner.Registry, typ reflect.Type) (scan value.ValueScanner, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -16,11 +17,11 @@ func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan strings.Scanne
 	numFields := typ.NumField()
 
 	type field struct {
-		scan   strings.Scanner
+		scan   value.ValueScanner
 		offset uintptr
 	}
 
-	var fldScan strings.Scanner
+	var fldScan value.ValueScanner
 
 	tagScanners := make(map[string]field, numFields)
 
@@ -32,7 +33,7 @@ func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan strings.Scanne
 				continue
 			}
 
-			if fldScan, err = f.Scanner(fld.Type); err != nil {
+			if fldScan, err = r.CreateValueScanner(fld.Type, fld.Tag); err != nil {
 				return
 			}
 

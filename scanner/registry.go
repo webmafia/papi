@@ -8,16 +8,33 @@ import (
 	"github.com/webmafia/fastapi/scanner/value"
 )
 
-type ScannerCreator struct {
-	req sync.Map
-	val sync.Map
+type Registry struct {
+	req    sync.Map
+	val    sync.Map
+	def    RequestScannerCreator
+	frozen bool
 }
 
-func NewScannerCreator() *ScannerCreator {
-	return &ScannerCreator{}
+func NewRegistry(init ...func(*Registry)) (r *Registry) {
+	r = &Registry{}
+
+	if len(init) > 0 {
+		init[0](r)
+	}
+
+	r.frozen = true
+	return r
 }
 
-func (s *ScannerCreator) RegisterRequestScanner(typ reflect.Type, creator RequestScannerCreator) {
+func (s *Registry) RegisterDefaultRequestScanner(creator RequestScannerCreator) {
+	if s.frozen {
+		return
+	}
+
+	s.def = creator
+}
+
+func (s *Registry) RegisterRequestScanner(typ reflect.Type, creator RequestScannerCreator) {
 	if creator == nil {
 		s.req.Delete(typ)
 	} else {
@@ -25,19 +42,23 @@ func (s *ScannerCreator) RegisterRequestScanner(typ reflect.Type, creator Reques
 	}
 }
 
-func (s *ScannerCreator) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan RequestScanner, err error) {
+func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan RequestScanner, err error) {
 	if v, ok := s.req.Load(typ); ok {
 		if creator, ok := v.(RequestScannerCreator); ok {
-			return creator.CreateScanner(paramKeys, tags)
+			return creator.CreateScanner(typ, tags, paramKeys)
 		}
 
 		return nil, errors.New("invalid request scanner creator - this should not be possible")
 	}
 
+	if s.def != nil {
+		return s.def.CreateScanner(typ, tags, paramKeys)
+	}
+
 	return nil, errors.New("no scanner could be found nor created")
 }
 
-func (s *ScannerCreator) RegisterValueScanner(typ reflect.Type, create CreateValueScanner) {
+func (s *Registry) RegisterValueScanner(typ reflect.Type, create CreateValueScanner) {
 	if create == nil {
 		s.req.Delete(typ)
 	} else {
@@ -45,7 +66,7 @@ func (s *ScannerCreator) RegisterValueScanner(typ reflect.Type, create CreateVal
 	}
 }
 
-func (s *ScannerCreator) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) (scan value.ValueScanner, err error) {
+func (s *Registry) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) (scan value.ValueScanner, err error) {
 	var createScanner value.CreateValueScanner
 
 	createScanner = func(typ reflect.Type, createElemScanner value.CreateValueScanner) (scan value.ValueScanner, err error) {

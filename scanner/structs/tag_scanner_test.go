@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/scanner/strings"
+	"github.com/webmafia/fastapi/scanner"
 )
 
 func ExampleCreateTagScanner() {
@@ -17,7 +17,7 @@ func ExampleCreateTagScanner() {
 		D bool    `tag:"d"`
 	}
 
-	scan, err := CreateTagScanner(strings.NewFactory(), internal.ReflectType[Foo]())
+	scan, err := CreateTagScanner(scanner.NewRegistry(), internal.ReflectType[Foo]())
 
 	if err != nil {
 		panic(err)

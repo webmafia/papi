@@ -10,6 +10,6 @@ import (
 type (
 	RequestScanner        func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
 	RequestScannerCreator interface {
-		CreateScanner(paramKeys []string, tags reflect.StructTag) (scan RequestScanner, err error)
+		CreateScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan RequestScanner, err error)
 	}
 )
