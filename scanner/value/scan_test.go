@@ -1,25 +1,22 @@
-package strings
+package value
 
 import "testing"
 
 func BenchmarkScan(b *testing.B) {
-	f := NewFactory()
-
 	b.ResetTimer()
 
 	for range b.N {
 		var i int
 
-		if err := ScanString(f, &i, "123"); err != nil {
+		if err := ScanString(&i, "123"); err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
 func BenchmarkScanPrepared(b *testing.B) {
-	f := NewFactory()
 	var i int
-	scan, err := GetScanner(f, &i)
+	scan, err := GetScanner(&i)
 
 	if err != nil {
 		b.Fatal(err)

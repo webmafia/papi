@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"fmt"
@@ -12,8 +12,7 @@ import (
 func Example_createSliceScanner() {
 	var ints []int
 
-	f := NewFactory()
-	scan, err := f.createSliceScanner(reflect.TypeOf(ints))
+	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
 
 	if err != nil {
 		panic(err)
@@ -37,8 +36,7 @@ func Example_createSliceScanner() {
 func Benchmark_createSliceScanner(b *testing.B) {
 	var ints []int
 
-	f := NewFactory()
-	scan, err := f.createSliceScanner(reflect.TypeOf(ints))
+	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
 
 	if err != nil {
 		b.Fatal(err)
@@ -49,6 +47,24 @@ func Benchmark_createSliceScanner(b *testing.B) {
 	for range b.N {
 		var ints []int
 
+		if err = scan(fast.Noescape(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func Benchmark_createSliceScanner_reuse(b *testing.B) {
+	var ints []int
+
+	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
+
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for range b.N {
 		if err = scan(fast.Noescape(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
 			b.Fatal(err)
 		}

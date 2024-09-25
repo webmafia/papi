@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"fmt"
@@ -12,8 +12,7 @@ import (
 func Example_createArrayScanner() {
 	var ints [3]int
 
-	f := NewFactory()
-	scan, err := f.createArrayScanner(reflect.TypeOf(ints))
+	scan, err := createArrayScanner(reflect.TypeOf(ints), CreateCustomScanner)
 
 	if err != nil {
 		panic(err)
@@ -31,8 +30,7 @@ func Example_createArrayScanner() {
 func Benchmark_createArrayScanner(b *testing.B) {
 	var ints [3]int
 
-	f := NewFactory()
-	scan, err := f.createArrayScanner(reflect.TypeOf(ints))
+	scan, err := createArrayScanner(reflect.TypeOf(ints), CreateCustomScanner)
 
 	if err != nil {
 		b.Fatal(err)

@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"fmt"
@@ -10,37 +10,36 @@ import (
 func Example_createPointerScanner() {
 	var foo *int
 
-	f := NewFactory()
-	scan, err := f.createPointerScanner(reflect.TypeOf(foo))
+	scan, err := createPointerScanner(reflect.TypeOf(foo), CreateCustomScanner)
 
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println(uintptr(unsafe.Pointer(foo)))
 
 	// Pointer to a pointer
 	if err = scan(unsafe.Pointer(&foo), "123"); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(uintptr(unsafe.Pointer(foo)), "=", *foo)
+	fmt.Println(*foo)
 
 	// Pointer to a pointer
 	if err = scan(unsafe.Pointer(&foo), "456"); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(uintptr(unsafe.Pointer(foo)), "=", *foo)
+	fmt.Println(*foo)
 
-	// Output: TODO
+	// Output:
+	//
+	// 123
+	// 456
 }
 
 func Test_createPointerScanner(t *testing.T) {
 	var foo *int
 
-	f := NewFactory()
-	scan, err := f.createPointerScanner(reflect.TypeOf(foo))
+	scan, err := createPointerScanner(reflect.TypeOf(foo), CreateCustomScanner)
 
 	if err != nil {
 		panic(err)

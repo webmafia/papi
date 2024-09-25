@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"reflect"
@@ -8,13 +8,13 @@ import (
 	"github.com/webmafia/fastapi/internal"
 )
 
-func (f *Factory) createArrayScanner(typ reflect.Type) (scan Scanner, err error) {
+func createArrayScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()
 	arrSize := typ.Len()
 	itemSize := elem.Size()
-	elemScan, err := f.Scanner(elem)
+	elemScan, err := createElemScanner(elem, createElemScanner)
 
 	if err != nil {
 		return

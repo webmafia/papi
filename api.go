@@ -5,11 +5,9 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/internal"
 	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/route"
 	"github.com/webmafia/fastapi/scanner/strings"
-	"github.com/webmafia/fastapi/scanner/structs"
 	"github.com/webmafia/fastapi/spec"
 )
 
@@ -18,8 +16,7 @@ type API struct {
 	server   fasthttp.Server
 	scanners scanners
 	// docs    *spec.Document
-	opt           Options
-	scanInputTags structs.TagScanner
+	opt Options
 }
 
 type Options struct {
@@ -52,9 +49,7 @@ func New(opt ...Options) (api *API, err error) {
 		api.opt.JsonPool = json.NewPool(jsoniter.ConfigFastest)
 	}
 
-	if api.scanInputTags, err = structs.CreateTagScanner(api.opt.StringScan, internal.ReflectType[inputTags]()); err != nil {
-		return
-	}
+	registerScanners(api.opt.StringScan)
 
 	api.server.Handler = api.handler
 	// api.docs.Info = api.opt.OpenAPI.Info

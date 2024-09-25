@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"strconv"

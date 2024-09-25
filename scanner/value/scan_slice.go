@@ -1,4 +1,4 @@
-package strings
+package value
 
 import (
 	"reflect"
@@ -14,12 +14,12 @@ type sliceHeader struct {
 	cap  int
 }
 
-func (f *Factory) createSliceScanner(typ reflect.Type) (scan Scanner, err error) {
+func createSliceScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()
 	itemSize := elem.Size()
-	elemScan, err := f.Scanner(elem)
+	elemScan, err := createElemScanner(elem, createElemScanner)
 
 	if err != nil {
 		return

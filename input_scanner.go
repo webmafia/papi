@@ -9,6 +9,7 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
+	"github.com/webmafia/fastapi/scanner/strings"
 )
 
 type inputTags struct {
@@ -21,7 +22,10 @@ type fieldScanner struct {
 	scan   RequestScanner
 }
 
-type RequestScanner func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
+type (
+	RequestScanner       func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
+	CreateRequestScanner func(f *strings.Factory, typ reflect.Type, params []string, tags reflect.StructTag) (scan CreateRequestScanner, err error)
+)
 
 func createInputScanner(api *API, typ reflect.Type, params []string) (scan RequestScanner, err error) {
 	if scan, ok := api.scanners.get(typ); ok {
@@ -49,7 +53,7 @@ func createInputScanner(api *API, typ reflect.Type, params []string) (scan Reque
 			continue
 		}
 
-		if err = api.scanInputTags(unsafe.Pointer(&tags), fld.Tag); err != nil {
+		if err = strings.ScanString(api.opt.StringScan, &tags, string(fld.Tag)); err != nil {
 			return
 		}
 

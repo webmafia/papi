@@ -8,9 +8,7 @@ import (
 	"github.com/webmafia/fastapi/scanner/strings"
 )
 
-type TagScanner func(dst unsafe.Pointer, src reflect.StructTag) error
-
-func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan TagScanner, err error) {
+func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan strings.Scanner, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -47,7 +45,7 @@ func CreateTagScanner(f *strings.Factory, typ reflect.Type) (scan TagScanner, er
 		}
 	}
 
-	return func(dst unsafe.Pointer, src reflect.StructTag) (err error) {
+	return func(dst unsafe.Pointer, src string) (err error) {
 		for k, v := range iterateStructTags(src) {
 			if fld, ok := tagScanners[k]; ok {
 				if err = fld.scan(unsafe.Add(dst, fld.offset), v); err != nil {

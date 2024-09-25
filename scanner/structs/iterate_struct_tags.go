@@ -2,10 +2,9 @@ package structs
 
 import (
 	"iter"
-	"reflect"
 )
 
-func iterateStructTags(tag reflect.StructTag) iter.Seq2[string, string] {
+func iterateStructTags[T ~string](tag T) iter.Seq2[string, string] {
 	return func(yield func(string, string) bool) {
 		for tag != "" {
 			// Skip leading space.

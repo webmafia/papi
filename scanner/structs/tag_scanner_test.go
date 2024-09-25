@@ -27,7 +27,7 @@ func ExampleCreateTagScanner() {
 
 	var foo Foo
 
-	if err = scan(unsafe.Pointer(&foo), tags); err != nil {
+	if err = scan(unsafe.Pointer(&foo), string(tags)); err != nil {
 		return
 	}
 

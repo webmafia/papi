@@ -1,26 +1,19 @@
-package strings
+package value
 
 import (
 	"fmt"
 	"reflect"
-	"sync"
+	"unsafe"
 )
 
-type Factory struct {
-	types sync.Map
+type ValueScanner func(unsafe.Pointer, string) error
+type CreateValueScanner func(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error)
+
+func CreateScanner(typ reflect.Type) (scan ValueScanner, err error) {
+	return CreateCustomScanner(typ, CreateCustomScanner)
 }
 
-func NewFactory() *Factory {
-	return &Factory{}
-}
-
-func (f *Factory) Scanner(typ reflect.Type) (scan Scanner, err error) {
-	if val, ok := f.types.Load(typ); ok {
-		if scan, ok := val.(Scanner); ok {
-			return scan, nil
-		}
-	}
-
+func CreateCustomScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:
@@ -69,13 +62,13 @@ func (f *Factory) Scanner(typ reflect.Type) (scan Scanner, err error) {
 		return scanComplex128, nil
 
 	case reflect.Array:
-		return f.createArrayScanner(typ)
+		return createArrayScanner(typ, createElemScanner)
 
 	case reflect.Pointer:
-		return f.createPointerScanner(typ)
+		return createPointerScanner(typ, createElemScanner)
 
 	case reflect.Slice:
-		return f.createSliceScanner(typ)
+		return createSliceScanner(typ, createElemScanner)
 
 	case reflect.String:
 		return scanString, nil
@@ -86,13 +79,4 @@ func (f *Factory) Scanner(typ reflect.Type) (scan Scanner, err error) {
 	default:
 		return nil, fmt.Errorf("cannot scan to type: %s", kind.String())
 	}
-}
-
-func (f *Factory) RegisterScanner(typ reflect.Type, scan Scanner) {
-	if scan == nil {
-		f.types.Delete(typ)
-		return
-	}
-
-	f.types.Store(typ, scan)
 }

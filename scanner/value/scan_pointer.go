@@ -1,13 +1,13 @@
-package strings
+package value
 
 import (
 	"reflect"
 	"unsafe"
 )
 
-func (f *Factory) createPointerScanner(typ reflect.Type) (scan Scanner, err error) {
+func createPointerScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
 	elem := typ.Elem()
-	elemScan, err := f.Scanner(elem)
+	elemScan, err := createElemScanner(elem, createElemScanner)
 
 	if err != nil {
 		return
