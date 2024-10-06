@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fast"
 	"github.com/webmafia/fastapi/internal"
 	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/scanner"
@@ -125,49 +124,5 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 		}
 
 		return
-	}, nil
-}
-
-func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan scanner.RequestScanner, err error) {
-	dec := r.json.DecoderOf(typ)
-	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
-		iter := r.json.AcquireIterator(c.Request.BodyStream())
-		defer r.json.ReleaseIterator(iter)
-
-		dec.Decode(p, iter)
-		return iter.Error
-	}
-
-	return
-}
-
-func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan scanner.RequestScanner, err error) {
-	sc, err := r.reg.CreateValueScanner(typ, "")
-
-	if err != nil {
-		return
-	}
-
-	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
-		params := RequestParams(c)
-		return sc(p, params.Value(idx))
-	}, nil
-}
-
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan scanner.RequestScanner, err error) {
-	sc, err := r.reg.CreateValueScanner(typ, "")
-
-	if err != nil {
-		return
-	}
-
-	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
-		val := c.QueryArgs().Peek(key)
-
-		if len(val) > 0 {
-			return sc(p, fast.BytesToString(val))
-		}
-
-		return nil
 	}, nil
 }

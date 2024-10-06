@@ -32,6 +32,7 @@ func (l *List[T]) encodeMeta(s *jsoniter.Stream) {
 }
 
 func (l *List[T]) Write(v *T) {
+	// TODO: Don't acquire encoder on-the-fly
 	if l.enc == nil {
 		l.enc = jsoniter.ConfigFastest.EncoderOf(reflect2.TypeOf(*v))
 	} else {
