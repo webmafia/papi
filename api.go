@@ -17,12 +17,11 @@ type API struct {
 	server   fasthttp.Server
 	scanners *scanner.Registry
 	json     *json.Pool
-	// docs    *spec.Document
-	opt Options
+	docs     *spec.Document
+	opt      Options
 }
 
 type Options struct {
-	OpenAPI spec.OpenAPI
 	JsonAPI jsoniter.API
 }
 

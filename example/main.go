@@ -103,20 +103,20 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 
 func main() {
 	api, err := fastapi.New(fastapi.Options{
-		OpenAPI: spec.OpenAPI{
-			Info: spec.Info{
-				Title: "Demo API",
-				License: spec.License{
-					Name: "MIT",
-				},
-			},
-			Servers: []spec.Server{
-				{
-					Description: "Local",
-					Url:         "http://localhost:3001",
-				},
-			},
-		},
+		// OpenAPI: spec.OpenAPI{
+		// 	Info: spec.Info{
+		// 		Title: "Demo API",
+		// 		License: spec.License{
+		// 			Name: "MIT",
+		// 		},
+		// 	},
+		// 	Servers: []spec.Server{
+		// 		{
+		// 			Description: "Local",
+		// 			Url:         "http://localhost:3001",
+		// 		},
+		// 	},
+		// },
 	})
 
 	if err != nil {

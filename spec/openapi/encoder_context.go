@@ -1,4 +1,4 @@
-package spec
+package openapi
 
 type encoderContext struct {
 	tags map[*Tag]struct{}
