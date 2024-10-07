@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/openapi"
 	"github.com/webmafia/fastapi/route"
 )
 
@@ -32,10 +33,26 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	iTyp := reflect.TypeOf((*I)(nil)).Elem()
 	oTyp := reflect.TypeOf((*O)(nil)).Elem()
+
+	if api.opt.OpenAPI != nil {
+		op := &openapi.Operation{
+			Method:      string(r.Method),
+			Summary:     r.Summary,
+			Description: r.Description,
+			Tags:        r.Tags,
+		}
+
+		if err = api.reg.DescribeOperation(op, iTyp); err != nil {
+			return
+		}
+
+		api.opt.OpenAPI.Paths.AddOperation(r.Path, op)
+	}
+
 	_ = oTyp
 
 	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
-		cb, err := api.scanners.CreateRequestScanner(iTyp, "", route.Params, true)
+		cb, err := api.reg.CreateRequestScanner(iTyp, "", route.Params, true)
 
 		if err != nil {
 			return

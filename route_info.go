@@ -2,7 +2,7 @@ package fastapi
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/spec"
+	"github.com/webmafia/fastapi/openapi"
 )
 
 type Route[I any, O any] struct {
@@ -10,6 +10,6 @@ type Route[I any, O any] struct {
 	Path        string
 	Summary     string
 	Description string
-	Tags        []*spec.Tag
+	Tags        []*openapi.Tag
 	Handler     func(c *fasthttp.RequestCtx, in *I, out *O) error
 }

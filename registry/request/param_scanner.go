@@ -5,13 +5,13 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/registry"
 	"github.com/webmafia/fastapi/route"
-	"github.com/webmafia/fastapi/scanner"
 )
 
 const paramsKey = "params"
 
-func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan scanner.RequestScanner, err error) {
+func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan registry.RequestScanner, err error) {
 	sc, err := r.reg.CreateValueScanner(typ, "")
 
 	if err != nil {

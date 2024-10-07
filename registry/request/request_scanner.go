@@ -9,10 +9,11 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi/internal"
+	"github.com/webmafia/fastapi/openapi"
 	"github.com/webmafia/fastapi/pool/json"
-	"github.com/webmafia/fastapi/scanner"
-	"github.com/webmafia/fastapi/scanner/structs"
-	"github.com/webmafia/fastapi/scanner/value"
+	"github.com/webmafia/fastapi/registry"
+	"github.com/webmafia/fastapi/registry/structs"
+	"github.com/webmafia/fastapi/registry/value"
 )
 
 type inputTags struct {
@@ -22,18 +23,18 @@ type inputTags struct {
 }
 type fieldScanner struct {
 	offset uintptr
-	scan   scanner.RequestScanner
+	scan   registry.RequestScanner
 }
 
-var _ scanner.RequestScannerCreator = (*requestScanner)(nil)
+var _ registry.RequestScannerCreator = (*requestScanner)(nil)
 
 type requestScanner struct {
-	reg     *scanner.Registry
+	reg     *registry.Registry
 	json    *json.Pool
 	tagScan value.ValueScanner
 }
 
-func NewRequestScanner(r *scanner.Registry, json *json.Pool) (creator scanner.RequestScannerCreator, err error) {
+func NewRequestScanner(r *registry.Registry, json *json.Pool) (creator registry.RequestScannerCreator, err error) {
 	tagScan, err := structs.CreateTagScanner(r, internal.ReflectType[inputTags]())
 
 	if err != nil {
@@ -50,7 +51,7 @@ func NewRequestScanner(r *scanner.Registry, json *json.Pool) (creator scanner.Re
 }
 
 // CreateScanner implements scanner.RequestScannerCreator.
-func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan scanner.RequestScanner, err error) {
+func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan registry.RequestScanner, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -59,7 +60,7 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 	flds := make([]fieldScanner, 0, numFields)
 
 	for i := 0; i < numFields; i++ {
-		var sc scanner.RequestScanner
+		var sc registry.RequestScanner
 		var tags inputTags
 
 		fld := typ.Field(i)
@@ -125,4 +126,67 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 
 		return
 	}, nil
+}
+
+func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err error) {
+	if typ.Kind() != reflect.Struct {
+		return errors.New("invalid struct")
+	}
+
+	numFields := typ.NumField()
+
+	for i := 0; i < numFields; i++ {
+		var tags inputTags
+		fld := typ.Field(i)
+
+		if err = r.tagScan(unsafe.Pointer(&tags), string(fld.Tag)); err != nil {
+			return
+		}
+
+		if tags.Body != "" {
+			schema, err := r.reg.Schema(fld.Type)
+
+			if err != nil {
+				return err
+			}
+
+			// TODO: requestBody
+			_ = schema
+		}
+
+		if tags.Param != "" {
+			schema, err := r.reg.Schema(fld.Type)
+
+			if err != nil {
+				return err
+			}
+
+			param := openapi.Parameter{
+				Name:     tags.Param,
+				In:       openapi.InPath,
+				Required: true,
+				Schema:   schema,
+			}
+
+			op.Parameters = append(op.Parameters, param)
+		}
+
+		if tags.Query != "" {
+			schema, err := r.reg.Schema(fld.Type)
+
+			if err != nil {
+				return err
+			}
+
+			param := openapi.Parameter{
+				Name:   tags.Query,
+				In:     openapi.InQuery,
+				Schema: schema,
+			}
+
+			op.Parameters = append(op.Parameters, param)
+		}
+	}
+
+	return
 }

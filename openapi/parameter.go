@@ -6,6 +6,7 @@ type Parameter struct {
 	Name        string
 	In          ParameterIn
 	Description string
+	Schema      *Schema
 	Required    bool
 }
 

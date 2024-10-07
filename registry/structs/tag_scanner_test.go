@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/scanner"
+	"github.com/webmafia/fastapi/registry"
 )
 
 func ExampleCreateTagScanner() {
@@ -17,7 +17,7 @@ func ExampleCreateTagScanner() {
 		D bool    `tag:"d"`
 	}
 
-	scan, err := CreateTagScanner(scanner.NewRegistry(), internal.ReflectType[Foo]())
+	scan, err := CreateTagScanner(registry.NewRegistry(), internal.ReflectType[Foo]())
 
 	if err != nil {
 		panic(err)

@@ -1,6 +1,28 @@
 package openapi
 
-type Paths map[string][]Operation
+import "fmt"
+
+type Paths map[string][]*Operation
+
+func (p Paths) AddOperation(path string, op *Operation) (err error) {
+	for opPath, ops := range p {
+		for _, o := range ops {
+
+			// Operation ID must be unique among all paths
+			// if o.Id == op.Id {
+			// 	return fmt.Errorf("duplicate operation ID: %s", op.Id)
+			// }
+
+			// Method must be unique for specific path
+			if opPath == path && o.Method == op.Method {
+				return fmt.Errorf("duplicate method '%s' for path: %s", op.Method, path)
+			}
+		}
+	}
+
+	p[path] = append(p[path], op)
+	return
+}
 
 // func (p Paths) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 // 	m := make(map[string][]Operation)

@@ -6,12 +6,12 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi"
-	"github.com/webmafia/fastapi/spec"
+	"github.com/webmafia/fastapi/openapi"
 )
 
 var (
-	Users = spec.NewTag("users", "Users")
-	Files = spec.NewTag("files", "Files")
+	Users = openapi.NewTag("users", "Users")
+	Files = openapi.NewTag("files", "Files")
 )
 
 type userRoutes struct{}
@@ -26,7 +26,7 @@ func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 		Method:  "GET",
 		Path:    "/users/{id}",
 		Summary: "Get user by ID",
-		Tags:    []*spec.Tag{Users},
+		Tags:    []*openapi.Tag{Users},
 
 		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
@@ -46,7 +46,7 @@ func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 		Method:  "GET",
 		Path:    "/users",
 		Summary: "List all users",
-		Tags:    []*spec.Tag{Users},
+		Tags:    []*openapi.Tag{Users},
 
 		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *fastapi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status})
@@ -68,7 +68,7 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 		Method:  "POST",
 		Path:    "/users",
 		Summary: "Create user",
-		Tags:    []*spec.Tag{Users},
+		Tags:    []*openapi.Tag{Users},
 
 		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *User) (err error) {
 			// buf, err := io.ReadAll(req.Body)
@@ -102,7 +102,8 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 // }
 
 func main() {
-	api, err := fastapi.New(fastapi.Options{
+	api, err := fastapi.NewAPI(fastapi.Options{
+		OpenAPI: openapi.NewDocument(),
 		// OpenAPI: spec.OpenAPI{
 		// 	Info: spec.Info{
 		// 		Title: "Demo API",
@@ -127,9 +128,9 @@ func main() {
 		panic(err)
 	}
 
-	if err := dumpSpecToFile(api); err != nil {
-		panic(err)
-	}
+	// if err := dumpSpecToFile(api); err != nil {
+	// 	panic(err)
+	// }
 
 	log.Println("Listening...")
 

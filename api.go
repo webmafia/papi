@@ -5,24 +5,24 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fastapi/openapi"
 	"github.com/webmafia/fastapi/pool/json"
+	"github.com/webmafia/fastapi/registry"
+	"github.com/webmafia/fastapi/registry/request"
 	"github.com/webmafia/fastapi/route"
-	"github.com/webmafia/fastapi/scanner"
-	"github.com/webmafia/fastapi/scanner/request"
-	"github.com/webmafia/fastapi/spec"
 )
 
 type API struct {
-	router   route.Router
-	server   fasthttp.Server
-	scanners *scanner.Registry
-	json     *json.Pool
-	docs     *spec.Document
-	opt      Options
+	router route.Router
+	server fasthttp.Server
+	reg    *registry.Registry
+	json   *json.Pool
+	opt    Options
 }
 
 type Options struct {
 	JsonAPI jsoniter.API
+	OpenAPI *openapi.Document
 }
 
 func (opt *Options) setDefaults() {
@@ -31,7 +31,7 @@ func (opt *Options) setDefaults() {
 	}
 }
 
-func New(opt ...Options) (api *API, err error) {
+func NewAPI(opt ...Options) (api *API, err error) {
 	api = &API{
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
@@ -50,12 +50,9 @@ func New(opt ...Options) (api *API, err error) {
 	api.opt.setDefaults()
 
 	api.json = json.NewPool(api.opt.JsonAPI)
-	api.scanners = scanner.NewRegistry(func(r *scanner.Registry) {
-		var creator scanner.RequestScannerCreator
-
-		if creator, err = request.NewRequestScanner(r, api.json); err == nil {
-			r.RegisterDefaultRequestScanner(creator)
-		}
+	api.reg = registry.NewRegistry(func(r *registry.Registry) (creator registry.RequestScannerCreator) {
+		creator, err = request.NewRequestScanner(r, api.json)
+		return
 	})
 
 	if err != nil {

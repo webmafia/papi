@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webmafia/fastapi/scanner"
-	"github.com/webmafia/fastapi/scanner/value"
+	"github.com/webmafia/fastapi/registry"
+	"github.com/webmafia/fastapi/registry/value"
 )
 
-func CreateTagScanner(r *scanner.Registry, typ reflect.Type) (scan value.ValueScanner, err error) {
+func CreateTagScanner(r *registry.Registry, typ reflect.Type) (scan value.ValueScanner, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}

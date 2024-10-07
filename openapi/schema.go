@@ -30,17 +30,17 @@ type Schema struct {
 	Description string
 	Type        SchemaType
 	Required    []string
-	Enum        []string
-	Format      string // string format
-	Pattern     string // Regex
-	Min         int
-	Max         int
+	Enum        []string `tag:"enum"`
+	Format      string   `tag:"format"`
+	Pattern     string   `tag:"pattern"`
+	Min         int      `tag:"min"`
+	Max         int      `tag:"max"`
 	Items       *Schema
-	Properties  map[string]*Schema
-	Nullable    bool
-	ReadOnly    bool
-	WriteOnly   bool
-	UniqueItems bool
+	Properties  []Property
+	Nullable    bool `tag:"nullable"`
+	ReadOnly    bool `tag:"readonly"`
+	WriteOnly   bool `tag:"writeonly"`
+	UniqueItems bool `tag:"unique"`
 }
 
 func (sch *Schema) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
@@ -141,17 +141,13 @@ func (sch *Schema) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 			s.WriteObjectField("properties")
 			s.WriteObjectStart()
 
-			var written bool
-
-			for k, v := range sch.Properties {
-				if written {
+			for i := range sch.Properties {
+				if i != 0 {
 					s.WriteMore()
-				} else {
-					written = true
 				}
 
-				s.WriteObjectField(k)
-				v.JsonEncode(ctx, s)
+				s.WriteObjectField(sch.Properties[i].Name)
+				sch.Properties[i].Schema.JsonEncode(ctx, s)
 			}
 
 			s.WriteObjectEnd()

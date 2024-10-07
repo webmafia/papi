@@ -6,10 +6,10 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
-	"github.com/webmafia/fastapi/scanner"
+	"github.com/webmafia/fastapi/registry"
 )
 
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan scanner.RequestScanner, err error) {
+func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan registry.RequestScanner, err error) {
 	sc, err := r.reg.CreateValueScanner(typ, "")
 
 	if err != nil {
