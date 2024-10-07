@@ -1,6 +1,7 @@
 package fastapi
 
 import (
+	"errors"
 	"io"
 
 	jsoniter "github.com/json-iterator/go"
@@ -97,10 +98,16 @@ func (api *API) ListenAndServe(addr string) error {
 }
 
 func (api *API) WriteOpenAPI(w io.Writer) error {
+	if api.opt.OpenAPI == nil {
+		return errors.New("no OpenAPI documentation initialized")
+	}
+
 	s := api.json.AcquireStream(w)
 	defer api.json.ReleaseStream(s)
 
-	// api.docs.JsonEncode(s)
+	if err := api.opt.OpenAPI.JsonEncode(s); err != nil {
+		return err
+	}
 
 	if err := s.Error; err != nil {
 		return err

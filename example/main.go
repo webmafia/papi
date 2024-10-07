@@ -128,9 +128,9 @@ func main() {
 		panic(err)
 	}
 
-	// if err := dumpSpecToFile(api); err != nil {
-	// 	panic(err)
-	// }
+	if err := dumpSpecToFile(api); err != nil {
+		panic(err)
+	}
 
 	log.Println("Listening...")
 

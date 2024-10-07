@@ -143,15 +143,14 @@ func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err 
 			return
 		}
 
-		if tags.Body != "" {
+		if tags.Body == "json" {
 			schema, err := r.reg.Schema(fld.Type)
 
 			if err != nil {
 				return err
 			}
 
-			// TODO: requestBody
-			_ = schema
+			op.RequestBody = schema
 		}
 
 		if tags.Param != "" {

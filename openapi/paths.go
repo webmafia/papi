@@ -1,6 +1,11 @@
 package openapi
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	jsoniter "github.com/json-iterator/go"
+)
 
 type Paths map[string][]*Operation
 
@@ -24,38 +29,32 @@ func (p Paths) AddOperation(path string, op *Operation) (err error) {
 	return
 }
 
-// func (p Paths) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
-// 	m := make(map[string][]Operation)
+func (p Paths) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
+	s.WriteObjectStart()
 
-// 	for i := range p {
-// 		m[p[i].Path] = append(m[p[i].Path], p[i])
-// 	}
+	var written bool
 
-// 	s.WriteObjectStart()
+	for path, ops := range p {
+		if written {
+			s.WriteMore()
+		} else {
+			written = true
+		}
 
-// 	var written bool
+		s.WriteObjectField(path)
+		s.WriteObjectStart()
 
-// 	for path, ops := range m {
-// 		if written {
-// 			s.WriteMore()
-// 		} else {
-// 			written = true
-// 		}
+		for i := range ops {
+			if i != 0 {
+				s.WriteMore()
+			}
 
-// 		s.WriteObjectField(path)
-// 		s.WriteObjectStart()
+			s.WriteObjectField(strings.ToLower(ops[i].Method))
+			ops[i].JsonEncode(ctx, s)
+		}
 
-// 		for i := range ops {
-// 			if i != 0 {
-// 				s.WriteMore()
-// 			}
+		s.WriteObjectEnd()
+	}
 
-// 			s.WriteObjectField(strings.ToLower(ops[i].Method))
-// 			ops[i].JsonEncode(ctx, s)
-// 		}
-
-// 		s.WriteObjectEnd()
-// 	}
-
-// 	s.WriteObjectEnd()
-// }
+	s.WriteObjectEnd()
+}
