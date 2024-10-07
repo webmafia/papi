@@ -56,19 +56,29 @@ func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag
 	return nil, errors.New("no scanner could be found nor created")
 }
 
-func (s *Registry) DescribeOperation(op *openapi.Operation, typ reflect.Type) (err error) {
+func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type) (err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if creator, ok := s.req[typ]; ok {
-		return creator.Describe(op, typ)
+	// Input
+	if creator, ok := s.req[in]; ok {
+		err = creator.Describe(op, in)
+	} else if s.def != nil {
+		err = s.def.Describe(op, in)
+	} else {
+		err = errors.New("no input descriptor could be found nor created")
 	}
 
-	if s.def != nil {
-		return s.def.Describe(op, typ)
+	if err != nil {
+		return
 	}
 
-	return errors.New("no descriptor could be found nor created")
+	// Output
+	if op.Response, err = s.Schema(out); err != nil {
+		return
+	}
+
+	return
 }
 
 func (s *Registry) RegisterValueScanner(typ reflect.Type, create CreateValueScanner) {

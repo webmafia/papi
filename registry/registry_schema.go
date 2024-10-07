@@ -92,6 +92,7 @@ func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err erro
 	case reflect.Struct:
 		s.Title = typ.Name()
 		numFlds := typ.NumField()
+		s.Type = openapi.Object
 		s.Properties = make([]openapi.Property, 0, numFlds)
 
 		for i := range numFlds {

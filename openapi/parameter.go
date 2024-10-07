@@ -28,5 +28,9 @@ func (p *Parameter) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectField("required")
 	s.WriteBool(p.Required)
 
+	s.WriteMore()
+	s.WriteObjectField("schema")
+	p.Schema.JsonEncode(ctx, s)
+
 	s.WriteObjectEnd()
 }

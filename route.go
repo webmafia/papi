@@ -32,9 +32,10 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 
 func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	iTyp := reflect.TypeOf((*I)(nil)).Elem()
-	oTyp := reflect.TypeOf((*O)(nil)).Elem()
 
 	if api.opt.OpenAPI != nil {
+		oTyp := reflect.TypeOf((*O)(nil)).Elem()
+
 		op := &openapi.Operation{
 			Method:      string(r.Method),
 			Summary:     r.Summary,
@@ -42,14 +43,12 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 			Tags:        r.Tags,
 		}
 
-		if err = api.reg.DescribeOperation(op, iTyp); err != nil {
+		if err = api.reg.DescribeOperation(op, iTyp, oTyp); err != nil {
 			return
 		}
 
 		api.opt.OpenAPI.Paths.AddOperation(r.Path, op)
 	}
-
-	_ = oTyp
 
 	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
 		cb, err := api.reg.CreateRequestScanner(iTyp, "", route.Params, true)
@@ -59,7 +58,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 		}
 
 		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
-			c.SetContentType("application/json; charset=utf-8")
+			c.SetContentType("application/json")
 
 			s := api.json.AcquireStream(c.Response.BodyWriter())
 			defer api.json.ReleaseStream(s)

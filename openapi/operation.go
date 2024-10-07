@@ -12,6 +12,7 @@ type Operation struct {
 	Description string
 	Parameters  []Parameter
 	RequestBody *Schema
+	Response    *Schema
 	Tags        []*Tag
 }
 
@@ -78,6 +79,36 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 		s.WriteObjectField("schema")
 		op.RequestBody.JsonEncode(ctx, s)
+
+		s.WriteObjectEnd()
+
+		s.WriteObjectEnd()
+
+		s.WriteObjectEnd()
+	}
+
+	if op.Response != nil {
+		s.WriteMore()
+		s.WriteObjectField("responses")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("200")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("description")
+		s.WriteString("TODO")
+
+		s.WriteMore()
+		s.WriteObjectField("content")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("application/json")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("schema")
+		op.Response.JsonEncode(ctx, s)
+
+		s.WriteObjectEnd()
 
 		s.WriteObjectEnd()
 
