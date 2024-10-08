@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fastapi"
@@ -39,7 +40,8 @@ func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 
 func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 	type req struct {
-		Status string `query:"status"`
+		Status string    `query:"status"`
+		Before time.Time `query:"before"`
 	}
 
 	return fastapi.AddRoute(api, fastapi.Route[req, fastapi.List[User]]{
@@ -49,8 +51,8 @@ func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 		Tags:    []*openapi.Tag{Users},
 
 		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *fastapi.List[User]) (err error) {
-			resp.Write(&User{ID: 999, Name: req.Status})
-			resp.Write(&User{ID: 998, Name: "Foobaz"})
+			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
+			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
 			resp.Meta.Total = 123
 
 			return

@@ -1,4 +1,4 @@
-package value
+package scanner
 
 import (
 	"reflect"
@@ -14,7 +14,7 @@ type sliceHeader struct {
 	cap  int
 }
 
-func createSliceScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
+func createSliceScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()

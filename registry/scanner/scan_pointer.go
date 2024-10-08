@@ -1,11 +1,11 @@
-package value
+package scanner
 
 import (
 	"reflect"
 	"unsafe"
 )
 
-func createPointerScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
+func createPointerScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
 	elem := typ.Elem()
 	elemScan, err := createElemScanner(elem, createElemScanner)
 

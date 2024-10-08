@@ -1,4 +1,4 @@
-package value
+package scanner
 
 import (
 	"reflect"
@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/fastapi/internal"
 )
 
-func createArrayScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
+func createArrayScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()

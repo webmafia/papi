@@ -1,4 +1,4 @@
-package value
+package scanner
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"unsafe"
 )
 
-type ValueScanner func(unsafe.Pointer, string) error
-type CreateValueScanner func(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error)
+type Scanner func(unsafe.Pointer, string) error
+type CreateValueScanner func(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error)
 
-func CreateScanner(typ reflect.Type) (scan ValueScanner, err error) {
+func CreateScanner(typ reflect.Type) (scan Scanner, err error) {
 	return CreateCustomScanner(typ, CreateCustomScanner)
 }
 
-func CreateCustomScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan ValueScanner, err error) {
+func CreateCustomScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:

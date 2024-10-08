@@ -12,8 +12,8 @@ import (
 	"github.com/webmafia/fastapi/openapi"
 	"github.com/webmafia/fastapi/pool/json"
 	"github.com/webmafia/fastapi/registry"
+	"github.com/webmafia/fastapi/registry/scanner"
 	"github.com/webmafia/fastapi/registry/structs"
-	"github.com/webmafia/fastapi/registry/value"
 )
 
 type inputTags struct {
@@ -31,7 +31,7 @@ var _ registry.RequestScannerCreator = (*requestScanner)(nil)
 type requestScanner struct {
 	reg     *registry.Registry
 	json    *json.Pool
-	tagScan value.ValueScanner
+	tagScan scanner.Scanner
 }
 
 func NewRequestScanner(r *registry.Registry, json *json.Pool) (creator registry.RequestScannerCreator, err error) {

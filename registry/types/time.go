@@ -6,10 +6,10 @@ import (
 	"unsafe"
 
 	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/registry/value"
+	"github.com/webmafia/fastapi/registry/scanner"
 )
 
-func Time() Type {
+func TimeType() Type {
 	return timeType{}
 }
 
@@ -19,7 +19,7 @@ func (t timeType) Type() reflect.Type {
 	return reflect.TypeOf((*time.Time)(nil)).Elem()
 }
 
-func (t timeType) CreateScanner(_ reflect.StructTag) (scan value.ValueScanner, err error) {
+func (t timeType) CreateScanner(_ reflect.StructTag) (scan scanner.Scanner, err error) {
 	return func(p unsafe.Pointer, s string) (err error) {
 		ptr := (*time.Time)(p)
 		parsed, err := time.Parse(time.RFC3339, s)

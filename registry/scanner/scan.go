@@ -1,4 +1,4 @@
-package value
+package scanner
 
 import (
 	"reflect"
@@ -7,7 +7,7 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func getScanner[T any](dst *T) (scan ValueScanner, err error) {
+func getScanner[T any](dst *T) (scan Scanner, err error) {
 	return CreateScanner(reflect.TypeOf(dst).Elem())
 }
 

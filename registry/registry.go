@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/webmafia/fastapi/registry/scanner"
 	"github.com/webmafia/fastapi/registry/types"
-	"github.com/webmafia/fastapi/registry/value"
 )
 
 type Registry struct {
@@ -57,7 +57,7 @@ func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag
 
 func (s *Registry) RegisterCommonTypes() {
 	s.RegisterType(
-		types.Time(),
+		types.TimeType(),
 	)
 }
 
@@ -72,18 +72,18 @@ func (s *Registry) RegisterType(types ...types.Type) {
 	}
 }
 
-func (s *Registry) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) (scan value.ValueScanner, err error) {
+func (s *Registry) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) (scan scanner.Scanner, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var createScanner value.CreateValueScanner
+	var createScanner scanner.CreateValueScanner
 
-	createScanner = func(typ reflect.Type, createElemScanner value.CreateValueScanner) (scan value.ValueScanner, err error) {
+	createScanner = func(typ reflect.Type, createElemScanner scanner.CreateValueScanner) (scan scanner.Scanner, err error) {
 		if creator, ok := s.typ[typ]; ok {
 			return creator.CreateScanner(tags)
 		}
 
-		return value.CreateCustomScanner(typ, createScanner)
+		return scanner.CreateCustomScanner(typ, createScanner)
 	}
 
 	return createScanner(typ, createScanner)
