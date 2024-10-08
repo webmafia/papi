@@ -1,23 +1,13 @@
 package registry
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/webmafia/fastapi/openapi"
 )
-
-func (r *Registry) RegisterSchema(typ reflect.Type, schema *openapi.Schema) {
-	// r.mu.Lock()
-	// defer r.mu.Unlock()
-
-	if schema == nil {
-		delete(r.schemas, typ)
-	} else {
-		r.schemas[typ] = schema
-	}
-}
 
 func (r *Registry) Schema(typ reflect.Type) (schema *openapi.Schema, err error) {
 	schema, ok := r.getSchema(typ)
@@ -33,7 +23,11 @@ func (r *Registry) getSchema(typ reflect.Type) (schema *openapi.Schema, ok bool)
 	// r.mu.RLock()
 	// defer r.mu.RUnlock()
 
-	schema, ok = r.schemas[typ]
+	val, ok := r.val[typ]
+
+	if ok {
+		val.Describe()
+	}
 	return
 }
 
@@ -127,3 +121,30 @@ func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err erro
 
 	return
 }
+
+func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type) (err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Input
+	if creator, ok := s.req[in]; ok {
+		err = creator.Describe(op, in)
+	} else if s.def != nil {
+		err = s.def.Describe(op, in)
+	} else {
+		err = errors.New("no input descriptor could be found nor created")
+	}
+
+	if err != nil {
+		return
+	}
+
+	// Output
+	if op.Response, err = s.Schema(out); err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *Registry) Describe(schema *openapi.Schema)
