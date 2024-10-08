@@ -9,9 +9,8 @@ import (
 var _ Schema = (*Ref)(nil)
 
 type Ref struct {
-	Name    string
-	Schema  Schema
-	written bool
+	Name   string
+	Schema Schema
 }
 
 func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {

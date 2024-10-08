@@ -68,31 +68,13 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 		s.WriteObjectField("schemas")
 		s.WriteObjectStart()
 
-		var written bool
-
-		for {
-			var changed bool
-
-			for ref := range ctx.refs {
-				if ref.written {
-					continue
-				}
-
-				if written {
-					s.WriteMore()
-				} else {
-					written = true
-				}
-
-				s.WriteObjectField(ref.Name)
-				ref.Schema.encodeSchema(ctx, s)
-				ref.written = true
-				changed = true
+		for i, ref := range ctx.allRefs() {
+			if i != 0 {
+				s.WriteMore()
 			}
 
-			if !changed {
-				break
-			}
+			s.WriteObjectField(ref.Name)
+			ref.Schema.encodeSchema(ctx, s)
 		}
 
 		s.WriteObjectEnd()
