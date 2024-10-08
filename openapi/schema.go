@@ -41,6 +41,7 @@ type Schema struct {
 	ReadOnly    bool `tag:"readonly"`
 	WriteOnly   bool `tag:"writeonly"`
 	UniqueItems bool `tag:"unique"`
+	ShouldBeRef bool
 }
 
 func (sch *Schema) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {

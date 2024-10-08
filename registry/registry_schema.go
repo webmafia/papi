@@ -89,6 +89,7 @@ func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err erro
 		numFlds := typ.NumField()
 		s.Type = openapi.Object
 		s.Properties = make([]openapi.Property, 0, numFlds)
+		s.ShouldBeRef = true
 
 		for i := range numFlds {
 			fld := typ.Field(i)

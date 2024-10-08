@@ -19,8 +19,7 @@ type userRoutes struct{}
 
 func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 	type req struct {
-		Id    int `param:"id"`
-		Limit int `query:"limit"`
+		Id int `param:"id"`
 	}
 
 	return fastapi.AddRoute(api, fastapi.Route[req, User]{
@@ -42,6 +41,7 @@ func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 	type req struct {
 		Status string    `query:"status"`
 		Before time.Time `query:"before"`
+		Limit  int       `query:"limit" min:"0" max:"500"`
 	}
 
 	return fastapi.AddRoute(api, fastapi.Route[req, fastapi.List[User]]{
