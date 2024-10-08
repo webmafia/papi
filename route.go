@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/route"
 )
@@ -31,27 +32,12 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 }
 
 func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
-	iTyp := reflect.TypeOf((*I)(nil)).Elem()
-
-	if api.opt.OpenAPI != nil {
-		oTyp := reflect.TypeOf((*O)(nil)).Elem()
-
-		op := &openapi.Operation{
-			Method:      string(r.Method),
-			Summary:     r.Summary,
-			Description: r.Description,
-			Tags:        r.Tags,
-		}
-
-		if err = api.reg.DescribeOperation(op, iTyp, oTyp); err != nil {
-			return
-		}
-
-		api.opt.OpenAPI.Paths.AddOperation(r.Path, op)
+	if err = addToDocs(api, r); err != nil {
+		return
 	}
 
 	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
-		cb, err := api.reg.CreateRequestScanner(iTyp, "", route.Params, true)
+		cb, err := api.reg.CreateRequestScanner(internal.ReflectType[I](), "", route.Params, true)
 
 		if err != nil {
 			return
@@ -110,4 +96,26 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 		return
 	})
+}
+
+func addToDocs[I, O any](api *API, r Route[I, O]) (err error) {
+	if api.opt.OpenAPI == nil {
+		return
+	}
+
+	iTyp := internal.ReflectType[I]()
+	oTyp := internal.ReflectType[O]()
+
+	op := &openapi.Operation{
+		Method:      string(r.Method),
+		Summary:     r.Summary,
+		Description: r.Description,
+		Tags:        r.Tags,
+	}
+
+	if err = api.reg.DescribeOperation(op, iTyp, oTyp); err != nil {
+		return
+	}
+
+	return api.opt.OpenAPI.Paths.AddOperation(r.Path, op)
 }

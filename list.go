@@ -8,6 +8,13 @@ import (
 	"github.com/webmafia/fast"
 )
 
+var _ Lister = (*List[struct{}])(nil)
+
+type Lister interface {
+	setStream(s *jsoniter.Stream)
+	encodeMeta(s *jsoniter.Stream)
+}
+
 type List[T any] struct {
 	Meta ListMeta
 
@@ -40,9 +47,4 @@ func (l *List[T]) Write(v *T) {
 	}
 
 	l.enc.Encode(fast.Noescape(unsafe.Pointer(v)), l.s)
-}
-
-type Lister interface {
-	setStream(s *jsoniter.Stream)
-	encodeMeta(s *jsoniter.Stream)
 }
