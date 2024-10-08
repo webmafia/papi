@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webmafia/fastapi/registry"
-	"github.com/webmafia/fastapi/registry/scanner"
+	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/scanner"
 )
 
 func CreateTagScanner(r *registry.Registry, typ reflect.Type) (scan scanner.Scanner, err error) {

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/webmafia/fastapi/openapi"
+	"github.com/webbmaffian/papi/openapi"
 )
 
 func (r *Registry) Schema(typ reflect.Type) (schema openapi.Schema, err error) {

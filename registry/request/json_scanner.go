@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/registry"
+	"github.com/webbmaffian/papi/registry"
 )
 
 func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan registry.RequestScanner, err error) {

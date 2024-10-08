@@ -3,8 +3,8 @@ package types
 import (
 	"reflect"
 
-	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/registry/scanner"
+	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry/scanner"
 )
 
 type Type interface {

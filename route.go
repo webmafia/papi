@@ -5,8 +5,8 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/route"
+	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/route"
 )
 
 func (api *API) RegisterRoutes(types ...any) (err error) {

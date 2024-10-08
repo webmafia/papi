@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/registry"
+	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/registry"
 )
 
 func ExampleCreateTagScanner() {

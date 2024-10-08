@@ -5,9 +5,9 @@ import (
 	"reflect"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/fastapi/pool/json"
-	"github.com/webmafia/fastapi/registry"
-	"github.com/webmafia/fastapi/registry/request"
+	"github.com/webbmaffian/papi/pool/json"
+	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/request"
 )
 
 func ExampleRegistry() {

@@ -5,8 +5,8 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/registry"
-	"github.com/webmafia/fastapi/route"
+	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/route"
 )
 
 const paramsKey = "params"

@@ -5,8 +5,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/registry/scanner"
+	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry/scanner"
 )
 
 func TimeType() Type {

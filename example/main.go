@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi"
-	"github.com/webmafia/fastapi/openapi"
+	fastapi "github.com/webbmaffian/papi"
+	"github.com/webbmaffian/papi/openapi"
 )
 
 var (

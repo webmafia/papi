@@ -6,11 +6,11 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/pool/json"
-	"github.com/webmafia/fastapi/registry"
-	"github.com/webmafia/fastapi/registry/request"
-	"github.com/webmafia/fastapi/route"
+	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/pool/json"
+	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/request"
+	"github.com/webbmaffian/papi/route"
 )
 
 type API struct {

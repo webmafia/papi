@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/webmafia/fastapi/registry/scanner"
-	"github.com/webmafia/fastapi/registry/types"
+	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/registry/types"
 )
 
 type Registry struct {

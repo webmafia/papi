@@ -1,4 +1,4 @@
-module github.com/webmafia/fastapi
+module github.com/webbmaffian/papi
 
 go 1.23
 

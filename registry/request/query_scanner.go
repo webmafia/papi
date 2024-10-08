@@ -5,8 +5,8 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webbmaffian/papi/registry"
 	"github.com/webmafia/fast"
-	"github.com/webmafia/fastapi/registry"
 )
 
 func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan registry.RequestScanner, err error) {

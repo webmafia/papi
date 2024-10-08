@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/openapi"
+	"github.com/webbmaffian/papi/openapi"
 )
 
 type (

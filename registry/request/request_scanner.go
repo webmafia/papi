@@ -8,12 +8,12 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/fastapi/internal"
-	"github.com/webmafia/fastapi/openapi"
-	"github.com/webmafia/fastapi/pool/json"
-	"github.com/webmafia/fastapi/registry"
-	"github.com/webmafia/fastapi/registry/scanner"
-	"github.com/webmafia/fastapi/registry/structs"
+	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/pool/json"
+	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/registry/structs"
 )
 
 type inputTags struct {
