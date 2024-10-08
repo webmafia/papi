@@ -144,7 +144,7 @@ func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err 
 		}
 
 		if tags.Body == "json" {
-			schema, err := r.reg.Schema(fld.Type)
+			schema, err := r.reg.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
 				return err
@@ -154,7 +154,7 @@ func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err 
 		}
 
 		if tags.Param != "" {
-			schema, err := r.reg.Schema(fld.Type)
+			schema, err := r.reg.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
 				return err
@@ -171,7 +171,7 @@ func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err 
 		}
 
 		if tags.Query != "" {
-			schema, err := r.reg.Schema(fld.Type)
+			schema, err := r.reg.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
 				return err
