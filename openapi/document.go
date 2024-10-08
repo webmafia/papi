@@ -8,7 +8,6 @@ type Document struct {
 	Info    Info
 	Servers []Server
 	Paths   Paths
-	// Components Components
 }
 
 func NewDocument() *Document {
@@ -53,7 +52,51 @@ func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
 	s.WriteObjectField("paths")
 	doc.Paths.JsonEncode(ctx, s)
 
+	doc.encodeReferences(s, ctx)
+
 	s.WriteObjectEnd()
 
 	return s.Error
+}
+
+func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
+	if len(ctx.refs) > 0 {
+		s.WriteMore()
+		s.WriteObjectField("components")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("schemas")
+		s.WriteObjectStart()
+
+		var written bool
+
+		for {
+			var changed bool
+
+			for ref := range ctx.refs {
+				if ref.written {
+					continue
+				}
+
+				if written {
+					s.WriteMore()
+				} else {
+					written = true
+				}
+
+				s.WriteObjectField(ref.Name)
+				ref.Schema.encodeSchema(ctx, s)
+				ref.written = true
+				changed = true
+			}
+
+			if !changed {
+				break
+			}
+		}
+
+		s.WriteObjectEnd()
+
+		s.WriteObjectEnd()
+	}
 }

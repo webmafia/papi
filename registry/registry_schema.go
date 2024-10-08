@@ -9,20 +9,17 @@ import (
 	"github.com/webmafia/fastapi/openapi"
 )
 
-func (r *Registry) Schema(typ reflect.Type) (schema *openapi.Schema, err error) {
+func (r *Registry) Schema(typ reflect.Type) (schema openapi.Schema, err error) {
 	schema, ok := r.getSchema(typ)
 
 	if !ok {
-		schema, err = r.createSchema(typ)
+		schema, err = r.createSchema(typ, "")
 	}
 
 	return
 }
 
-func (r *Registry) getSchema(typ reflect.Type) (schema *openapi.Schema, ok bool) {
-	// r.mu.RLock()
-	// defer r.mu.RUnlock()
-
+func (r *Registry) getSchema(typ reflect.Type) (schema openapi.Schema, ok bool) {
 	val, ok := r.typ[typ]
 
 	if ok {
@@ -32,64 +29,55 @@ func (r *Registry) getSchema(typ reflect.Type) (schema *openapi.Schema, ok bool)
 	return
 }
 
-func (r *Registry) createSchema(typ reflect.Type) (s *openapi.Schema, err error) {
-	// r.mu.Lock()
-	// defer r.mu.Unlock()
-
-	s = new(openapi.Schema)
-
-	if err = r.describeSchema(s, typ); err != nil {
-		return
-	}
-
-	return
-}
-
-func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err error) {
+func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (openapi.Schema, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:
-		s.Type = openapi.Boolean
+		return &openapi.Boolean{}, nil
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		s.Type = openapi.Integer
+		return &openapi.Integer{}, nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		s.Type = openapi.Integer
+		return &openapi.Integer{}, nil
 
 	case reflect.Float32, reflect.Float64:
-		s.Type = openapi.Number
+		return &openapi.Number{}, nil
 
 	case reflect.Array:
-		s.Type = openapi.Array
-		s.Min = typ.Len()
-		s.Max = s.Min
-		s.Items = new(openapi.Schema)
+		itemType, err := r.createSchema(typ.Elem(), tags)
 
-		if err = r.describeSchema(s.Items, typ.Elem()); err != nil {
-			return
+		if err != nil {
+			return nil, err
 		}
+
+		return &openapi.Array{
+			Items: itemType,
+			Min:   typ.Len(),
+			Max:   typ.Len(),
+		}, nil
 
 	case reflect.Pointer:
-		return r.describeSchema(s, typ.Elem())
+		return r.createSchema(typ.Elem(), tags)
 
 	case reflect.Slice:
-		s.Type = openapi.Array
-		s.Items = new(openapi.Schema)
+		itemType, err := r.createSchema(typ.Elem(), tags)
 
-		if err = r.describeSchema(s.Items, typ.Elem()); err != nil {
-			return
+		if err != nil {
+			return nil, err
 		}
 
+		return &openapi.Array{Items: itemType}, nil
+
 	case reflect.String:
-		s.Type = openapi.String
+		return &openapi.String{}, nil
 
 	case reflect.Struct:
-		s.Title = typ.Name()
 		numFlds := typ.NumField()
-		s.Type = openapi.Object
-		s.Properties = make([]openapi.Property, 0, numFlds)
-		s.ShouldBeRef = true
+
+		obj := &openapi.Object{
+			Properties: make([]openapi.ObjectProperty, 0, numFlds),
+		}
 
 		for i := range numFlds {
 			fld := typ.Field(i)
@@ -104,23 +92,30 @@ func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err erro
 				name, _, _ = strings.Cut(jsonTag, ",")
 			}
 
-			prop := openapi.Property{
-				Name: name,
+			propSchema, err := r.createSchema(fld.Type, fld.Tag)
+
+			if err != nil {
+				return nil, err
 			}
 
-			if prop.Schema, err = r.Schema(fld.Type); err != nil {
-				return
-			}
-
-			s.Properties = append(s.Properties, prop)
-
+			obj.Properties = append(obj.Properties, openapi.ObjectProperty{
+				Name:   name,
+				Schema: propSchema,
+			})
 		}
 
-	default:
-		return fmt.Errorf("cannot create schema for type: %s", kind.String())
-	}
+		if name := typ.Name(); name != "" {
+			return &openapi.Ref{
+				Name:   name,
+				Schema: obj,
+			}, nil
+		}
 
-	return
+		return obj, nil
+
+	default:
+		return nil, fmt.Errorf("cannot create schema for type: %s", kind.String())
+	}
 }
 
 func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type) (err error) {

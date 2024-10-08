@@ -10,5 +10,5 @@ import (
 type Type interface {
 	Type() reflect.Type
 	CreateScanner(tags reflect.StructTag) (scan scanner.Scanner, err error)
-	Describe(tags reflect.StructTag) (schema *openapi.Schema)
+	Describe(tags reflect.StructTag) (schema openapi.Schema)
 }

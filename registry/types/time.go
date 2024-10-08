@@ -32,9 +32,11 @@ func (t timeType) CreateScanner(_ reflect.StructTag) (scan scanner.Scanner, err 
 	}, nil
 }
 
-func (t timeType) Describe(_ reflect.StructTag) *openapi.Schema {
-	return &openapi.Schema{
-		Type:   openapi.String,
-		Format: "RFC3339",
+func (t timeType) Describe(_ reflect.StructTag) openapi.Schema {
+	return &openapi.Ref{
+		Name: "Timestamp",
+		Schema: &openapi.String{
+			Format: "RFC3339",
+		},
 	}
 }

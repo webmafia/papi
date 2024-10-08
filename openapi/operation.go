@@ -11,8 +11,8 @@ type Operation struct {
 	Summary     string
 	Description string
 	Parameters  []Parameter
-	RequestBody *Schema
-	Response    *Schema
+	RequestBody Schema
+	Response    Schema
 	Tags        []*Tag
 }
 
@@ -78,7 +78,7 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteObjectStart()
 
 		s.WriteObjectField("schema")
-		op.RequestBody.JsonEncode(ctx, s)
+		op.RequestBody.encodeSchema(ctx, s)
 
 		s.WriteObjectEnd()
 
@@ -106,7 +106,7 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteObjectStart()
 
 		s.WriteObjectField("schema")
-		op.Response.JsonEncode(ctx, s)
+		op.Response.encodeSchema(ctx, s)
 
 		s.WriteObjectEnd()
 

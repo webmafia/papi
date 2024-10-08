@@ -6,7 +6,7 @@ type Parameter struct {
 	Name        string
 	In          ParameterIn
 	Description string
-	Schema      *Schema
+	Schema      Schema
 	Required    bool
 }
 
@@ -30,7 +30,7 @@ func (p *Parameter) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 	s.WriteMore()
 	s.WriteObjectField("schema")
-	p.Schema.JsonEncode(ctx, s)
+	p.Schema.encodeSchema(ctx, s)
 
 	s.WriteObjectEnd()
 }

@@ -32,7 +32,7 @@ func ExampleRegistry() {
 		panic(err)
 	}
 
-	fmt.Printf("%#v\n", *s)
+	fmt.Printf("%#v\n", s)
 
 	// Output: TODO
 }
