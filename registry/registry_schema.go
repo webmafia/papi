@@ -9,21 +9,27 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 )
 
-func (r *Registry) Schema(typ reflect.Type) (schema openapi.Schema, err error) {
-	schema, ok := r.getSchema(typ)
+func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema openapi.Schema, err error) {
+	var tags reflect.StructTag
+
+	if len(tag) > 0 {
+		tags = tag[0]
+	}
+
+	schema, ok := r.getSchema(typ, tags)
 
 	if !ok {
-		schema, err = r.createSchema(typ, "")
+		schema, err = r.createSchema(typ, tags)
 	}
 
 	return
 }
 
-func (r *Registry) getSchema(typ reflect.Type) (schema openapi.Schema, ok bool) {
+func (r *Registry) getSchema(typ reflect.Type, tags reflect.StructTag) (schema openapi.Schema, ok bool) {
 	val, ok := r.typ[typ]
 
 	if ok {
-		schema = val.Describe("")
+		schema = val.Describe(tags)
 	}
 
 	return
@@ -45,7 +51,7 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 		return &openapi.Number{}, nil
 
 	case reflect.Array:
-		itemType, err := r.createSchema(typ.Elem(), tags)
+		itemType, err := r.Schema(typ.Elem(), tags)
 
 		if err != nil {
 			return nil, err
@@ -58,10 +64,10 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 		}, nil
 
 	case reflect.Pointer:
-		return r.createSchema(typ.Elem(), tags)
+		return r.Schema(typ.Elem(), tags)
 
 	case reflect.Slice:
-		itemType, err := r.createSchema(typ.Elem(), tags)
+		itemType, err := r.Schema(typ.Elem(), tags)
 
 		if err != nil {
 			return nil, err
@@ -92,7 +98,7 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 				name, _, _ = strings.Cut(jsonTag, ",")
 			}
 
-			propSchema, err := r.createSchema(fld.Type, fld.Tag)
+			propSchema, err := r.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
 				return nil, err
