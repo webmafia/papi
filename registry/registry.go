@@ -5,12 +5,13 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/webmafia/fastapi/registry/types"
 	"github.com/webmafia/fastapi/registry/value"
 )
 
 type Registry struct {
 	req map[reflect.Type]RequestScannerCreator
-	val map[reflect.Type]ValueScannerCreator
+	typ map[reflect.Type]types.Type
 	def RequestScannerCreator
 	mu  sync.RWMutex
 }
@@ -18,7 +19,7 @@ type Registry struct {
 func NewRegistry(def ...func(*Registry) RequestScannerCreator) (r *Registry) {
 	r = &Registry{
 		req: make(map[reflect.Type]RequestScannerCreator),
-		val: make(map[reflect.Type]ValueScannerCreator),
+		typ: make(map[reflect.Type]types.Type),
 	}
 
 	if len(def) > 0 {
@@ -54,14 +55,20 @@ func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag
 	return nil, errors.New("no scanner could be found nor created")
 }
 
-func (s *Registry) RegisterValueScanner(typ reflect.Type, creator ValueScannerCreator) {
+func (s *Registry) RegisterCommonTypes() {
+	s.RegisterType(
+		types.Time(),
+	)
+}
+
+func (s *Registry) RegisterType(types ...types.Type) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if creator == nil {
-		delete(s.val, typ)
-	} else {
-		s.val[typ] = creator
+	for _, typ := range types {
+		if typ != nil {
+			s.typ[typ.Type()] = typ
+		}
 	}
 }
 
@@ -72,7 +79,7 @@ func (s *Registry) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) 
 	var createScanner value.CreateValueScanner
 
 	createScanner = func(typ reflect.Type, createElemScanner value.CreateValueScanner) (scan value.ValueScanner, err error) {
-		if creator, ok := s.val[typ]; ok {
+		if creator, ok := s.typ[typ]; ok {
 			return creator.CreateScanner(tags)
 		}
 

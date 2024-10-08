@@ -23,11 +23,12 @@ func (r *Registry) getSchema(typ reflect.Type) (schema *openapi.Schema, ok bool)
 	// r.mu.RLock()
 	// defer r.mu.RUnlock()
 
-	val, ok := r.val[typ]
+	val, ok := r.typ[typ]
 
 	if ok {
-		val.Describe()
+		schema = val.Describe("")
 	}
+
 	return
 }
 
@@ -103,11 +104,10 @@ func (r *Registry) describeSchema(s *openapi.Schema, typ reflect.Type) (err erro
 			}
 
 			prop := openapi.Property{
-				Name:   name,
-				Schema: new(openapi.Schema),
+				Name: name,
 			}
 
-			if err = r.describeSchema(prop.Schema, fld.Type); err != nil {
+			if prop.Schema, err = r.Schema(fld.Type); err != nil {
 				return
 			}
 
@@ -146,5 +146,3 @@ func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type
 
 	return
 }
-
-func (s *Registry) Describe(schema *openapi.Schema)

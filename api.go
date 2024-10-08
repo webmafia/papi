@@ -52,6 +52,7 @@ func NewAPI(opt ...Options) (api *API, err error) {
 
 	api.json = json.NewPool(api.opt.JsonAPI)
 	api.reg = registry.NewRegistry(func(r *registry.Registry) (creator registry.RequestScannerCreator) {
+		r.RegisterCommonTypes()
 		creator, err = request.NewRequestScanner(r, api.json)
 		return
 	})

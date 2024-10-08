@@ -1,4 +1,4 @@
-package registry
+package types
 
 import (
 	"reflect"
@@ -7,7 +7,8 @@ import (
 	"github.com/webmafia/fastapi/registry/value"
 )
 
-type ValueScannerCreator interface {
+type Type interface {
+	Type() reflect.Type
 	CreateScanner(tags reflect.StructTag) (scan value.ValueScanner, err error)
-	Describe(schema *openapi.Schema) (err error)
+	Describe(tags reflect.StructTag) (schema *openapi.Schema)
 }

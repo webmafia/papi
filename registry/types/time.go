@@ -9,13 +9,17 @@ import (
 	"github.com/webmafia/fastapi/registry/value"
 )
 
-type Time struct{}
+func Time() Type {
+	return timeType{}
+}
 
-func (t Time) Type() reflect.Type {
+type timeType struct{}
+
+func (t timeType) Type() reflect.Type {
 	return reflect.TypeOf((*time.Time)(nil)).Elem()
 }
 
-func (t Time) CreateScanner(_ reflect.StructTag) (scan value.ValueScanner, err error) {
+func (t timeType) CreateScanner(_ reflect.StructTag) (scan value.ValueScanner, err error) {
 	return func(p unsafe.Pointer, s string) (err error) {
 		ptr := (*time.Time)(p)
 		parsed, err := time.Parse(time.RFC3339, s)
@@ -28,8 +32,8 @@ func (t Time) CreateScanner(_ reflect.StructTag) (scan value.ValueScanner, err e
 	}, nil
 }
 
-func (t Time) Describe(_ reflect.StructTag) openapi.Schema {
-	return openapi.Schema{
+func (t timeType) Describe(_ reflect.StructTag) *openapi.Schema {
+	return &openapi.Schema{
 		Type:   openapi.String,
 		Format: "RFC3339",
 	}
