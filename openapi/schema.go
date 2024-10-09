@@ -1,7 +1,11 @@
 package openapi
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	jsoniter "github.com/json-iterator/go"
+	"github.com/webbmaffian/papi/internal/hasher"
+)
 
 type Schema interface {
-	encodeSchema(ctx *encoderContext, s *jsoniter.Stream)
+	hasher.Hashable
+	encodeSchema(ctx *encoderContext, s *jsoniter.Stream) error
 }

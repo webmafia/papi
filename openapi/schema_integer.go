@@ -1,20 +1,29 @@
 package openapi
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/webbmaffian/papi/internal/hasher"
+)
 
 var _ Schema = (*Integer)(nil)
 
 type Integer struct {
-	Title       string
-	Description string
-	Min         int
-	Max         int
-	Nullable    bool
-	ReadOnly    bool
-	WriteOnly   bool
+	Title       string `tag:"title"`
+	Description string `tag:"description"`
+	Min         int    `tag:"min"`
+	Max         int    `tag:"max"`
+	Nullable    bool   `tag:"flags:nullable"`
+	ReadOnly    bool   `tag:"flags:readonly"`
+	WriteOnly   bool   `tag:"flags:writeonly"`
 }
 
-func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
+func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
+	if s.Error != nil {
+		return s.Error
+	}
+
 	s.WriteObjectStart()
 
 	s.WriteObjectField("type")
@@ -63,4 +72,14 @@ func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
 	}
 
 	s.WriteObjectEnd()
+
+	if s.Error != nil {
+		err = fmt.Errorf("failed to encode integer schema: %w", s.Error)
+	}
+
+	return
+}
+
+func (sch *Integer) Hash() uint64 {
+	return hasher.Hash(sch)
 }

@@ -1,17 +1,22 @@
 package openapi
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/webbmaffian/papi/internal/hasher"
+)
 
 var _ Schema = (*Object)(nil)
 
 type Object struct {
-	Title       string
-	Description string
+	Title       string `tag:"title"`
+	Description string `tag:"description"`
 	Required    []string
 	Properties  []ObjectProperty
-	Nullable    bool
-	ReadOnly    bool
-	WriteOnly   bool
+	Nullable    bool `tag:"flags:nullable"`
+	ReadOnly    bool `tag:"flags:readonly"`
+	WriteOnly   bool `tag:"flags:writeonly"`
 }
 
 type ObjectProperty struct {
@@ -19,7 +24,11 @@ type ObjectProperty struct {
 	Schema Schema
 }
 
-func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
+func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
+	if s.Error != nil {
+		return s.Error
+	}
+
 	s.WriteObjectStart()
 
 	s.WriteObjectField("type")
@@ -82,11 +91,24 @@ func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
 			}
 
 			s.WriteObjectField(sch.Properties[i].Name)
-			sch.Properties[i].Schema.encodeSchema(ctx, s)
+
+			if err = sch.Properties[i].Schema.encodeSchema(ctx, s); err != nil {
+				return
+			}
 		}
 
 		s.WriteObjectEnd()
 	}
 
 	s.WriteObjectEnd()
+
+	if s.Error != nil {
+		err = fmt.Errorf("failed to encode object schema: %w", s.Error)
+	}
+
+	return
+}
+
+func (sch *Object) Hash() uint64 {
+	return hasher.Hash(sch)
 }

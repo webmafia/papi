@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"fmt"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -13,8 +14,14 @@ type Ref struct {
 	Schema Schema
 }
 
-func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
-	ctx.addRef(sch)
+func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
+	if s.Error != nil {
+		return s.Error
+	}
+
+	if err = ctx.addRef(sch); err != nil {
+		return
+	}
 
 	s.WriteObjectStart()
 
@@ -31,4 +38,14 @@ func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) {
 	}
 
 	s.WriteObjectEnd()
+
+	if s.Error != nil {
+		err = fmt.Errorf("failed to encode reference schema: %w", s.Error)
+	}
+
+	return
+}
+
+func (sch *Ref) Hash() uint64 {
+	return sch.Schema.Hash()
 }

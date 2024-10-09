@@ -1,6 +1,9 @@
 package openapi
 
-import "iter"
+import (
+	"fmt"
+	"iter"
+)
 
 type encoderContext struct {
 	tags map[*Tag]struct{}
@@ -18,20 +21,29 @@ func (ctx *encoderContext) addTag(tag *Tag) {
 	ctx.tags[tag] = struct{}{}
 }
 
-func (ctx *encoderContext) addRef(ref *Ref) {
+func (ctx *encoderContext) addRef(ref *Ref) (err error) {
+	if cur, ok := ctx.refs[ref.Name]; ok {
+		if cur.Hash() != ref.Hash() {
+			err = fmt.Errorf("reference name '%s' already exists", ref.Name)
+		}
+
+		return
+	}
+
 	ctx.refs[ref.Name] = ref
+	return
 }
 
 func (ctx *encoderContext) allRefs() iter.Seq2[int, *Ref] {
 	return func(yield func(int, *Ref) bool) {
 		var i int
-		done := make(map[*Ref]struct{})
+		done := make(map[string]struct{})
 
 		for {
 			var changed bool
 
 			for _, ref := range ctx.refs {
-				if _, ok := done[ref]; ok {
+				if _, ok := done[ref.Name]; ok {
 					continue
 				}
 
@@ -39,7 +51,7 @@ func (ctx *encoderContext) allRefs() iter.Seq2[int, *Ref] {
 					return
 				}
 
-				done[ref] = struct{}{}
+				done[ref.Name] = struct{}{}
 				changed = true
 				i++
 			}

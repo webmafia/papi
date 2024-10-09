@@ -12,6 +12,7 @@ import (
 type Registry struct {
 	req map[reflect.Type]RequestScannerCreator
 	typ map[reflect.Type]types.Type
+	tag map[reflect.Type]scanner.Scanner
 	def RequestScannerCreator
 	mu  sync.RWMutex
 }
@@ -20,6 +21,7 @@ func NewRegistry(def ...func(*Registry) RequestScannerCreator) (r *Registry) {
 	r = &Registry{
 		req: make(map[reflect.Type]RequestScannerCreator),
 		typ: make(map[reflect.Type]types.Type),
+		tag: make(map[reflect.Type]scanner.Scanner),
 	}
 
 	if len(def) > 0 {

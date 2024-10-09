@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

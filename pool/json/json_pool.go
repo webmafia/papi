@@ -44,6 +44,7 @@ func (p *Pool) AcquireIterator(r io.Reader) *jsoniter.Iterator {
 }
 
 func (p *Pool) ReleaseIterator(iter *jsoniter.Iterator) {
+	iter.Error = nil
 	p.iterPool.Put(iter.Reset(nil))
 }
 
@@ -54,6 +55,7 @@ func (p *Pool) AcquireStream(w io.Writer) *jsoniter.Stream {
 
 //go:inline
 func (p *Pool) ReleaseStream(s *jsoniter.Stream) {
+	s.Error = nil
 	p.api.ReturnStream(s)
 }
 

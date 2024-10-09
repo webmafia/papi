@@ -8,12 +8,9 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/pool/json"
 	"github.com/webbmaffian/papi/registry"
-	"github.com/webbmaffian/papi/registry/scanner"
-	"github.com/webbmaffian/papi/registry/structs"
 )
 
 type inputTags struct {
@@ -29,22 +26,14 @@ type fieldScanner struct {
 var _ registry.RequestScannerCreator = (*requestScanner)(nil)
 
 type requestScanner struct {
-	reg     *registry.Registry
-	json    *json.Pool
-	tagScan scanner.Scanner
+	reg  *registry.Registry
+	json *json.Pool
 }
 
 func NewRequestScanner(r *registry.Registry, json *json.Pool) (creator registry.RequestScannerCreator, err error) {
-	tagScan, err := structs.CreateTagScanner(r, internal.ReflectType[inputTags]())
-
-	if err != nil {
-		return
-	}
-
 	creator = &requestScanner{
-		reg:     r,
-		json:    json,
-		tagScan: tagScan,
+		reg:  r,
+		json: json,
 	}
 
 	return
@@ -72,7 +61,7 @@ func (r *requestScanner) CreateScanner(typ reflect.Type, tags reflect.StructTag,
 			})
 		}
 
-		if err = r.tagScan(unsafe.Pointer(&tags), string(fld.Tag)); err != nil {
+		if err = registry.ScanTags(r.reg, &tags, fld.Tag); err != nil {
 			return
 		}
 
@@ -139,7 +128,7 @@ func (r *requestScanner) Describe(op *openapi.Operation, typ reflect.Type) (err 
 		var tags inputTags
 		fld := typ.Field(i)
 
-		if err = r.tagScan(unsafe.Pointer(&tags), string(fld.Tag)); err != nil {
+		if err = registry.ScanTags(r.reg, &tags, fld.Tag); err != nil {
 			return
 		}
 

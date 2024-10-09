@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry/structs"
 )
 
 func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema openapi.Schema, err error) {
@@ -39,16 +40,16 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:
-		return &openapi.Boolean{}, nil
+		return scanSchemaTags(r, &openapi.Boolean{}, tags)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return &openapi.Integer{}, nil
+		return scanSchemaTags(r, &openapi.Integer{}, tags)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return &openapi.Integer{}, nil
+		return scanSchemaTags(r, &openapi.Integer{}, tags)
 
 	case reflect.Float32, reflect.Float64:
-		return &openapi.Number{}, nil
+		return scanSchemaTags(r, &openapi.Number{}, tags)
 
 	case reflect.Array:
 		itemType, err := r.Schema(typ.Elem(), tags)
@@ -57,11 +58,11 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 			return nil, err
 		}
 
-		return &openapi.Array{
+		return scanSchemaTags(r, &openapi.Array{
 			Items: itemType,
 			Min:   typ.Len(),
 			Max:   typ.Len(),
-		}, nil
+		}, tags)
 
 	case reflect.Pointer:
 		return r.Schema(typ.Elem(), tags)
@@ -73,10 +74,10 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 			return nil, err
 		}
 
-		return &openapi.Array{Items: itemType}, nil
+		return scanSchemaTags(r, &openapi.Array{Items: itemType}, tags)
 
 	case reflect.String:
-		return &openapi.String{}, nil
+		return scanSchemaTags(r, &openapi.String{}, tags)
 
 	case reflect.Struct:
 		numFlds := typ.NumField()
@@ -108,6 +109,13 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 				Name:   name,
 				Schema: propSchema,
 			})
+
+			if flags, ok := fld.Tag.Lookup("flags"); ok {
+				if structs.HasFlag(flags, "required") {
+					obj.Required = append(obj.Required, name)
+				}
+			}
+
 		}
 
 		if name := typ.Name(); name != "" {
@@ -117,7 +125,7 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 			}, nil
 		}
 
-		return obj, nil
+		return scanSchemaTags(r, obj, tags)
 
 	default:
 		return nil, fmt.Errorf("cannot create schema for type: %s", kind.String())
