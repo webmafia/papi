@@ -1,4 +1,4 @@
-package fastapi
+package papi
 
 import jsoniter "github.com/json-iterator/go"
 

@@ -1,3 +1,3 @@
-package fastapi
+package papi
 
 type Skip struct{}

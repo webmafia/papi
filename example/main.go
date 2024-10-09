@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	fastapi "github.com/webbmaffian/papi"
+	"github.com/webbmaffian/papi"
 	"github.com/webbmaffian/papi/openapi"
 )
 
@@ -16,18 +16,18 @@ var (
 
 type userRoutes struct{}
 
-func (r userRoutes) GetUser(api *fastapi.API) (err error) {
+func (r userRoutes) GetUser(api *papi.API) (err error) {
 	type req struct {
 		Id int `param:"id"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[req, User]{
+	return papi.AddRoute(api, papi.Route[req, User]{
 		Method:  "GET",
 		Path:    "/users/{id}",
 		Summary: "Get user by ID",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *User) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
 			resp.Name = "helluuu"
 
@@ -36,20 +36,20 @@ func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 	})
 }
 
-func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
+func (r userRoutes) ListUsers(api *papi.API) (err error) {
 	type req struct {
 		Status string    `query:"status"`
 		Before time.Time `query:"before"`
 		Limit  int       `query:"limit" min:"0" max:"500"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[req, fastapi.List[User]]{
+	return papi.AddRoute(api, papi.Route[req, papi.List[User]]{
 		Method:  "GET",
 		Path:    "/users",
 		Summary: "List all users",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *fastapi.List[User]) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
 			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
 			resp.Meta.Total = 123
@@ -59,19 +59,19 @@ func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 	})
 }
 
-func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
+func (r userRoutes) CreateUser(api *papi.API) (err error) {
 	type req struct {
 		// Body io.Reader
 		Body User `body:"json"`
 	}
 
-	return fastapi.AddRoute(api, fastapi.Route[req, User]{
+	return papi.AddRoute(api, papi.Route[req, User]{
 		Method:  "POST",
 		Path:    "/users",
 		Summary: "Create user",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *User) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			// buf, err := io.ReadAll(req.Body)
 			// _ = buf
 			*resp = req.Body
@@ -82,18 +82,18 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 	})
 }
 
-// func (r userRoutes) UploadFile(api *fastapi.API[User]) (err error) {
+// func (r userRoutes) UploadFile(api *papi.API[User]) (err error) {
 // 	type req struct {
 // 		Body *multipart.Form // TODO: Also accept *multipart.File
 // 	}
 
-// 	return fastapi.AddRoute(api, fastapi.Route[User, req, User]{
+// 	return papi.AddRoute(api, papi.Route[User, req, User]{
 // 		Method:  "POST",
 // 		Path:    "/files",
 // 		Summary: "Upload file",
 // 		Tags:    []*spec.Tag{Files},
 
-// 		Handler: func(ctx *fastapi.Ctx[User], req *req, resp *User) (err error) {
+// 		Handler: func(ctx *papi.Ctx[User], req *req, resp *User) (err error) {
 // 			f := req.Body.File
 // 			fmt.Printf("%#v\n", f)
 
@@ -103,7 +103,7 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 // }
 
 func main() {
-	api, err := fastapi.NewAPI(fastapi.Options{
+	api, err := papi.NewAPI(papi.Options{
 		OpenAPI: openapi.NewDocument(),
 		// OpenAPI: spec.OpenAPI{
 		// 	Info: spec.Info{
@@ -140,7 +140,7 @@ func main() {
 	}
 }
 
-func dumpSpecToFile(api *fastapi.API) (err error) {
+func dumpSpecToFile(api *papi.API) (err error) {
 	log.Println("Dumping OpenAPI spec to file...")
 	f, err := os.Create("openapi.json")
 

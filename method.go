@@ -1,4 +1,4 @@
-package fastapi
+package papi
 
 type Method string
 
