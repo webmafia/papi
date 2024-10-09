@@ -1,7 +1,6 @@
 package fastapi
 
 import (
-	"github.com/valyala/fasthttp"
 	"github.com/webbmaffian/papi/openapi"
 )
 
@@ -11,5 +10,5 @@ type Route[I any, O any] struct {
 	Summary     string
 	Description string
 	Tags        []*openapi.Tag
-	Handler     func(c *fasthttp.RequestCtx, in *I, out *O) error
+	Handler     func(c *RequestCtx, in *I, out *O) error
 }

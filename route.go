@@ -66,7 +66,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 				enc.setStream(s)
 
-				if err = r.Handler(c, &in, &out); err != nil {
+				if err = r.Handler(fasthttpToPapi(c), &in, &out); err != nil {
 					return
 				}
 
@@ -78,7 +78,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 				s.WriteObjectEnd()
 			} else {
-				if err = r.Handler(c, &in, &out); err != nil {
+				if err = r.Handler(fasthttpToPapi(c), &in, &out); err != nil {
 					return
 				}
 

@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/valyala/fasthttp"
 	fastapi "github.com/webbmaffian/papi"
 	"github.com/webbmaffian/papi/openapi"
 )
@@ -28,7 +27,7 @@ func (r userRoutes) GetUser(api *fastapi.API) (err error) {
 		Summary: "Get user by ID",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *User) (err error) {
+		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
 			resp.Name = "helluuu"
 
@@ -50,7 +49,7 @@ func (r userRoutes) ListUsers(api *fastapi.API) (err error) {
 		Summary: "List all users",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *fastapi.List[User]) (err error) {
+		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *fastapi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
 			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
 			resp.Meta.Total = 123
@@ -72,7 +71,7 @@ func (r userRoutes) CreateUser(api *fastapi.API) (err error) {
 		Summary: "Create user",
 		Tags:    []*openapi.Tag{Users},
 
-		Handler: func(ctx *fasthttp.RequestCtx, req *req, resp *User) (err error) {
+		Handler: func(ctx *fastapi.RequestCtx, req *req, resp *User) (err error) {
 			// buf, err := io.ReadAll(req.Body)
 			// _ = buf
 			*resp = req.Body
