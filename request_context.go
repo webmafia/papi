@@ -1,4 +1,4 @@
-package fastapi
+package papi
 
 import "github.com/valyala/fasthttp"
 
