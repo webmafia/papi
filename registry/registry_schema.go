@@ -3,6 +3,7 @@ package registry
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -42,14 +43,72 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 	case reflect.Bool:
 		return scanSchemaTags(r, &openapi.Boolean{}, tags)
 
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return scanSchemaTags(r, &openapi.Integer{}, tags)
+	case reflect.Int:
+		return scanSchemaTags(r, &openapi.Integer[int]{
+			Min: math.MinInt,
+			Max: math.MaxInt,
+		}, tags)
 
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return scanSchemaTags(r, &openapi.Integer{}, tags)
+	case reflect.Int8:
+		return scanSchemaTags(r, &openapi.Integer[int8]{
+			Min: math.MinInt8,
+			Max: math.MaxInt8,
+		}, tags)
 
-	case reflect.Float32, reflect.Float64:
-		return scanSchemaTags(r, &openapi.Number{}, tags)
+	case reflect.Int16:
+		return scanSchemaTags(r, &openapi.Integer[int16]{
+			Min: math.MinInt16,
+			Max: math.MaxInt16,
+		}, tags)
+
+	case reflect.Int32:
+		return scanSchemaTags(r, &openapi.Integer[int32]{
+			Min: math.MinInt32,
+			Max: math.MaxInt32,
+		}, tags)
+
+	case reflect.Int64:
+		return scanSchemaTags(r, &openapi.Integer[int64]{
+			Min: math.MinInt64,
+			Max: math.MaxInt64,
+		}, tags)
+
+	case reflect.Uint:
+		return scanSchemaTags(r, &openapi.Integer[uint]{
+			Max: math.MaxUint,
+		}, tags)
+
+	case reflect.Uint8:
+		return scanSchemaTags(r, &openapi.Integer[uint8]{
+			Max: math.MaxUint8,
+		}, tags)
+
+	case reflect.Uint16:
+		return scanSchemaTags(r, &openapi.Integer[uint16]{
+			Max: math.MaxUint16,
+		}, tags)
+
+	case reflect.Uint32:
+		return scanSchemaTags(r, &openapi.Integer[uint32]{
+			Max: math.MaxUint32,
+		}, tags)
+
+	case reflect.Uint64:
+		return scanSchemaTags(r, &openapi.Integer[uint64]{
+			Max: math.MaxUint64,
+		}, tags)
+
+	case reflect.Float32:
+		return scanSchemaTags(r, &openapi.Number[float32]{
+			Min: -math.MaxFloat32,
+			Max: math.MaxFloat32,
+		}, tags)
+
+	case reflect.Float64:
+		return scanSchemaTags(r, &openapi.Number[float64]{
+			Min: -math.MaxFloat64,
+			Max: math.MaxFloat64,
+		}, tags)
 
 	case reflect.Array:
 		itemType, err := r.Schema(typ.Elem(), tags)

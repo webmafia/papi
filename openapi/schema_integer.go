@@ -4,22 +4,23 @@ import (
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/webbmaffian/papi/internal/constraints"
 	"github.com/webbmaffian/papi/internal/hasher"
 )
 
-var _ Schema = (*Integer)(nil)
+var _ Schema = (*Integer[int])(nil)
 
-type Integer struct {
+type Integer[T constraints.Integer] struct {
 	Title       string `tag:"title"`
 	Description string `tag:"description"`
-	Min         int    `tag:"min"`
-	Max         int    `tag:"max"`
+	Min         T      `tag:"min"`
+	Max         T      `tag:"max"`
 	Nullable    bool   `tag:"flags:nullable"`
 	ReadOnly    bool   `tag:"flags:readonly"`
 	WriteOnly   bool   `tag:"flags:writeonly"`
 }
 
-func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
+func (sch *Integer[T]) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error
 	}
@@ -59,17 +60,13 @@ func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err e
 		s.WriteBool(sch.WriteOnly)
 	}
 
-	if sch.Min >= 0 {
-		s.WriteMore()
-		s.WriteObjectField("minimum")
-		s.WriteInt(sch.Min)
-	}
+	s.WriteMore()
+	s.WriteObjectField("minimum")
+	s.WriteVal(sch.Min)
 
-	if sch.Max > 0 {
-		s.WriteMore()
-		s.WriteObjectField("maximum")
-		s.WriteInt(sch.Max)
-	}
+	s.WriteMore()
+	s.WriteObjectField("maximum")
+	s.WriteVal(sch.Max)
 
 	s.WriteObjectEnd()
 
@@ -80,6 +77,6 @@ func (sch *Integer) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err e
 	return
 }
 
-func (sch *Integer) Hash() uint64 {
+func (sch *Integer[T]) Hash() uint64 {
 	return hasher.Hash(sch)
 }

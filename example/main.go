@@ -38,9 +38,10 @@ func (r userRoutes) GetUser(api *papi.API) (err error) {
 
 func (r userRoutes) ListUsers(api *papi.API) (err error) {
 	type req struct {
-		Status string    `query:"status"`
-		Before time.Time `query:"before"`
-		Limit  int       `query:"limit" min:"0" max:"500"`
+		Status  string    `query:"status"`
+		Before  time.Time `query:"before"`
+		Limit   int       `query:"limit" min:"0" max:"500"`
+		Decimal float64   `query:"decimal"`
 	}
 
 	return papi.AddRoute(api, papi.Route[req, papi.List[User]]{
