@@ -8,7 +8,7 @@ import (
 func Example_iterateStructTags() {
 	tags := reflect.StructTag(`json:"foo" db:"bar" number:"123"`)
 
-	for k, v := range iterateStructTags(tags) {
+	for k, v := range IterateStructTags(tags) {
 		fmt.Println(k, "is set to:", v)
 	}
 

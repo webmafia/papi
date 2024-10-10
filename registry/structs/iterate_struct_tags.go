@@ -4,7 +4,7 @@ import (
 	"iter"
 )
 
-func iterateStructTags[T ~string](tag T) iter.Seq2[string, string] {
+func IterateStructTags[T ~string](tag T) iter.Seq2[string, string] {
 	return func(yield func(string, string) bool) {
 		for tag != "" {
 			// Skip leading space.

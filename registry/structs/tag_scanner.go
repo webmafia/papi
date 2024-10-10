@@ -34,7 +34,7 @@ func CreateTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type
 	for i := range numFields {
 		fld := typ.Field(i)
 
-		for k, v := range iterateStructTags(fld.Tag) {
+		for k, v := range IterateStructTags(fld.Tag) {
 			if k != "tag" {
 				continue
 			}
@@ -61,7 +61,7 @@ func CreateTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type
 	}
 
 	return func(dst unsafe.Pointer, src string) (err error) {
-		for k, v := range iterateStructTags(src) {
+		for k, v := range IterateStructTags(src) {
 			if k == "flags" {
 				for flag := range iterateFlags(v) {
 					idx := slices.Index(flags, flag)
