@@ -8,7 +8,7 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendMinValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+func createMinValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
@@ -51,7 +51,7 @@ func appendMinValidators(offset uintptr, typ reflect.Type, field string, s strin
 		return validSliceMin(offset, field, s)
 
 	case reflect.Pointer:
-		return validPointer(offset, typ, field, s, appendMinValidators)
+		return validPointer(offset, typ, field, s, createMinValidator)
 
 	case reflect.String:
 		return validStringMin(offset, field, s)

@@ -64,8 +64,27 @@ func createZeroChecker(t reflect.Type) (func(ptr unsafe.Pointer) bool, error) {
 			return *(*unsafe.Pointer)(ptr) == nil
 		}, nil
 	case reflect.Slice:
+		elemType := t.Elem()
+		isZeroElem, err := createZeroChecker(elemType)
+		if err != nil {
+			return nil, err
+		}
+
 		return func(ptr unsafe.Pointer) bool {
-			return sliceLen(ptr) == 0
+			length := sliceLen(ptr)
+			if length == 0 {
+				return true // A zero-length slice is considered zero
+			}
+
+			// Check if all elements in the slice are zero
+			dataPtr, _ := sliceDataAndLen(ptr)
+			for i := 0; i < length; i++ {
+				elemPtr := unsafe.Add(dataPtr, uintptr(i)*elemType.Size())
+				if !isZeroElem(elemPtr) {
+					return false
+				}
+			}
+			return true
 		}, nil
 	case reflect.Array:
 		arrayLen := uintptr(t.Len())
@@ -86,7 +105,27 @@ func createZeroChecker(t reflect.Type) (func(ptr unsafe.Pointer) bool, error) {
 			}
 			return true
 		}, nil
+	case reflect.Struct:
+		// Handle struct fields
+		return func(ptr unsafe.Pointer) bool {
+			for i := 0; i < t.NumField(); i++ {
+				field := t.Field(i)
+				fieldType := field.Type
+				fieldOffset := field.Offset
+				checkField, err := createZeroChecker(fieldType)
+
+				if err != nil {
+					return false // if any field cannot be checked, assume it's not zero
+				}
+
+				fieldPtr := unsafe.Add(ptr, fieldOffset)
+				if !checkField(fieldPtr) {
+					return false
+				}
+			}
+			return true
+		}, nil
 	default:
-		return nil, notImplemented("required", kind)
+		return nil, notImplemented("zero-checker", kind)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"unsafe"
 )
 
-func appendRequiredValidators(offset uintptr, typ reflect.Type, field string) (validator, error) {
+func createRequiredValidator(offset uintptr, typ reflect.Type, field string) (validator, error) {
 	isZero, err := createZeroChecker(typ)
 
 	if err != nil {

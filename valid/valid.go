@@ -69,28 +69,28 @@ func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr,
 		switch k {
 
 		case "min":
-			if valid, err = appendMinValidators(offset, typ, field, v); err != nil {
+			if valid, err = createMinValidator(offset, typ, field, v); err != nil {
 				return
 			}
 
 			valids.append(valid)
 
 		case "max":
-			if valid, err = appendMaxValidators(offset, typ, field, v); err != nil {
+			if valid, err = createMaxValidator(offset, typ, field, v); err != nil {
 				return
 			}
 
 			valids.append(valid)
 
 		case "enum":
-			if valid, err = appendEnumValidators(offset, typ, field, v); err != nil {
+			if valid, err = createEnumValidator(offset, typ, field, v); err != nil {
 				return
 			}
 
 			valids.append(valid)
 
 		case "pattern":
-			if valid, err = appendPatternValidators(offset, typ, field, v); err != nil {
+			if valid, err = createPatternValidator(offset, typ, field, v); err != nil {
 				return
 			}
 
@@ -100,7 +100,7 @@ func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr,
 
 		case "flags":
 			if structs.HasFlag(v, "required") {
-				if valid, err = appendRequiredValidators(offset, typ, field); err != nil {
+				if valid, err = createRequiredValidator(offset, typ, field); err != nil {
 					return
 				}
 

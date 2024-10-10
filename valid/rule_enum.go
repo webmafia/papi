@@ -8,7 +8,7 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendEnumValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+func createEnumValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
@@ -48,13 +48,13 @@ func appendEnumValidators(offset uintptr, typ reflect.Type, field string, s stri
 		return validComparableEnum[float64](offset, field, s)
 
 	case reflect.Array:
-		return validArray(offset, typ, field, s, appendEnumValidators)
+		return validArray(offset, typ, field, s, createEnumValidator)
 
 	case reflect.Slice:
-		return validSlice(offset, typ, field, s, appendEnumValidators)
+		return validSlice(offset, typ, field, s, createEnumValidator)
 
 	case reflect.Pointer:
-		return validPointer(offset, typ, field, s, appendEnumValidators)
+		return validPointer(offset, typ, field, s, createEnumValidator)
 
 	case reflect.String:
 		return validComparableEnum[string](offset, field, s)

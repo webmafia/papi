@@ -6,17 +6,17 @@ import (
 	"unsafe"
 )
 
-func appendPatternValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+func createPatternValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Array:
-		return validArray(offset, typ, field, s, appendPatternValidators)
+		return validArray(offset, typ, field, s, createPatternValidator)
 
 	case reflect.Slice:
-		return validSlice(offset, typ, field, s, appendPatternValidators)
+		return validSlice(offset, typ, field, s, createPatternValidator)
 
 	case reflect.Pointer:
-		return validPointer(offset, typ, field, s, appendPatternValidators)
+		return validPointer(offset, typ, field, s, createPatternValidator)
 
 	case reflect.String:
 		return validStringPattern(offset, field, s)

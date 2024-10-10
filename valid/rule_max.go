@@ -8,7 +8,7 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendMaxValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+func createMaxValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
@@ -51,7 +51,7 @@ func appendMaxValidators(offset uintptr, typ reflect.Type, field string, s strin
 		return validSliceMax(offset, field, s)
 
 	case reflect.Pointer:
-		return validPointer(offset, typ, field, s, appendMaxValidators)
+		return validPointer(offset, typ, field, s, createMaxValidator)
 
 	case reflect.String:
 		return validStringMax(offset, field, s)
