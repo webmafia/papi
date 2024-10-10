@@ -1,6 +1,7 @@
 package papi
 
 import (
+	"log"
 	"reflect"
 	"unsafe"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/route"
+	"github.com/webbmaffian/papi/valid"
 )
 
 func (api *API) RegisterRoutes(types ...any) (err error) {
@@ -36,6 +38,12 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 		return
 	}
 
+	validate, err := valid.CreateStructValidator[I]()
+
+	if err != nil {
+		return
+	}
+
 	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
 		cb, err := api.reg.CreateRequestScanner(internal.ReflectType[I](), "", route.Params, true)
 
@@ -57,6 +65,13 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 
 			if err = cb(unsafe.Pointer(&in), c); err != nil {
 				return
+			}
+
+			// TODO: Reuse errors from pool, and return any errors to client
+			var errs valid.FieldErrors
+			validate(&in, &errs)
+			if errs.HasError() {
+				log.Println(errs)
 			}
 
 			if enc, ok := outAny.(Lister); ok {

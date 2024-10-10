@@ -5,23 +5,18 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/registry/structs"
 )
 
-type validators []validator
+func CreateStructValidator[T any]() (Validator[T], error) {
+	valid, err := createStructValidator(internal.ReflectType[T]())
 
-func (valids *validators) append(valid validator) {
-	*valids = append(*valids, valid)
-}
+	if err != nil {
+		return nil, err
+	}
 
-func (valids *validators) compile() (valid validator, err error) {
-	*valids = compactSlice(*valids)
-
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
-		for _, valid := range *valids {
-			valid(ptr, errs)
-		}
-	}, nil
+	return *(*Validator[T])(unsafe.Pointer(&valid)), nil
 }
 
 func createStructValidator(typ reflect.Type) (valid validator, err error) {
