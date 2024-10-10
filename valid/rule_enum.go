@@ -48,23 +48,13 @@ func appendEnumValidators(offset uintptr, typ reflect.Type, field string, s stri
 		return validComparableEnum[float64](offset, field, s)
 
 	case reflect.Array:
-		elem := typ.Elem()
-		valid, err := appendEnumValidators(offset, elem, field, s)
+		return validArray(offset, typ, field, s, appendEnumValidators)
 
-		if err != nil {
-			return nil, err
-		}
+	case reflect.Slice:
+		return validSlice(offset, typ, field, s, appendEnumValidators)
 
-		l := typ.Len()
-		size := elem.Size()
-
-		return func(ptr unsafe.Pointer, errs *FieldErrors) {
-			for i := range l {
-				valid(unsafe.Add(ptr, uintptr(i)*size), errs)
-			}
-		}, nil
-
-	// case reflect.Slice:
+	case reflect.Pointer:
+		return validPointer(offset, typ, field, s, appendEnumValidators)
 
 	case reflect.String:
 		return validComparableEnum[string](offset, field, s)

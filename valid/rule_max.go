@@ -50,6 +50,9 @@ func appendMaxValidators(offset uintptr, typ reflect.Type, field string, s strin
 	case reflect.Slice:
 		return validSliceMax(offset, field, s)
 
+	case reflect.Pointer:
+		return validPointer(offset, typ, field, s, appendMaxValidators)
+
 	case reflect.String:
 		return validStringMax(offset, field, s)
 

@@ -1,10 +1,12 @@
 package valid
 
 import (
+	"reflect"
 	"unsafe"
 )
 
 type validator func(ptr unsafe.Pointer, errs *FieldErrors)
+type validatorCreator func(offset uintptr, typ reflect.Type, field string, s string) (validator, error)
 
 // func validNumMax[T constraints.Number](s string) (validator, error) {
 // 	var max T

@@ -50,6 +50,9 @@ func appendMinValidators(offset uintptr, typ reflect.Type, field string, s strin
 	case reflect.Slice:
 		return validSliceMin(offset, field, s)
 
+	case reflect.Pointer:
+		return validPointer(offset, typ, field, s, appendMinValidators)
+
 	case reflect.String:
 		return validStringMin(offset, field, s)
 

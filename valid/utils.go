@@ -21,10 +21,64 @@ func sliceLen(ptr unsafe.Pointer) int {
 	return (*sliceHeader)(ptr).len
 }
 
+func sliceDataAndLen(ptr unsafe.Pointer) (unsafe.Pointer, int) {
+	return (*sliceHeader)(ptr).data, (*sliceHeader)(ptr).len
+}
+
 func stringLen(ptr unsafe.Pointer) int {
 	return (*stringHeader)(ptr).len
 }
 
 func notImplemented(validation string, kind reflect.Kind) error {
 	return fmt.Errorf("'%s' validation of %s is not implemented", validation, kind)
+}
+
+func validArray(offset uintptr, typ reflect.Type, field string, s string, create validatorCreator) (validator, error) {
+	elem := typ.Elem()
+	valid, err := create(offset, elem, field, s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	l := typ.Len()
+	size := elem.Size()
+
+	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+		for i := range l {
+			valid(unsafe.Add(ptr, uintptr(i)*size), errs)
+		}
+	}, nil
+}
+
+func validSlice(offset uintptr, typ reflect.Type, field string, s string, create validatorCreator) (validator, error) {
+	elem := typ.Elem()
+	valid, err := create(0, elem, field, s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	size := elem.Size()
+
+	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+		data, l := sliceDataAndLen(unsafe.Add(ptr, offset))
+
+		for i := range l {
+			valid(unsafe.Add(data, uintptr(i)*size), errs)
+		}
+	}, nil
+}
+
+func validPointer(offset uintptr, typ reflect.Type, field string, s string, create validatorCreator) (validator, error) {
+	elem := typ.Elem()
+	valid, err := create(0, elem, field, s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+		valid(*(*unsafe.Pointer)(unsafe.Add(ptr, offset)), errs)
+	}, nil
 }

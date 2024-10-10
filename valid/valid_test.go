@@ -11,7 +11,13 @@ import (
 func Example() {
 	type foo struct {
 		A uint16    `min:"123" flags:"required"`
-		B [4]uint64 `enum:"1,2,3"`
+		B *[]uint64 `enum:"1,2,3"`
+		C struct {
+			Foo   string `enum:"foo"`
+			Bar   string `enum:"bar"`
+			Baz   [4]int `enum:"7,8,9" flags:"required"`
+			Bazzo []int  `enum:"7,8,9" flags:"required"`
+		}
 	}
 
 	valid, err := createStructValidator(internal.ReflectType[foo]())
@@ -22,8 +28,11 @@ func Example() {
 
 	f := foo{
 		A: 122,
-		B: [4]uint64{1, 2, 2},
+		B: &[]uint64{1, 2, 3, 4},
 	}
+	f.C.Foo = "baz"
+	f.C.Bar = "baz"
+	// f.C.Baz = [4]int{1}
 
 	var errs FieldErrors
 
