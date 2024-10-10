@@ -1,6 +1,10 @@
 package valid
 
-import "unsafe"
+import (
+	"fmt"
+	"reflect"
+	"unsafe"
+)
 
 type sliceHeader struct {
 	data unsafe.Pointer
@@ -19,4 +23,8 @@ func sliceLen(ptr unsafe.Pointer) int {
 
 func stringLen(ptr unsafe.Pointer) int {
 	return (*stringHeader)(ptr).len
+}
+
+func notImplemented(validation string, kind reflect.Kind) error {
+	return fmt.Errorf("'%s' validation of %s is not implemented", validation, kind)
 }

@@ -8,53 +8,54 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendMaxValidators(valids *validators, offset uintptr, fld *reflect.StructField, s string) (err error) {
-	switch kind := fld.Type.Kind(); kind {
+func appendMaxValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
-		return valids.append(validNumMax[int](offset, fld.Name, s))
+		return validNumMax[int](offset, field, s)
 
 	case reflect.Int8:
-		return valids.append(validNumMax[int8](offset, fld.Name, s))
+		return validNumMax[int8](offset, field, s)
 
 	case reflect.Int16:
-		return valids.append(validNumMax[int16](offset, fld.Name, s))
+		return validNumMax[int16](offset, field, s)
 
 	case reflect.Int32:
-		return valids.append(validNumMax[int32](offset, fld.Name, s))
+		return validNumMax[int32](offset, field, s)
 
 	case reflect.Int64:
-		return valids.append(validNumMax[int64](offset, fld.Name, s))
+		return validNumMax[int64](offset, field, s)
 
 	case reflect.Uint:
-		return valids.append(validNumMax[uint](offset, fld.Name, s))
+		return validNumMax[uint](offset, field, s)
 
 	case reflect.Uint8:
-		return valids.append(validNumMax[uint8](offset, fld.Name, s))
+		return validNumMax[uint8](offset, field, s)
 
 	case reflect.Uint16:
-		return valids.append(validNumMax[uint16](offset, fld.Name, s))
+		return validNumMax[uint16](offset, field, s)
 
 	case reflect.Uint32:
-		return valids.append(validNumMax[uint32](offset, fld.Name, s))
+		return validNumMax[uint32](offset, field, s)
 
 	case reflect.Uint64:
-		return valids.append(validNumMax[uint64](offset, fld.Name, s))
+		return validNumMax[uint64](offset, field, s)
 
 	case reflect.Float32:
-		return valids.append(validNumMax[float32](offset, fld.Name, s))
+		return validNumMax[float32](offset, field, s)
 
 	case reflect.Float64:
-		return valids.append(validNumMax[float64](offset, fld.Name, s))
+		return validNumMax[float64](offset, field, s)
 
 	case reflect.Slice:
-		return valids.append(validSliceMax(offset, fld.Name, s))
+		return validSliceMax(offset, field, s)
 
 	case reflect.String:
-		return valids.append(validStringMax(offset, fld.Name, s))
-	}
+		return validStringMax(offset, field, s)
 
-	return
+	default:
+		return nil, notImplemented("max", kind)
+	}
 }
 
 func validNumMax[T constraints.Number](offset uintptr, field string, s string) (validator, error) {

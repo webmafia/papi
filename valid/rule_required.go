@@ -5,53 +5,54 @@ import (
 	"unsafe"
 )
 
-func appendRequiredValidators(valids *validators, offset uintptr, fld *reflect.StructField) (err error) {
-	switch kind := fld.Type.Kind(); kind {
+func appendRequiredValidators(offset uintptr, typ reflect.Type, field string) (validator, error) {
+	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
-		return valids.append(validComparableRequired[int](offset, fld.Name))
+		return validComparableRequired[int](offset, field)
 
 	case reflect.Int8:
-		return valids.append(validComparableRequired[int8](offset, fld.Name))
+		return validComparableRequired[int8](offset, field)
 
 	case reflect.Int16:
-		return valids.append(validComparableRequired[int16](offset, fld.Name))
+		return validComparableRequired[int16](offset, field)
 
 	case reflect.Int32:
-		return valids.append(validComparableRequired[int32](offset, fld.Name))
+		return validComparableRequired[int32](offset, field)
 
 	case reflect.Int64:
-		return valids.append(validComparableRequired[int64](offset, fld.Name))
+		return validComparableRequired[int64](offset, field)
 
 	case reflect.Uint:
-		return valids.append(validComparableRequired[uint](offset, fld.Name))
+		return validComparableRequired[uint](offset, field)
 
 	case reflect.Uint8:
-		return valids.append(validComparableRequired[uint8](offset, fld.Name))
+		return validComparableRequired[uint8](offset, field)
 
 	case reflect.Uint16:
-		return valids.append(validComparableRequired[uint16](offset, fld.Name))
+		return validComparableRequired[uint16](offset, field)
 
 	case reflect.Uint32:
-		return valids.append(validComparableRequired[uint32](offset, fld.Name))
+		return validComparableRequired[uint32](offset, field)
 
 	case reflect.Uint64:
-		return valids.append(validComparableRequired[uint64](offset, fld.Name))
+		return validComparableRequired[uint64](offset, field)
 
 	case reflect.Float32:
-		return valids.append(validComparableRequired[float32](offset, fld.Name))
+		return validComparableRequired[float32](offset, field)
 
 	case reflect.Float64:
-		return valids.append(validComparableRequired[float64](offset, fld.Name))
+		return validComparableRequired[float64](offset, field)
 
 	// case reflect.Array:
 	// case reflect.Slice:
 
 	case reflect.String:
-		return valids.append(validComparableRequired[string](offset, fld.Name))
-	}
+		return validComparableRequired[string](offset, field)
 
-	return
+	default:
+		return nil, notImplemented("required", kind)
+	}
 }
 
 func validComparableRequired[T comparable](offset uintptr, field string) (validator, error) {

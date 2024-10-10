@@ -8,26 +8,10 @@ import (
 	"github.com/webbmaffian/papi/registry/structs"
 )
 
-type String struct {
-	Enum      []string `tag:"enum"`
-	Format    string   `tag:"format"`
-	Pattern   string   `tag:"pattern"`
-	Min       int      `tag:"min"`
-	Max       int      `tag:"max"`
-	Nullable  bool     `tag:"flags:nullable"`
-	ReadOnly  bool     `tag:"flags:readonly"`
-	WriteOnly bool     `tag:"flags:writeonly"`
-	Required  bool     `tag:"flags:required"`
-}
-
 type validators []validator
 
-func (valids *validators) append(valid validator, err error) error {
-	if err == nil {
-		*valids = append(*valids, valid)
-	}
-
-	return err
+func (valids *validators) append(valid validator) {
+	*valids = append(*valids, valid)
 }
 
 func (valids *validators) compile() (valid validator, err error) {
@@ -64,43 +48,63 @@ func appendStructValidators(valids *validators, typ reflect.Type, offset uintptr
 			continue
 		}
 
-		if err = appendFieldValidators(valids, offset, &fld); err != nil {
+		if err = appendFieldValidators(valids, fld.Type, offset+fld.Offset, fld.Name, fld.Tag); err != nil {
 			return
+		}
+
+		if fld.Type.Kind() == reflect.Struct {
+			if err = appendStructValidators(valids, fld.Type, offset+fld.Offset); err != nil {
+				return
+			}
 		}
 	}
 
 	return
 }
 
-func appendFieldValidators(valids *validators, offset uintptr, fld *reflect.StructField) (err error) {
-	for k, v := range structs.IterateStructTags(fld.Tag) {
+func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr, field string, tag reflect.StructTag) (err error) {
+	for k, v := range structs.IterateStructTags(tag) {
+		var valid validator
+
 		switch k {
 
 		case "min":
-			if err = appendMinValidators(valids, offset, fld, v); err != nil {
+			if valid, err = appendMinValidators(offset, typ, field, v); err != nil {
 				return
 			}
+
+			valids.append(valid)
 
 		case "max":
-			if err = appendMaxValidators(valids, offset, fld, v); err != nil {
+			if valid, err = appendMaxValidators(offset, typ, field, v); err != nil {
 				return
 			}
+
+			valids.append(valid)
 
 		case "enum":
-			if err = appendEnumValidators(valids, offset, fld, v); err != nil {
+			if valid, err = appendEnumValidators(offset, typ, field, v); err != nil {
 				return
 			}
 
+			valids.append(valid)
+
 		case "pattern":
-			if err = appendPatternValidators(valids, offset, fld, v); err != nil {
+			if valid, err = appendPatternValidators(offset, typ, field, v); err != nil {
 				return
 			}
+
+			valids.append(valid)
+
+		// case "unique":
 
 		case "flags":
 			if structs.HasFlag(v, "required") {
-				if err = appendRequiredValidators(valids, offset, fld); err != nil {
+				if valid, err = appendRequiredValidators(offset, typ, field); err != nil {
 					return
 				}
+
+				valids.append(valid)
 			}
 		}
 	}

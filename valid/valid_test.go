@@ -10,24 +10,27 @@ import (
 
 func Example() {
 	type foo struct {
-		MyValue int `min:"123" flags:"required"`
+		A uint16    `min:"123" flags:"required"`
+		B [4]uint64 `enum:"1,2,3"`
 	}
 
 	valid, err := createStructValidator(internal.ReflectType[foo]())
 
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	f := foo{
-		MyValue: 122,
+		A: 122,
+		B: [4]uint64{1, 2, 2},
 	}
 
 	var errs FieldErrors
 
 	valid(unsafe.Pointer(&f), &errs)
 
-	fmt.Printf("%#v\n", errs)
+	// fmt.Printf("%#v\n", errs)
+	fmt.Println(errs)
 
 	// Output: TODO
 }

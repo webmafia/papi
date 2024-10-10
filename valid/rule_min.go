@@ -8,53 +8,54 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendMinValidators(valids *validators, offset uintptr, fld *reflect.StructField, s string) (err error) {
-	switch kind := fld.Type.Kind(); kind {
+func appendMinValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
-		return valids.append(validNumMin[int](offset, fld.Name, s))
+		return validNumMin[int](offset, field, s)
 
 	case reflect.Int8:
-		return valids.append(validNumMin[int8](offset, fld.Name, s))
+		return validNumMin[int8](offset, field, s)
 
 	case reflect.Int16:
-		return valids.append(validNumMin[int16](offset, fld.Name, s))
+		return validNumMin[int16](offset, field, s)
 
 	case reflect.Int32:
-		return valids.append(validNumMin[int32](offset, fld.Name, s))
+		return validNumMin[int32](offset, field, s)
 
 	case reflect.Int64:
-		return valids.append(validNumMin[int64](offset, fld.Name, s))
+		return validNumMin[int64](offset, field, s)
 
 	case reflect.Uint:
-		return valids.append(validNumMin[uint](offset, fld.Name, s))
+		return validNumMin[uint](offset, field, s)
 
 	case reflect.Uint8:
-		return valids.append(validNumMin[uint8](offset, fld.Name, s))
+		return validNumMin[uint8](offset, field, s)
 
 	case reflect.Uint16:
-		return valids.append(validNumMin[uint16](offset, fld.Name, s))
+		return validNumMin[uint16](offset, field, s)
 
 	case reflect.Uint32:
-		return valids.append(validNumMin[uint32](offset, fld.Name, s))
+		return validNumMin[uint32](offset, field, s)
 
 	case reflect.Uint64:
-		return valids.append(validNumMin[uint64](offset, fld.Name, s))
+		return validNumMin[uint64](offset, field, s)
 
 	case reflect.Float32:
-		return valids.append(validNumMin[float32](offset, fld.Name, s))
+		return validNumMin[float32](offset, field, s)
 
 	case reflect.Float64:
-		return valids.append(validNumMin[float64](offset, fld.Name, s))
+		return validNumMin[float64](offset, field, s)
 
 	case reflect.Slice:
-		return valids.append(validSliceMin(offset, fld.Name, s))
+		return validSliceMin(offset, field, s)
 
 	case reflect.String:
-		return valids.append(validStringMin(offset, fld.Name, s))
-	}
+		return validStringMin(offset, field, s)
 
-	return
+	default:
+		return nil, notImplemented("min", kind)
+	}
 }
 
 func validNumMin[T constraints.Number](offset uintptr, field string, s string) (validator, error) {

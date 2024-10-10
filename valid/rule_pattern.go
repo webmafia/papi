@@ -6,17 +6,18 @@ import (
 	"unsafe"
 )
 
-func appendPatternValidators(valids *validators, offset uintptr, fld *reflect.StructField, s string) (err error) {
-	switch kind := fld.Type.Kind(); kind {
+func appendPatternValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+	switch kind := typ.Kind(); kind {
 
 	// case reflect.Array:
 	// case reflect.Slice:
 
 	case reflect.String:
-		return valids.append(validStringPattern(offset, fld.Name, s))
-	}
+		return validStringPattern(offset, field, s)
 
-	return
+	default:
+		return nil, notImplemented("pattern", kind)
+	}
 }
 
 func validStringPattern(offset uintptr, field string, s string) (validator, error) {

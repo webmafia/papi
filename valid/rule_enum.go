@@ -8,53 +8,70 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func appendEnumValidators(valids *validators, offset uintptr, fld *reflect.StructField, s string) (err error) {
-	switch kind := fld.Type.Kind(); kind {
+func appendEnumValidators(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
+	switch kind := typ.Kind(); kind {
 
 	case reflect.Int:
-		return valids.append(validComparableEnum[int](offset, fld.Name, s))
+		return validComparableEnum[int](offset, field, s)
 
 	case reflect.Int8:
-		return valids.append(validComparableEnum[int8](offset, fld.Name, s))
+		return validComparableEnum[int8](offset, field, s)
 
 	case reflect.Int16:
-		return valids.append(validComparableEnum[int16](offset, fld.Name, s))
+		return validComparableEnum[int16](offset, field, s)
 
 	case reflect.Int32:
-		return valids.append(validComparableEnum[int32](offset, fld.Name, s))
+		return validComparableEnum[int32](offset, field, s)
 
 	case reflect.Int64:
-		return valids.append(validComparableEnum[int64](offset, fld.Name, s))
+		return validComparableEnum[int64](offset, field, s)
 
 	case reflect.Uint:
-		return valids.append(validComparableEnum[uint](offset, fld.Name, s))
+		return validComparableEnum[uint](offset, field, s)
 
 	case reflect.Uint8:
-		return valids.append(validComparableEnum[uint8](offset, fld.Name, s))
+		return validComparableEnum[uint8](offset, field, s)
 
 	case reflect.Uint16:
-		return valids.append(validComparableEnum[uint16](offset, fld.Name, s))
+		return validComparableEnum[uint16](offset, field, s)
 
 	case reflect.Uint32:
-		return valids.append(validComparableEnum[uint32](offset, fld.Name, s))
+		return validComparableEnum[uint32](offset, field, s)
 
 	case reflect.Uint64:
-		return valids.append(validComparableEnum[uint64](offset, fld.Name, s))
+		return validComparableEnum[uint64](offset, field, s)
 
 	case reflect.Float32:
-		return valids.append(validComparableEnum[float32](offset, fld.Name, s))
+		return validComparableEnum[float32](offset, field, s)
 
 	case reflect.Float64:
-		return valids.append(validComparableEnum[float64](offset, fld.Name, s))
+		return validComparableEnum[float64](offset, field, s)
 
-	// case reflect.Array:
+	case reflect.Array:
+		elem := typ.Elem()
+		valid, err := appendEnumValidators(offset, elem, field, s)
+
+		if err != nil {
+			return nil, err
+		}
+
+		l := typ.Len()
+		size := elem.Size()
+
+		return func(ptr unsafe.Pointer, errs *FieldErrors) {
+			for i := range l {
+				valid(unsafe.Add(ptr, uintptr(i)*size), errs)
+			}
+		}, nil
+
 	// case reflect.Slice:
 
 	case reflect.String:
-		return valids.append(validComparableEnum[string](offset, fld.Name, s))
-	}
+		return validComparableEnum[string](offset, field, s)
 
-	return
+	default:
+		return nil, notImplemented("enum", kind)
+	}
 }
 
 func validComparableEnum[T comparable](offset uintptr, field string, s string) (validator, error) {

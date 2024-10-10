@@ -1,6 +1,9 @@
 package valid
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 var (
 	ErrBelowMin       ValidationError = &validationError{code: "BELOW_MIN", msg: "Below minimum"}
@@ -70,9 +73,30 @@ func (f FieldErrors) HasError() bool {
 }
 
 func (f FieldErrors) Error() string {
-	if f.HasError() {
-		return f[0].Error()
+	return f.String()
+}
+
+func (f FieldErrors) String() string {
+	if !f.HasError() {
+		return "(no error)"
 	}
 
-	return ""
+	var b strings.Builder
+
+	for i := range f {
+		if i != 0 {
+			b.WriteString("\n")
+		}
+
+		b.WriteString(f[i].Field())
+		b.WriteString(" - ")
+		b.WriteString(f[i].Code())
+		b.WriteString(": ")
+		b.WriteString(f[i].Error())
+		b.WriteString(" (")
+		b.WriteString(f[i].Expect())
+		b.WriteString(")")
+	}
+
+	return b.String()
 }
