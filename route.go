@@ -199,5 +199,5 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 		return
 	}
 
-	return api.opt.OpenAPI.Paths.AddOperation(r.Path, op)
+	return api.opt.OpenAPI.AddOperation(r.Path, op)
 }

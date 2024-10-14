@@ -46,6 +46,10 @@ func NewAPI(opt ...Options) (api *API, err error) {
 
 	if len(opt) > 0 {
 		api.opt = opt[0]
+
+		if api.opt.OpenAPI.NumOperations() != 0 {
+			return nil, errors.New("there must not be any existing operations in OpenAPI documentation")
+		}
 	}
 
 	api.opt.setDefaults()

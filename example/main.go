@@ -98,22 +98,20 @@ func (r userRoutes) CreateUser(api *papi.API) (err error) {
 // }
 
 func main() {
+	host := "localhost:3001"
 	api, err := papi.NewAPI(papi.Options{
-		OpenAPI: openapi.NewDocument(),
-		// OpenAPI: spec.OpenAPI{
-		// 	Info: spec.Info{
-		// 		Title: "Demo API",
-		// 		License: spec.License{
-		// 			Name: "MIT",
-		// 		},
-		// 	},
-		// 	Servers: []spec.Server{
-		// 		{
-		// 			Description: "Local",
-		// 			Url:         "http://localhost:3001",
-		// 		},
-		// 	},
-		// },
+		OpenAPI: openapi.NewDocument(
+			openapi.Info{
+				Title: "Demo API",
+				License: openapi.License{
+					Name: "MIT",
+				},
+			},
+			openapi.Server{
+				Description: "Local",
+				Url:         "http://" + host,
+			},
+		),
 	})
 
 	if err != nil {
@@ -128,9 +126,9 @@ func main() {
 		panic(err)
 	}
 
-	log.Println("Listening...")
+	log.Println("Listening at", host, "...")
 
-	if err := api.ListenAndServe("127.0.0.1:3001"); err != nil {
+	if err := api.ListenAndServe(host); err != nil {
 		panic(err)
 	}
 }

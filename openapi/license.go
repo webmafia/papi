@@ -3,8 +3,9 @@ package openapi
 import jsoniter "github.com/json-iterator/go"
 
 type License struct {
-	Name string
-	Url  string
+	Name       string
+	Identifier string
+	Url        string
 }
 
 func (l *License) JsonEncode(_ *encoderContext, s *jsoniter.Stream) {
@@ -13,9 +14,15 @@ func (l *License) JsonEncode(_ *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectField("name")
 	s.WriteString(l.Name)
 
-	s.WriteMore()
-	s.WriteObjectField("url")
-	s.WriteString(l.Url)
+	if l.Url != "" {
+		s.WriteMore()
+		s.WriteObjectField("url")
+		s.WriteString(l.Url)
+	} else if l.Identifier != "" {
+		s.WriteMore()
+		s.WriteObjectField("identifier")
+		s.WriteString(l.Identifier)
+	}
 
 	s.WriteObjectEnd()
 }

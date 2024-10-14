@@ -7,13 +7,23 @@ const Version = "3.0.0"
 type Document struct {
 	Info    Info
 	Servers []Server
-	Paths   Paths
+	paths   Paths
 }
 
-func NewDocument() *Document {
+func NewDocument(info Info, servers ...Server) *Document {
 	return &Document{
-		Paths: make(Paths),
+		Info:    info,
+		Servers: servers,
+		paths:   make(Paths),
 	}
+}
+
+func (doc *Document) AddOperation(path string, op *Operation) (err error) {
+	return doc.paths.AddOperation(path, op)
+}
+
+func (doc *Document) NumOperations() int {
+	return len(doc.paths)
 }
 
 func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
@@ -50,7 +60,7 @@ func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
 
 	s.WriteMore()
 	s.WriteObjectField("paths")
-	doc.Paths.JsonEncode(ctx, s)
+	doc.paths.JsonEncode(ctx, s)
 
 	doc.encodeReferences(s, ctx)
 
