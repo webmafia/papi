@@ -81,4 +81,24 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 
 		s.WriteObjectEnd()
 	}
+
+	if len(ctx.tags) > 0 {
+		s.WriteMore()
+		s.WriteObjectField("tags")
+		s.WriteArrayStart()
+
+		var written bool
+
+		for tag := range ctx.tags {
+			if written {
+				s.WriteMore()
+			} else {
+				written = true
+			}
+
+			tag.JsonEncode(ctx, s)
+		}
+
+		s.WriteArrayEnd()
+	}
 }

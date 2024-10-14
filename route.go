@@ -33,10 +33,67 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 	return
 }
 
-func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
-	if err = addToDocs(api, r); err != nil {
+func GET[I, O any](api *API, r Route[I, O]) (err error) {
+	var route AdvancedRoute[I, O]
+
+	route.fromRoute(&r)
+	route.Method = "GET"
+
+	if err = addToDocs(api, &route); err != nil {
 		return
 	}
+
+	return addRoute(api, route)
+}
+
+func PUT[I, O any](api *API, r Route[I, O]) (err error) {
+	var route AdvancedRoute[I, O]
+
+	route.fromRoute(&r)
+	route.Method = "PUT"
+
+	if err = addToDocs(api, &route); err != nil {
+		return
+	}
+
+	return addRoute(api, route)
+}
+
+func POST[I, O any](api *API, r Route[I, O]) (err error) {
+	var route AdvancedRoute[I, O]
+
+	route.fromRoute(&r)
+	route.Method = "POST"
+
+	if err = addToDocs(api, &route); err != nil {
+		return
+	}
+
+	return addRoute(api, route)
+}
+
+func DELETE[I, O any](api *API, r Route[I, O]) (err error) {
+	var route AdvancedRoute[I, O]
+
+	route.fromRoute(&r)
+	route.Method = "DELETE"
+
+	if err = addToDocs(api, &route); err != nil {
+		return
+	}
+
+	return addRoute(api, route)
+}
+
+func AddRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
+	if err = addToDocs(api, &r); err != nil {
+		return
+	}
+
+	return addRoute(api, r)
+}
+
+func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 
 	validate, err := valid.CreateStructValidator[I]()
 
@@ -44,7 +101,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 		return
 	}
 
-	return api.router.Add(string(r.Method), r.Path, func(route *route.Route) (err error) {
+	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		cb, err := api.reg.CreateRequestScanner(internal.ReflectType[I](), "", route.Params, true)
 
 		if err != nil {
@@ -113,7 +170,7 @@ func AddRoute[I, O any](api *API, r Route[I, O]) (err error) {
 	})
 }
 
-func addToDocs[I, O any](api *API, r Route[I, O]) (err error) {
+func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 	if api.opt.OpenAPI == nil {
 		return
 	}
@@ -122,10 +179,20 @@ func addToDocs[I, O any](api *API, r Route[I, O]) (err error) {
 	oTyp := internal.ReflectType[O]()
 
 	op := &openapi.Operation{
-		Method:      string(r.Method),
+		Id:          r.OperationId,
+		Method:      r.Method,
 		Summary:     r.Summary,
 		Description: r.Description,
 		Tags:        r.Tags,
+	}
+
+	if op.Id == "" {
+		title, id := internal.ParseName(internal.CallerName(2))
+		op.Id = id
+
+		if op.Summary == "" {
+			op.Summary = title
+		}
 	}
 
 	if err = api.reg.DescribeOperation(op, iTyp, oTyp); err != nil {

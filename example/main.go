@@ -16,16 +16,14 @@ var (
 
 type userRoutes struct{}
 
-func (r userRoutes) GetUser(api *papi.API) (err error) {
+func (r userRoutes) GetUserByID(api *papi.API) (err error) {
 	type req struct {
 		Id int `param:"id"`
 	}
 
-	return papi.AddRoute(api, papi.Route[req, User]{
-		Method:  "GET",
-		Path:    "/users/{id}",
-		Summary: "Get user by ID",
-		Tags:    []*openapi.Tag{Users},
+	return papi.GET(api, papi.Route[req, User]{
+		Path: "/users/{id}",
+		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
@@ -44,11 +42,9 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 		Decimal float64   `query:"decimal"`
 	}
 
-	return papi.AddRoute(api, papi.Route[req, papi.List[User]]{
-		Method:  "GET",
-		Path:    "/users",
-		Summary: "List all users",
-		Tags:    []*openapi.Tag{Users},
+	return papi.GET(api, papi.Route[req, papi.List[User]]{
+		Path: "/users",
+		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
@@ -66,11 +62,9 @@ func (r userRoutes) CreateUser(api *papi.API) (err error) {
 		Body User `body:"json"`
 	}
 
-	return papi.AddRoute(api, papi.Route[req, User]{
-		Method:  "POST",
-		Path:    "/users",
-		Summary: "Create user",
-		Tags:    []*openapi.Tag{Users},
+	return papi.POST(api, papi.Route[req, User]{
+		Path: "/users",
+		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			// buf, err := io.ReadAll(req.Body)

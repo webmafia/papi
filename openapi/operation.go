@@ -96,7 +96,12 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteObjectStart()
 
 		s.WriteObjectField("description")
-		s.WriteString("TODO")
+
+		if ref, ok := op.Response.(*Ref); ok {
+			s.WriteString(ref.Name)
+		} else {
+			s.WriteString("Response")
+		}
 
 		s.WriteMore()
 		s.WriteObjectField("content")
