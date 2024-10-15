@@ -9,8 +9,8 @@ import (
 	"github.com/webbmaffian/papi/route"
 )
 
-func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan types.RequestScanner, err error) {
-	sc, err := r.reg.CreateValueScanner(typ, "")
+func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan types.RequestDecoder, err error) {
+	sc, err := r.reg.CreateParamDecoder(typ, "")
 
 	if err != nil {
 		return

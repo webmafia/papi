@@ -20,7 +20,7 @@ type inputTags struct {
 }
 type fieldScanner struct {
 	offset uintptr
-	scan   types.RequestScanner
+	scan   types.RequestDecoder
 }
 
 type requestScanner struct {
@@ -29,7 +29,7 @@ type requestScanner struct {
 }
 
 // CreateScanner implements scanner.RequestScannerCreator.
-func (r *requestScanner) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan types.RequestScanner, err error) {
+func (r *requestScanner) CreateRequestDecoder(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan types.RequestDecoder, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -38,12 +38,12 @@ func (r *requestScanner) CreateRequestScanner(typ reflect.Type, tags reflect.Str
 	flds := make([]fieldScanner, 0, numFields)
 
 	for i := 0; i < numFields; i++ {
-		var sc types.RequestScanner
+		var sc types.RequestDecoder
 		var tags inputTags
 
 		fld := typ.Field(i)
 
-		if sc, err := r.reg.CreateRequestScanner(fld.Type, fld.Tag, paramKeys); err == nil {
+		if sc, err := r.reg.CreateRequestDecoder(fld.Type, fld.Tag, paramKeys); err == nil {
 			flds = append(flds, fieldScanner{
 				offset: fld.Offset,
 				scan:   sc,

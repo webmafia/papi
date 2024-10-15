@@ -16,13 +16,14 @@ type Type interface {
 type ParamType interface {
 	Type
 	ParamSchema(tags reflect.StructTag) (schema openapi.Schema)
-	CreateParamScanner(tags reflect.StructTag) (scan scanner.Scanner, err error)
+	CreateParamDecoder(tags reflect.StructTag) (scan ParamDecoder, err error)
 }
 
 type RequestType interface {
 	Type
-	CreateRequestScanner(tags reflect.StructTag, paramKeys []string) (scan RequestScanner, err error)
+	CreateRequestDecoder(tags reflect.StructTag, paramKeys []string) (scan RequestDecoder, err error)
 	DescribeOperation(op *openapi.Operation) (err error)
 }
 
-type RequestScanner func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
+type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
+type ParamDecoder = scanner.Scanner

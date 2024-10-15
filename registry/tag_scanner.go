@@ -13,7 +13,7 @@ func ScanTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (err error) 
 	scan, ok := reg.tag[typ]
 
 	if !ok {
-		if scan, err = structs.CreateTagScanner(typ, reg.CreateValueScanner); err != nil {
+		if scan, err = structs.CreateTagScanner(typ, reg.CreateParamDecoder); err != nil {
 			return
 		}
 

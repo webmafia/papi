@@ -7,10 +7,10 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/registry/types"
 )
 
-func CreateTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type, tags reflect.StructTag) (scan scanner.Scanner, err error)) (scan scanner.Scanner, err error) {
+func CreateTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type, tags reflect.StructTag) (scan types.ParamDecoder, err error)) (scan types.ParamDecoder, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -18,11 +18,11 @@ func CreateTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type
 	numFields := typ.NumField()
 
 	type field struct {
-		scan   scanner.Scanner
+		scan   types.ParamDecoder
 		offset uintptr
 	}
 
-	var fldScan scanner.Scanner
+	var fldScan types.ParamDecoder
 
 	tagScanners := make(map[string]field, numFields)
 

@@ -14,7 +14,7 @@ import (
 type Registry struct {
 	req map[reflect.Type]types.RequestType
 	typ map[reflect.Type]types.ParamType
-	tag map[reflect.Type]scanner.Scanner
+	tag map[reflect.Type]types.ParamDecoder
 	def *requestScanner
 	mu  sync.RWMutex
 }
@@ -23,7 +23,7 @@ func NewRegistry(json *json.Pool) (r *Registry, err error) {
 	r = &Registry{
 		req: make(map[reflect.Type]types.RequestType),
 		typ: make(map[reflect.Type]types.ParamType),
-		tag: make(map[reflect.Type]scanner.Scanner),
+		tag: make(map[reflect.Type]types.ParamDecoder),
 	}
 
 	r.def = &requestScanner{
@@ -38,16 +38,16 @@ func NewRegistry(json *json.Pool) (r *Registry, err error) {
 	return
 }
 
-func (s *Registry) CreateRequestScanner(typ reflect.Type, tags reflect.StructTag, paramKeys []string, fallback ...bool) (scan types.RequestScanner, err error) {
+func (s *Registry) CreateRequestDecoder(typ reflect.Type, tags reflect.StructTag, paramKeys []string, fallback ...bool) (scan types.RequestDecoder, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	if creator, ok := s.req[typ]; ok {
-		return creator.CreateRequestScanner(tags, paramKeys)
+		return creator.CreateRequestDecoder(tags, paramKeys)
 	}
 
 	if len(fallback) > 0 && fallback[0] && s.def != nil {
-		return s.def.CreateRequestScanner(typ, tags, paramKeys)
+		return s.def.CreateRequestDecoder(typ, tags, paramKeys)
 	}
 
 	return nil, errors.New("no scanner could be found nor created")
@@ -84,15 +84,15 @@ func (s *Registry) RegisterType(typs ...types.Type) (err error) {
 	return
 }
 
-func (s *Registry) CreateValueScanner(typ reflect.Type, tags reflect.StructTag) (scan scanner.Scanner, err error) {
+func (s *Registry) CreateParamDecoder(typ reflect.Type, tags reflect.StructTag) (scan types.ParamDecoder, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	var createScanner scanner.CreateValueScanner
 
-	createScanner = func(typ reflect.Type, createElemScanner scanner.CreateValueScanner) (scan scanner.Scanner, err error) {
+	createScanner = func(typ reflect.Type, createElemScanner scanner.CreateValueScanner) (scan types.ParamDecoder, err error) {
 		if creator, ok := s.typ[typ]; ok {
-			return creator.CreateParamScanner(tags)
+			return creator.CreateParamDecoder(tags)
 		}
 
 		return scanner.CreateCustomScanner(typ, createScanner)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/registry/types"
 )
 
 func ExampleCreateTagScanner() {
@@ -20,7 +21,7 @@ func ExampleCreateTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	scan, err := CreateTagScanner(internal.ReflectType[Foo](), func(typ reflect.Type, _ reflect.StructTag) (scan scanner.Scanner, err error) {
+	scan, err := CreateTagScanner(internal.ReflectType[Foo](), func(typ reflect.Type, _ reflect.StructTag) (scan types.ParamDecoder, err error) {
 		return scanner.CreateScanner(typ)
 	})
 

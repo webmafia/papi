@@ -9,8 +9,8 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan types.RequestScanner, err error) {
-	sc, err := r.reg.CreateValueScanner(typ, "")
+func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan types.RequestDecoder, err error) {
+	sc, err := r.reg.CreateParamDecoder(typ, "")
 
 	if err != nil {
 		return
