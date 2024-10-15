@@ -5,10 +5,9 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/registry/types"
 )
 
-func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan types.RequestDecoder, err error) {
+func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan RequestDecoder, err error) {
 	dec := r.json.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
 		iter := r.json.AcquireIterator(c.Request.BodyStream())

@@ -6,9 +6,10 @@ import (
 	"unsafe"
 
 	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry"
 )
 
-func TimeType() ParamType {
+func TimeType() registry.ParamType {
 	return timeType{}
 }
 
@@ -18,7 +19,7 @@ func (t timeType) Type() reflect.Type {
 	return reflect.TypeOf((*time.Time)(nil)).Elem()
 }
 
-func (t timeType) CreateParamDecoder(_ reflect.StructTag) (scan ParamDecoder, err error) {
+func (t timeType) CreateParamDecoder(_ reflect.StructTag) (scan registry.ParamDecoder, err error) {
 	return func(p unsafe.Pointer, s string) (err error) {
 		ptr := (*time.Time)(p)
 		parsed, err := time.Parse(time.RFC3339, s)

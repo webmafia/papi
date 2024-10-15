@@ -5,11 +5,10 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/registry/types"
 	"github.com/webmafia/fast"
 )
 
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan types.RequestDecoder, err error) {
+func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan RequestDecoder, err error) {
 	sc, err := r.reg.CreateParamDecoder(typ, "")
 
 	if err != nil {

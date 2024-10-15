@@ -1,4 +1,4 @@
-package types
+package registry
 
 import (
 	"reflect"
@@ -21,9 +21,11 @@ type ParamType interface {
 
 type RequestType interface {
 	Type
-	CreateRequestDecoder(tags reflect.StructTag, paramKeys []string) (scan RequestDecoder, err error)
+	CreateRequestDecoder(tags reflect.StructTag, paramKeys []string) (RequestDecoder, error)
+	CreateResponseEncoder(reg *Registry, tags reflect.StructTag, paramKeys []string, handler ResponseEncoder) (ResponseEncoder, error)
 	DescribeOperation(op *openapi.Operation) (err error)
 }
 
 type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
+type ResponseEncoder func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error
 type ParamDecoder = scanner.Scanner

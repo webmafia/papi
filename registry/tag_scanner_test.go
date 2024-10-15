@@ -1,4 +1,4 @@
-package structs
+package registry
 
 import (
 	"fmt"
@@ -7,10 +7,9 @@ import (
 
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/registry/scanner"
-	"github.com/webbmaffian/papi/registry/types"
 )
 
-func ExampleCreateTagScanner() {
+func Example_createTagScanner() {
 	type Foo struct {
 		A string  `tag:"a"`
 		B int     `tag:"b"`
@@ -21,7 +20,7 @@ func ExampleCreateTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	scan, err := CreateTagScanner(internal.ReflectType[Foo](), func(typ reflect.Type, _ reflect.StructTag) (scan types.ParamDecoder, err error) {
+	scan, err := createTagScanner(internal.ReflectType[Foo](), func(typ reflect.Type, _ reflect.StructTag) (scan ParamDecoder, err error) {
 		return scanner.CreateScanner(typ)
 	})
 
@@ -39,5 +38,5 @@ func ExampleCreateTagScanner() {
 
 	fmt.Printf("%#v\n", foo)
 
-	// Output: structs.Foo{A:"foobar", B:123, C:456.789, D:true, E:false, F:true, G:true}
+	// Output: internal.Foo{A:"foobar", B:123, C:456.789, D:true, E:false, F:true, G:true}
 }

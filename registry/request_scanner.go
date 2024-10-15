@@ -10,7 +10,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/pool/json"
-	"github.com/webbmaffian/papi/registry/types"
 )
 
 type inputTags struct {
@@ -20,7 +19,7 @@ type inputTags struct {
 }
 type fieldScanner struct {
 	offset uintptr
-	scan   types.RequestDecoder
+	scan   RequestDecoder
 }
 
 type requestScanner struct {
@@ -28,8 +27,7 @@ type requestScanner struct {
 	json *json.Pool
 }
 
-// CreateScanner implements scanner.RequestScannerCreator.
-func (r *requestScanner) CreateRequestDecoder(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan types.RequestDecoder, err error) {
+func (r *requestScanner) CreateRequestDecoder(typ reflect.Type, tags reflect.StructTag, paramKeys []string) (scan RequestDecoder, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -38,7 +36,7 @@ func (r *requestScanner) CreateRequestDecoder(typ reflect.Type, tags reflect.Str
 	flds := make([]fieldScanner, 0, numFields)
 
 	for i := 0; i < numFields; i++ {
-		var sc types.RequestDecoder
+		var sc RequestDecoder
 		var tags inputTags
 
 		fld := typ.Field(i)
@@ -103,6 +101,24 @@ func (r *requestScanner) CreateRequestDecoder(typ reflect.Type, tags reflect.Str
 		}
 
 		return
+	}, nil
+}
+
+func (r *requestScanner) CreateResponseEncoder(typ reflect.Type, tags reflect.StructTag, paramKeys []string, handler ResponseEncoder) (scan ResponseEncoder, err error) {
+	enc := r.json.EncoderOf(typ)
+
+	return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error {
+		if err := handler(c, in, out); err != nil {
+			return err
+		}
+
+		c.SetContentType("application/json")
+
+		s := r.json.AcquireStream(c.Response.BodyWriter())
+		defer r.json.ReleaseStream(s)
+
+		enc.Encode(out, s)
+		return s.Error
 	}, nil
 }
 

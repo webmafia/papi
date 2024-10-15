@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry/structs"
 )
 
 type ParamSchemer interface {
@@ -180,7 +180,7 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 			})
 
 			if flags, ok := fld.Tag.Lookup("flags"); ok {
-				if structs.HasFlag(flags, "required") {
+				if internal.HasFlag(flags, "required") {
 					obj.Required = append(obj.Required, name)
 				}
 			}

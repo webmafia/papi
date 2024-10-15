@@ -8,6 +8,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry"
 	"github.com/webbmaffian/papi/route"
 	"github.com/webbmaffian/papi/valid"
 )
@@ -94,7 +95,6 @@ func AddRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 }
 
 func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
-
 	validate, err := valid.CreateStructValidator[I]()
 
 	if err != nil {
@@ -102,7 +102,19 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	}
 
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
-		cb, err := api.reg.CreateRequestScanner(internal.ReflectType[I](), "", route.Params, true)
+		var (
+			decodeRequest  registry.RequestDecoder
+			encodeResponse registry.ResponseEncoder
+			handler        = *(*registry.ResponseEncoder)(unsafe.Pointer(&r.Handler))
+		)
+
+		if decodeRequest, err = api.reg.CreateRequestDecoder(internal.ReflectType[I](), "", route.Params, true); err != nil {
+			return
+		}
+
+		if encodeResponse, err = api.reg.CreateResponseEncoder(internal.ReflectType[O](), "", route.Params, handler, true); err != nil {
+			return
+		}
 
 		if err != nil {
 			return
@@ -115,12 +127,11 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			defer api.json.ReleaseStream(s)
 
 			var (
-				in     I
-				out    O
-				outAny any = &out
+				in  I
+				out O
 			)
 
-			if err = cb(unsafe.Pointer(&in), c); err != nil {
+			if err = decodeRequest(unsafe.Pointer(&in), c); err != nil {
 				return
 			}
 
@@ -131,37 +142,41 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				log.Println(errs)
 			}
 
-			if enc, ok := outAny.(Lister); ok {
-				s.WriteObjectStart()
-				s.WriteObjectField("items")
-				s.WriteArrayStart()
-
-				enc.setStream(s)
-
-				if err = r.Handler(c, &in, &out); err != nil {
-					return
-				}
-
-				s.WriteArrayEnd()
-				s.WriteMore()
-
-				s.WriteObjectField("meta")
-				enc.encodeMeta(s)
-
-				s.WriteObjectEnd()
-			} else {
-				if err = r.Handler(c, &in, &out); err != nil {
-					return
-				}
-
-				if enc, ok := outAny.(JsonEncoder); ok {
-					if err = enc.EncodeJson(s); err != nil {
-						return
-					}
-				} else {
-					s.WriteVal(out)
-				}
+			if err = encodeResponse(c, unsafe.Pointer(&in), unsafe.Pointer(&out)); err != nil {
+				return
 			}
+
+			// if enc, ok := outAny.(Lister); ok {
+			// 	s.WriteObjectStart()
+			// 	s.WriteObjectField("items")
+			// 	s.WriteArrayStart()
+
+			// 	enc.setStream(s)
+
+			// 	if err = r.Handler(c, &in, &out); err != nil {
+			// 		return
+			// 	}
+
+			// 	s.WriteArrayEnd()
+			// 	s.WriteMore()
+
+			// 	s.WriteObjectField("meta")
+			// 	enc.encodeMeta(s)
+
+			// 	s.WriteObjectEnd()
+			// } else {
+			// 	if err = r.Handler(c, &in, &out); err != nil {
+			// 		return
+			// 	}
+
+			// 	if enc, ok := outAny.(JsonEncoder); ok {
+			// 		if err = enc.EncodeJson(s); err != nil {
+			// 			return
+			// 		}
+			// 	} else {
+			// 		s.WriteVal(out)
+			// 	}
+			// }
 
 			return s.Flush()
 		}

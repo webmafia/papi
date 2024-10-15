@@ -6,7 +6,6 @@ import (
 	"unsafe"
 
 	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/registry/structs"
 )
 
 func CreateStructValidator[T any]() (Validator[T], error) {
@@ -58,7 +57,7 @@ func appendStructValidators(valids *validators, typ reflect.Type, offset uintptr
 }
 
 func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr, field string, tag reflect.StructTag) (err error) {
-	for k, v := range structs.IterateStructTags(tag) {
+	for k, v := range internal.IterateStructTags(tag) {
 		var valid validator
 
 		switch k {
@@ -94,7 +93,7 @@ func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr,
 		// case "unique":
 
 		case "flags":
-			if structs.HasFlag(v, "required") {
+			if internal.HasFlag(v, "required") {
 				if valid, err = createRequiredValidator(offset, typ, field); err != nil {
 					return
 				}

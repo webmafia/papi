@@ -62,3 +62,7 @@ func (p *Pool) ReleaseStream(s *jsoniter.Stream) {
 func (p *Pool) DecoderOf(typ reflect.Type) jsoniter.ValDecoder {
 	return p.api.DecoderOf(reflect2.Type2(reflect.PointerTo(typ)))
 }
+
+func (p *Pool) EncoderOf(typ reflect.Type) jsoniter.ValEncoder {
+	return p.api.EncoderOf(reflect2.Type2(reflect.PointerTo(typ)))
+}

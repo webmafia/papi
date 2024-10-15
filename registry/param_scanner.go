@@ -5,11 +5,10 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/registry/types"
 	"github.com/webbmaffian/papi/route"
 )
 
-func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan types.RequestDecoder, err error) {
+func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan RequestDecoder, err error) {
 	sc, err := r.reg.CreateParamDecoder(typ, "")
 
 	if err != nil {

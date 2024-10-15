@@ -1,11 +1,11 @@
-package structs
+package internal
 
 import (
 	"iter"
 	"strings"
 )
 
-func iterateFlags(flags string) iter.Seq[string] {
+func IterateFlags(flags string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		str := flags
 
@@ -32,7 +32,7 @@ func iterateFlags(flags string) iter.Seq[string] {
 }
 
 func HasFlag(flags string, flag string) bool {
-	for f := range iterateFlags(flags) {
+	for f := range IterateFlags(flags) {
 		if f == flag {
 			return true
 		}
