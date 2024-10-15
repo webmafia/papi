@@ -1,6 +1,11 @@
 package route
 
-import "github.com/webmafia/fast"
+import (
+	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fast"
+)
+
+const paramsKey = "params"
 
 var NilParams = &Params{}
 
@@ -44,4 +49,16 @@ func (p *Params) Get(key string) (val string, ok bool) {
 
 func (p *Params) Valid() bool {
 	return len(p.keys) == len(p.vals)
+}
+
+func RequestParams(c *fasthttp.RequestCtx) *Params {
+	if params, ok := c.UserValue(paramsKey).(*Params); ok {
+		return params
+	}
+
+	return NilParams
+}
+
+func SetRequestParams(c *fasthttp.RequestCtx, params *Params) {
+	c.SetUserValue(paramsKey, params)
 }

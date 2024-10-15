@@ -17,6 +17,10 @@ type Boolean struct {
 	WriteOnly   bool   `tag:"flags:writeonly"`
 }
 
+func (sch *Boolean) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *Boolean) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

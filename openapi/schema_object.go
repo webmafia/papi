@@ -24,6 +24,10 @@ type ObjectProperty struct {
 	Schema Schema
 }
 
+func (sch *Object) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

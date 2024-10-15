@@ -1,7 +1,9 @@
 package papi
 
 import (
+	"fmt"
 	"io"
+	"reflect"
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
@@ -25,4 +27,15 @@ func BenchmarkList_Write(b *testing.B) {
 			Name: "Hello there",
 		})
 	}
+}
+
+func ExampleList() {
+	type foo struct{}
+	type bar struct{}
+
+	fmt.Println(reflect.TypeFor[List[foo]]())
+	fmt.Println(reflect.TypeFor[List[bar]]())
+	fmt.Println(reflect.TypeFor[List[foo]]() == reflect.TypeFor[List[bar]]())
+
+	// Output: TODO
 }

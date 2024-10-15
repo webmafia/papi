@@ -9,7 +9,6 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/pool/json"
 	"github.com/webbmaffian/papi/registry"
-	"github.com/webbmaffian/papi/registry/request"
 	"github.com/webbmaffian/papi/route"
 )
 
@@ -38,10 +37,6 @@ func NewAPI(opt ...Options) (api *API, err error) {
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
 		},
-		// docs: &spec.Document{
-		// 	OpenAPI: "3.0.0",
-		// 	Schemas: make(map[reflect.Type]schema.Schema),
-		// },
 	}
 
 	if len(opt) > 0 {
@@ -55,19 +50,11 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	api.opt.setDefaults()
 
 	api.json = json.NewPool(api.opt.JsonAPI)
-	api.reg = registry.NewRegistry(func(r *registry.Registry) (creator registry.RequestScannerCreator) {
-		r.RegisterCommonTypes()
-		creator, err = request.NewRequestScanner(r, api.json)
-		return
-	})
-
-	if err != nil {
+	if api.reg, err = registry.NewRegistry(api.json); err != nil {
 		return
 	}
 
 	api.server.Handler = api.handler
-	// api.docs.Info = api.opt.OpenAPI.Info
-	// api.docs.Servers = api.opt.OpenAPI.Servers
 
 	return
 }
@@ -90,7 +77,7 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 		return
 	}
 
-	request.SetRequestParams(c, params)
+	route.SetRequestParams(c, params)
 
 	if err := cb(c); err != nil {
 		// TODO: Proper error message

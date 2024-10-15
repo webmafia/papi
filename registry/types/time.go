@@ -9,7 +9,7 @@ import (
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
-func TimeType() Type {
+func TimeType() ParamType {
 	return timeType{}
 }
 
@@ -19,7 +19,7 @@ func (t timeType) Type() reflect.Type {
 	return reflect.TypeOf((*time.Time)(nil)).Elem()
 }
 
-func (t timeType) CreateScanner(_ reflect.StructTag) (scan scanner.Scanner, err error) {
+func (t timeType) CreateParamScanner(_ reflect.StructTag) (scan scanner.Scanner, err error) {
 	return func(p unsafe.Pointer, s string) (err error) {
 		ptr := (*time.Time)(p)
 		parsed, err := time.Parse(time.RFC3339, s)
@@ -32,7 +32,7 @@ func (t timeType) CreateScanner(_ reflect.StructTag) (scan scanner.Scanner, err 
 	}, nil
 }
 
-func (t timeType) Describe(_ reflect.StructTag) openapi.Schema {
+func (t timeType) ParamSchema(_ reflect.StructTag) openapi.Schema {
 	return &openapi.Ref{
 		Name: "Timestamp",
 		Schema: &openapi.String{

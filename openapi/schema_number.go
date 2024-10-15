@@ -20,6 +20,10 @@ type Number[T constraints.Float] struct {
 	WriteOnly   bool   `tag:"flags:writeonly"`
 }
 
+func (sch *Number[T]) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *Number[T]) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

@@ -21,6 +21,10 @@ type Array struct {
 	UniqueItems bool `tag:"flags:unique"`
 }
 
+func (sch *Array) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *Array) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

@@ -1,14 +1,14 @@
-package request
+package registry
 
 import (
 	"reflect"
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/types"
 )
 
-func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan registry.RequestScanner, err error) {
+func (r *requestScanner) createJsonScanner(typ reflect.Type) (scan types.RequestScanner, err error) {
 	dec := r.json.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
 		iter := r.json.AcquireIterator(c.Request.BodyStream())

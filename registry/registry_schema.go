@@ -11,6 +11,12 @@ import (
 	"github.com/webbmaffian/papi/registry/structs"
 )
 
+type ParamSchemer interface {
+	ParamSchema(reg *Registry, tags reflect.StructTag) (schema openapi.Schema, err error)
+}
+
+var paramSchemer = reflect.TypeFor[ParamSchemer]()
+
 func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema openapi.Schema, err error) {
 	var tags reflect.StructTag
 
@@ -18,20 +24,24 @@ func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema op
 		tags = tag[0]
 	}
 
-	schema, ok := r.getSchema(typ, tags)
-
-	if !ok {
-		schema, err = r.createSchema(typ, tags)
+	if schema, ok := r.getSchema(typ, tags); ok {
+		return schema, nil
 	}
 
-	return
+	if typ.Implements(paramSchemer) {
+		if schemer, ok := reflect.New(typ).Interface().(ParamSchemer); ok {
+			return schemer.ParamSchema(r, tags)
+		}
+	}
+
+	return r.createSchema(typ, tags)
 }
 
 func (r *Registry) getSchema(typ reflect.Type, tags reflect.StructTag) (schema openapi.Schema, ok bool) {
 	val, ok := r.typ[typ]
 
 	if ok {
-		schema = val.Describe(tags)
+		schema = val.ParamSchema(tags)
 	}
 
 	return
@@ -197,9 +207,9 @@ func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type
 
 	// Input
 	if creator, ok := s.req[in]; ok {
-		err = creator.Describe(op, in)
+		err = creator.DescribeOperation(op)
 	} else if s.def != nil {
-		err = s.def.Describe(op, in)
+		err = s.def.DescribeOperation(op, in)
 	} else {
 		err = errors.New("no input descriptor could be found nor created")
 	}

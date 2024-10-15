@@ -7,5 +7,6 @@ import (
 
 type Schema interface {
 	hasher.Hashable
+	GetTitle() string
 	encodeSchema(ctx *encoderContext, s *jsoniter.Stream) error
 }

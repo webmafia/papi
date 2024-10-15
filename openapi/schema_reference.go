@@ -14,6 +14,10 @@ type Ref struct {
 	Schema Schema
 }
 
+func (sch *Ref) GetTitle() string {
+	return sch.Name
+}
+
 func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

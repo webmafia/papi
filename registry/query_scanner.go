@@ -1,15 +1,15 @@
-package request
+package registry
 
 import (
 	"reflect"
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/types"
 	"github.com/webmafia/fast"
 )
 
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan registry.RequestScanner, err error) {
+func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan types.RequestScanner, err error) {
 	sc, err := r.reg.CreateValueScanner(typ, "")
 
 	if err != nil {

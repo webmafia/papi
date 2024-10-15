@@ -20,6 +20,10 @@ type Integer[T constraints.Integer] struct {
 	WriteOnly   bool   `tag:"flags:writeonly"`
 }
 
+func (sch *Integer[T]) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *Integer[T]) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

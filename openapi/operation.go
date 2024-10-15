@@ -97,8 +97,8 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 		s.WriteObjectField("description")
 
-		if ref, ok := op.Response.(*Ref); ok {
-			s.WriteString(ref.Name)
+		if title := op.Response.GetTitle(); title != "" {
+			s.WriteString(title)
 		} else {
 			s.WriteString("Response")
 		}

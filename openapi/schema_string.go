@@ -22,6 +22,10 @@ type String struct {
 	WriteOnly   bool     `tag:"flags:writeonly"`
 }
 
+func (sch *String) GetTitle() string {
+	return sch.Title
+}
+
 func (sch *String) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error) {
 	if s.Error != nil {
 		return s.Error

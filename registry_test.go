@@ -7,19 +7,14 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/webbmaffian/papi/pool/json"
 	"github.com/webbmaffian/papi/registry"
-	"github.com/webbmaffian/papi/registry/request"
 )
 
 func ExampleRegistry() {
-	json := json.NewPool(jsoniter.ConfigFastest)
-	r := registry.NewRegistry(func(r *registry.Registry) (creator registry.RequestScannerCreator) {
-		creator, err := request.NewRequestScanner(r, json)
+	r, err := registry.NewRegistry(json.NewPool(jsoniter.ConfigFastest))
 
-		if err != nil {
-			panic(err)
-		}
+	if err != nil {
 		return
-	})
+	}
 
 	type req struct {
 		Id    int `param:"id"`
