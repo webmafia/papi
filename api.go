@@ -6,6 +6,7 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
+	papierr "github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/pool/json"
 	"github.com/webbmaffian/papi/registry"
@@ -22,13 +23,24 @@ type API struct {
 }
 
 type Options struct {
-	JsonAPI jsoniter.API
-	OpenAPI *openapi.Document
+	JsonAPI        jsoniter.API
+	OpenAPI        *openapi.Document
+	TransformError func(err error) papierr.ErrorDocumentor
 }
 
 func (opt *Options) setDefaults() {
 	if opt.JsonAPI == nil {
 		opt.JsonAPI = jsoniter.ConfigFastest
+	}
+
+	if opt.TransformError == nil {
+		opt.TransformError = func(err error) papierr.ErrorDocumentor {
+			if e, ok := err.(papierr.ErrorDocumentor); ok {
+				return e
+			}
+
+			return ErrUnknownError
+		}
 	}
 }
 
@@ -64,29 +76,36 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	return
 }
 
+func (api *API) sendError(c *fasthttp.RequestCtx, err papierr.ErrorDocumentor) {
+	s := api.json.AcquireStream(c)
+	defer api.json.ReleaseStream(s)
+
+	c.Response.Reset()
+	c.SetStatusCode(err.Status())
+
+	err.ErrorDocument(s)
+	s.Flush()
+}
+
 func (api *API) handler(c *fasthttp.RequestCtx) {
 	cb, params, ok := api.router.Lookup(c.Method(), c.Path())
 	defer api.router.ReleaseParams(params)
 
 	if !ok {
-		// TODO: Proper JSON response
-		c.NotFound()
+		api.sendError(c, ErrNotFound)
 		return
 	}
 
 	if !params.Valid() {
-		// TODO: Proper JSON response
-		c.Response.Reset()
-		c.SetStatusCode(fasthttp.StatusInternalServerError)
-		c.SetBodyString("params count mismatch")
+		api.sendError(c, ErrInvalidParams)
 		return
 	}
 
 	route.SetRequestParams(c, params)
 
 	if err := cb(c); err != nil {
-		// TODO: Proper error message
-		c.Error(err.Error(), 500)
+		api.sendError(c, api.opt.TransformError(err))
+		return
 	}
 }
 
