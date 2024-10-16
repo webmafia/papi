@@ -3,7 +3,7 @@ package registry
 import (
 	"reflect"
 
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/internal/scanner"
 )
 
 type Decoder = scanner.Scanner

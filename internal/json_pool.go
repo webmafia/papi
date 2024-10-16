@@ -1,4 +1,4 @@
-package json
+package internal
 
 import (
 	"io"
@@ -11,12 +11,12 @@ import (
 	"github.com/webmafia/fast"
 )
 
-type Pool struct {
+type JSONPool struct {
 	api      jsoniter.API
 	iterPool sync.Pool
 }
 
-func NewPool(api jsoniter.API, bufSize ...int) *Pool {
+func NewJSONPool(api jsoniter.API, bufSize ...int) *JSONPool {
 	var size int
 
 	if len(bufSize) > 0 {
@@ -27,7 +27,7 @@ func NewPool(api jsoniter.API, bufSize ...int) *Pool {
 		size = os.Getpagesize()
 	}
 
-	return &Pool{
+	return &JSONPool{
 		api: api,
 		iterPool: sync.Pool{
 			New: func() any {
@@ -39,30 +39,30 @@ func NewPool(api jsoniter.API, bufSize ...int) *Pool {
 	}
 }
 
-func (p *Pool) AcquireIterator(r io.Reader) *jsoniter.Iterator {
+func (p *JSONPool) AcquireIterator(r io.Reader) *jsoniter.Iterator {
 	return p.iterPool.Get().(*jsoniter.Iterator).Reset(r)
 }
 
-func (p *Pool) ReleaseIterator(iter *jsoniter.Iterator) {
+func (p *JSONPool) ReleaseIterator(iter *jsoniter.Iterator) {
 	iter.Error = nil
 	p.iterPool.Put(iter.Reset(nil))
 }
 
 //go:inline
-func (p *Pool) AcquireStream(w io.Writer) *jsoniter.Stream {
+func (p *JSONPool) AcquireStream(w io.Writer) *jsoniter.Stream {
 	return p.api.BorrowStream(w)
 }
 
 //go:inline
-func (p *Pool) ReleaseStream(s *jsoniter.Stream) {
+func (p *JSONPool) ReleaseStream(s *jsoniter.Stream) {
 	s.Error = nil
 	p.api.ReturnStream(s)
 }
 
-func (p *Pool) DecoderOf(typ reflect.Type) jsoniter.ValDecoder {
+func (p *JSONPool) DecoderOf(typ reflect.Type) jsoniter.ValDecoder {
 	return p.api.DecoderOf(reflect2.Type2(reflect.PointerTo(typ)))
 }
 
-func (p *Pool) EncoderOf(typ reflect.Type) jsoniter.ValEncoder {
+func (p *JSONPool) EncoderOf(typ reflect.Type) jsoniter.ValEncoder {
 	return p.api.EncoderOf(reflect2.Type2(reflect.PointerTo(typ)))
 }

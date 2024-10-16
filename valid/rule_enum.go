@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/webbmaffian/papi/errors"
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/internal/scanner"
 )
 
 func createEnumValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {

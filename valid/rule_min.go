@@ -6,7 +6,7 @@ import (
 
 	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/internal/constraints"
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/internal/scanner"
 )
 
 func createMinValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {

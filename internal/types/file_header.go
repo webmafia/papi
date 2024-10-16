@@ -4,7 +4,7 @@ import (
 	"mime/multipart"
 	"reflect"
 
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/internal/registry"
 )
 
 func FileHeaderType() registry.TypeRegistrar {

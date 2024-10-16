@@ -7,23 +7,20 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
+	"github.com/webbmaffian/papi/internal/registry"
 	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry"
 	"github.com/webmafia/fast"
 )
 
 var _ registry.TypeDescriber = (*List[struct{}])(nil)
 
 type List[T any] struct {
-	Meta ListMeta
-
+	meta struct {
+		Total int `json:"total"`
+	}
 	s       *jsoniter.Stream
 	enc     jsoniter.ValEncoder
 	written bool
-}
-
-type ListMeta struct {
-	Total int `json:"total"`
 }
 
 func (l *List[T]) Write(v *T) {
@@ -34,6 +31,10 @@ func (l *List[T]) Write(v *T) {
 	}
 
 	l.enc.Encode(fast.Noescape(unsafe.Pointer(v)), l.s)
+}
+
+func (l *List[T]) SetTotal(i int) {
+	l.meta.Total = i
 }
 
 func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription {
@@ -105,7 +106,7 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				s.WriteObjectField("meta")
 				s.WriteObjectStart()
 				s.WriteObjectField("total")
-				s.WriteInt(l.Meta.Total)
+				s.WriteInt(l.meta.Total)
 				s.WriteObjectEnd()
 
 				s.WriteObjectEnd()

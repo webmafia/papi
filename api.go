@@ -7,18 +7,18 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	papierr "github.com/webbmaffian/papi/errors"
+	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/registry"
+	"github.com/webbmaffian/papi/internal/route"
+	"github.com/webbmaffian/papi/internal/types"
 	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/pool/json"
-	"github.com/webbmaffian/papi/registry"
-	"github.com/webbmaffian/papi/registry/types"
-	"github.com/webbmaffian/papi/route"
 )
 
 type API struct {
 	router route.Router
 	server fasthttp.Server
 	reg    *registry.Registry
-	json   *json.Pool
+	json   *internal.JSONPool
 	opt    Options
 }
 
@@ -61,7 +61,7 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	}
 
 	api.opt.setDefaults()
-	api.json = json.NewPool(api.opt.JsonAPI)
+	api.json = internal.NewJSONPool(api.opt.JsonAPI)
 
 	if api.reg, err = registry.NewRegistry(api.json); err != nil {
 		return

@@ -49,7 +49,7 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
 			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
-			resp.Meta.Total = 123
+			resp.SetTotal(123)
 
 			return
 		},

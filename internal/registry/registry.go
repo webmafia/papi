@@ -4,19 +4,19 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/webbmaffian/papi/pool/json"
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/scanner"
 )
 
 type Registry struct {
 	scanCache map[reflect.Type]Decoder
 	desc      map[reflect.Type]TypeDescription
-	json      *json.Pool
+	json      *internal.JSONPool
 	scan      scanner.Creator
 	mu        sync.RWMutex
 }
 
-func NewRegistry(json *json.Pool) (r *Registry, err error) {
+func NewRegistry(json *internal.JSONPool) (r *Registry, err error) {
 	r = &Registry{
 		scanCache: make(map[reflect.Type]Decoder),
 		desc:      make(map[reflect.Type]TypeDescription),
@@ -29,7 +29,7 @@ func NewRegistry(json *json.Pool) (r *Registry, err error) {
 }
 
 //go:inline
-func (s *Registry) JSON() *json.Pool {
+func (s *Registry) JSON() *internal.JSONPool {
 	return s.json
 }
 

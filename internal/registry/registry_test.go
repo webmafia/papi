@@ -1,16 +1,15 @@
-package papi
+package registry
 
 import (
 	"fmt"
 	"reflect"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webbmaffian/papi/pool/json"
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/internal"
 )
 
 func ExampleRegistry() {
-	r, err := registry.NewRegistry(json.NewPool(jsoniter.ConfigFastest))
+	r, err := NewRegistry(internal.NewJSONPool(jsoniter.ConfigFastest))
 
 	if err != nil {
 		return
