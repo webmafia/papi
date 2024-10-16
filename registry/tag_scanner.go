@@ -11,7 +11,7 @@ import (
 )
 
 func ScanTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (err error) {
-	typ := internal.ReflectType[T]()
+	typ := reflect.TypeFor[T]()
 	scan, ok := reg.scanCache[typ]
 
 	if !ok {

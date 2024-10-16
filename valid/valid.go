@@ -9,7 +9,7 @@ import (
 )
 
 func CreateStructValidator[T any]() (Validator[T], error) {
-	valid, err := createStructValidator(internal.ReflectType[T]())
+	valid, err := createStructValidator(reflect.TypeFor[T]())
 
 	if err != nil {
 		return nil, err

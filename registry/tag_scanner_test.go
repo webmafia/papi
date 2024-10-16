@@ -6,7 +6,6 @@ import (
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/pool/json"
 )
 
@@ -27,7 +26,7 @@ func Example_createTagScanner() {
 		panic(err)
 	}
 
-	scan, err := reg.createTagScanner(internal.ReflectType[Foo]())
+	scan, err := reg.createTagScanner(reflect.TypeFor[Foo]())
 
 	if err != nil {
 		panic(err)

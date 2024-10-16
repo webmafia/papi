@@ -106,11 +106,11 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
-		if decodeRequest, err = api.reg.CreateRequestDecoder(internal.ReflectType[I](), route.Params); err != nil {
+		if decodeRequest, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params); err != nil {
 			return
 		}
 
-		if handler, err = api.reg.Handler(internal.ReflectType[O](), "", route.Params, handler); err != nil {
+		if handler, err = api.reg.Handler(reflect.TypeFor[O](), "", route.Params, handler); err != nil {
 			return
 		}
 
@@ -148,8 +148,8 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 		return
 	}
 
-	iTyp := internal.ReflectType[I]()
-	oTyp := internal.ReflectType[O]()
+	iTyp := reflect.TypeFor[I]()
+	oTyp := reflect.TypeFor[O]()
 
 	op := &openapi.Operation{
 		Id:          r.OperationId,
