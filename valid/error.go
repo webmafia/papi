@@ -3,6 +3,8 @@ package valid
 import (
 	"fmt"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 var (
@@ -17,6 +19,7 @@ type ValidationError interface {
 	error
 	fmt.Stringer
 	Code() string
+	EncodeJson(s *jsoniter.Stream)
 }
 
 type validationError struct {
@@ -99,4 +102,52 @@ func (f FieldErrors) String() string {
 	}
 
 	return b.String()
+}
+
+func (f FieldErrors) EncodeJson(s *jsoniter.Stream) {
+	s.WriteArrayStart()
+
+	for i := range f {
+		if i != 0 {
+			s.WriteMore()
+		}
+
+		f[i].EncodeJson(s)
+	}
+
+	s.WriteArrayEnd()
+}
+
+func (f FieldError) EncodeJson(s *jsoniter.Stream) {
+	s.WriteObjectStart()
+
+	s.WriteObjectField("error")
+	f.err.EncodeJson(s)
+
+	if f.field != "" {
+		s.WriteMore()
+		s.WriteObjectField("field")
+		s.WriteString(f.field)
+	}
+
+	if f.expect != "" {
+		s.WriteMore()
+		s.WriteObjectField("expect")
+		s.WriteString(f.expect)
+	}
+
+	s.WriteObjectEnd()
+}
+
+func (f validationError) EncodeJson(s *jsoniter.Stream) {
+	s.WriteObjectStart()
+
+	s.WriteObjectField("code")
+	s.WriteString(f.code)
+
+	s.WriteMore()
+	s.WriteObjectField("message")
+	s.WriteString(f.msg)
+
+	s.WriteObjectEnd()
 }

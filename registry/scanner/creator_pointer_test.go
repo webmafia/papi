@@ -10,7 +10,8 @@ import (
 func Example_createPointerScanner() {
 	var foo *int
 
-	scan, err := createPointerScanner(reflect.TypeOf(foo), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createPointerScanner(reflect.TypeOf(foo))
 
 	if err != nil {
 		panic(err)
@@ -38,8 +39,8 @@ func Example_createPointerScanner() {
 
 func Test_createPointerScanner(t *testing.T) {
 	var foo *int
-
-	scan, err := createPointerScanner(reflect.TypeOf(foo), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createPointerScanner(reflect.TypeOf(foo))
 
 	if err != nil {
 		panic(err)

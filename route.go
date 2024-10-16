@@ -1,7 +1,6 @@
 package papi
 
 import (
-	"log"
 	"reflect"
 	"unsafe"
 
@@ -103,16 +102,15 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		var (
-			decodeRequest  registry.RequestDecoder
-			encodeResponse registry.ResponseEncoder
-			handler        = *(*registry.ResponseEncoder)(unsafe.Pointer(&r.Handler))
+			decodeRequest registry.RequestDecoder
+			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
-		if decodeRequest, err = api.reg.CreateRequestDecoder(internal.ReflectType[I](), "", route.Params, true); err != nil {
+		if decodeRequest, err = api.reg.CreateRequestDecoder(internal.ReflectType[I](), route.Params); err != nil {
 			return
 		}
 
-		if encodeResponse, err = api.reg.CreateResponseEncoder(internal.ReflectType[O](), "", route.Params, handler, true); err != nil {
+		if handler, err = api.reg.Handler(internal.ReflectType[O](), "", route.Params, handler); err != nil {
 			return
 		}
 
@@ -121,11 +119,6 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 		}
 
 		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
-			c.SetContentType("application/json")
-
-			s := api.json.AcquireStream(c.Response.BodyWriter())
-			defer api.json.ReleaseStream(s)
-
 			var (
 				in  I
 				out O
@@ -138,47 +131,12 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			// TODO: Reuse errors from pool, and return any errors to client
 			var errs valid.FieldErrors
 			validate(&in, &errs)
+
 			if errs.HasError() {
-				log.Println(errs)
+				return errs
 			}
 
-			if err = encodeResponse(c, unsafe.Pointer(&in), unsafe.Pointer(&out)); err != nil {
-				return
-			}
-
-			// if enc, ok := outAny.(Lister); ok {
-			// 	s.WriteObjectStart()
-			// 	s.WriteObjectField("items")
-			// 	s.WriteArrayStart()
-
-			// 	enc.setStream(s)
-
-			// 	if err = r.Handler(c, &in, &out); err != nil {
-			// 		return
-			// 	}
-
-			// 	s.WriteArrayEnd()
-			// 	s.WriteMore()
-
-			// 	s.WriteObjectField("meta")
-			// 	enc.encodeMeta(s)
-
-			// 	s.WriteObjectEnd()
-			// } else {
-			// 	if err = r.Handler(c, &in, &out); err != nil {
-			// 		return
-			// 	}
-
-			// 	if enc, ok := outAny.(JsonEncoder); ok {
-			// 		if err = enc.EncodeJson(s); err != nil {
-			// 			return
-			// 		}
-			// 	} else {
-			// 		s.WriteVal(out)
-			// 	}
-			// }
-
-			return s.Flush()
+			return handler(c, unsafe.Pointer(&in), unsafe.Pointer(&out))
 		}
 
 		return

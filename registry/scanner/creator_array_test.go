@@ -11,8 +11,8 @@ import (
 
 func Example_createArrayScanner() {
 	var ints [3]int
-
-	scan, err := createArrayScanner(reflect.TypeOf(ints), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createArrayScanner(reflect.TypeOf(ints))
 
 	if err != nil {
 		panic(err)
@@ -30,7 +30,9 @@ func Example_createArrayScanner() {
 func Benchmark_createArrayScanner(b *testing.B) {
 	var ints [3]int
 
-	scan, err := createArrayScanner(reflect.TypeOf(ints), CreateCustomScanner)
+	c := NewCreator()
+
+	scan, err := c.createArrayScanner(reflect.TypeOf(ints))
 
 	if err != nil {
 		b.Fatal(err)

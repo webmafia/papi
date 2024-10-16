@@ -8,13 +8,13 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func createArrayScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
+func (c Creator) createArrayScanner(typ reflect.Type) (scan Scanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()
 	arrSize := typ.Len()
 	itemSize := elem.Size()
-	elemScan, err := createElemScanner(elem, createElemScanner)
+	elemScan, err := c.CreateScanner(elem)
 
 	if err != nil {
 		return

@@ -12,14 +12,14 @@ import (
 
 func ScanTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (err error) {
 	typ := internal.ReflectType[T]()
-	scan, ok := reg.tag[typ]
+	scan, ok := reg.scanCache[typ]
 
 	if !ok {
-		if scan, err = createTagScanner(typ, reg.CreateParamDecoder); err != nil {
+		if scan, err = reg.createTagScanner(typ); err != nil {
 			return
 		}
 
-		reg.tag[typ] = scan
+		reg.scanCache[typ] = scan
 	}
 
 	return scan(unsafe.Pointer(dst), string(tags))
@@ -33,7 +33,7 @@ func scanSchemaTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (*T, e
 	return dst, nil
 }
 
-func createTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type, tags reflect.StructTag) (scan ParamDecoder, err error)) (scan ParamDecoder, err error) {
+func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -41,11 +41,11 @@ func createTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type
 	numFields := typ.NumField()
 
 	type field struct {
-		scan   ParamDecoder
+		scan   Decoder
 		offset uintptr
 	}
 
-	var fldScan ParamDecoder
+	var fldScan Decoder
 
 	tagScanners := make(map[string]field, numFields)
 
@@ -70,7 +70,7 @@ func createTagScanner(typ reflect.Type, createValueScanner func(typ reflect.Type
 				}
 			}
 
-			if fldScan, err = createValueScanner(fld.Type, fld.Tag); err != nil {
+			if fldScan, err = r.Decoder(fld.Type, fld.Tag); err != nil {
 				return
 			}
 

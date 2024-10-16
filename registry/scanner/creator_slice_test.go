@@ -12,7 +12,8 @@ import (
 func Example_createSliceScanner() {
 	var ints []int
 
-	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createSliceScanner(reflect.TypeOf(ints))
 
 	if err != nil {
 		panic(err)
@@ -36,7 +37,8 @@ func Example_createSliceScanner() {
 func Benchmark_createSliceScanner(b *testing.B) {
 	var ints []int
 
-	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createSliceScanner(reflect.TypeOf(ints))
 
 	if err != nil {
 		b.Fatal(err)
@@ -56,7 +58,8 @@ func Benchmark_createSliceScanner(b *testing.B) {
 func Benchmark_createSliceScanner_reuse(b *testing.B) {
 	var ints []int
 
-	scan, err := createSliceScanner(reflect.TypeOf(ints), CreateCustomScanner)
+	c := NewCreator()
+	scan, err := c.createSliceScanner(reflect.TypeOf(ints))
 
 	if err != nil {
 		b.Fatal(err)

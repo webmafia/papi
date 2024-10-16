@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -11,12 +10,6 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 )
 
-type ParamSchemer interface {
-	ParamSchema(reg *Registry, tags reflect.StructTag) (schema openapi.Schema, err error)
-}
-
-var paramSchemer = reflect.TypeFor[ParamSchemer]()
-
 func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema openapi.Schema, err error) {
 	var tags reflect.StructTag
 
@@ -24,30 +17,35 @@ func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema op
 		tags = tag[0]
 	}
 
-	if schema, ok := r.getSchema(typ, tags); ok {
-		return schema, nil
+	// 1. If there is an explicit registered schema describer, use it
+	if schema, err, ok := r.getSchema(typ, tags); ok {
+		return schema, err
 	}
 
-	if typ.Implements(paramSchemer) {
-		if schemer, ok := reflect.New(typ).Interface().(ParamSchemer); ok {
-			return schemer.ParamSchema(r, tags)
+	// 2. If the type can describe itself, let it
+	if typ.Implements(typeDescriber) {
+		if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
+			if desc := v.TypeDescription(r); desc.Schema != nil {
+				return desc.Schema(tags)
+			}
 		}
 	}
 
-	return r.createSchema(typ, tags)
+	// 3. In all other cases, describe the schema automatically
+	return r.describeSchema(typ, tags)
 }
 
-func (r *Registry) getSchema(typ reflect.Type, tags reflect.StructTag) (schema openapi.Schema, ok bool) {
-	val, ok := r.typ[typ]
+func (r *Registry) getSchema(typ reflect.Type, tags reflect.StructTag) (schema openapi.Schema, err error, ok bool) {
+	desc, ok := r.desc[typ]
 
-	if ok {
-		schema = val.ParamSchema(tags)
+	if ok && desc.Schema != nil {
+		schema, err = desc.Schema(tags)
 	}
 
 	return
 }
 
-func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (openapi.Schema, error) {
+func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (openapi.Schema, error) {
 	switch kind := typ.Kind(); kind {
 
 	case reflect.Bool:
@@ -199,29 +197,4 @@ func (r *Registry) createSchema(typ reflect.Type, tags reflect.StructTag) (opena
 	default:
 		return nil, fmt.Errorf("cannot create schema for type: %s", kind.String())
 	}
-}
-
-func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type) (err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	// Input
-	if creator, ok := s.req[in]; ok {
-		err = creator.DescribeOperation(op)
-	} else if s.def != nil {
-		err = s.def.DescribeOperation(op, in)
-	} else {
-		err = errors.New("no input descriptor could be found nor created")
-	}
-
-	if err != nil {
-		return
-	}
-
-	// Output
-	if op.Response, err = s.Schema(out); err != nil {
-		return
-	}
-
-	return
 }

@@ -7,8 +7,10 @@ import (
 	"github.com/webmafia/fast"
 )
 
+var c = NewCreator()
+
 func getScanner[T any](dst *T) (scan Scanner, err error) {
-	return CreateScanner(reflect.TypeOf(dst).Elem())
+	return c.CreateScanner(reflect.TypeOf(dst).Elem())
 }
 
 func GetScanner[T any](dst *T) (scan func(*T, string) error, err error) {

@@ -9,6 +9,7 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/pool/json"
 	"github.com/webbmaffian/papi/registry"
+	"github.com/webbmaffian/papi/registry/types"
 	"github.com/webbmaffian/papi/route"
 )
 
@@ -48,11 +49,15 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	}
 
 	api.opt.setDefaults()
-
 	api.json = json.NewPool(api.opt.JsonAPI)
+
 	if api.reg, err = registry.NewRegistry(api.json); err != nil {
 		return
 	}
+
+	api.reg.RegisterType(
+		types.TimeType(),
+	)
 
 	api.server.Handler = api.handler
 

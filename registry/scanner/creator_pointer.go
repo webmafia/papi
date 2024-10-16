@@ -5,9 +5,9 @@ import (
 	"unsafe"
 )
 
-func createPointerScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
+func (c Creator) createPointerScanner(typ reflect.Type) (scan Scanner, err error) {
 	elem := typ.Elem()
-	elemScan, err := createElemScanner(elem, createElemScanner)
+	elemScan, err := c.CreateScanner(elem)
 
 	if err != nil {
 		return

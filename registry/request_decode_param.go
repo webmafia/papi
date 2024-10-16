@@ -8,8 +8,8 @@ import (
 	"github.com/webbmaffian/papi/route"
 )
 
-func (r *requestScanner) createParamScanner(typ reflect.Type, idx int) (scan RequestDecoder, err error) {
-	sc, err := r.reg.CreateParamDecoder(typ, "")
+func (r *Registry) createParamDecoder(typ reflect.Type, idx int, tags reflect.StructTag) (scan RequestDecoder, err error) {
+	sc, err := r.Decoder(typ, tags)
 
 	if err != nil {
 		return

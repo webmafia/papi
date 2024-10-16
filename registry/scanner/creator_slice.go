@@ -14,12 +14,12 @@ type sliceHeader struct {
 	cap  int
 }
 
-func createSliceScanner(typ reflect.Type, createElemScanner CreateValueScanner) (scan Scanner, err error) {
+func (c Creator) createSliceScanner(typ reflect.Type) (scan Scanner, err error) {
 	const sep byte = ','
 
 	elem := typ.Elem()
 	itemSize := elem.Size()
-	elemScan, err := createElemScanner(elem, createElemScanner)
+	elemScan, err := c.CreateScanner(elem)
 
 	if err != nil {
 		return

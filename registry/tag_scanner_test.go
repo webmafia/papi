@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"unsafe"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/registry/scanner"
+	"github.com/webbmaffian/papi/pool/json"
 )
 
 func Example_createTagScanner() {
@@ -20,9 +21,13 @@ func Example_createTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	scan, err := createTagScanner(internal.ReflectType[Foo](), func(typ reflect.Type, _ reflect.StructTag) (scan ParamDecoder, err error) {
-		return scanner.CreateScanner(typ)
-	})
+	reg, err := NewRegistry(json.NewPool(jsoniter.ConfigFastest))
+
+	if err != nil {
+		panic(err)
+	}
+
+	scan, err := reg.createTagScanner(internal.ReflectType[Foo]())
 
 	if err != nil {
 		panic(err)
@@ -38,5 +43,5 @@ func Example_createTagScanner() {
 
 	fmt.Printf("%#v\n", foo)
 
-	// Output: internal.Foo{A:"foobar", B:123, C:456.789, D:true, E:false, F:true, G:true}
+	// Output: registry.Foo{A:"foobar", B:123, C:456.789, D:true, E:false, F:true, G:true}
 }

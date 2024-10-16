@@ -8,8 +8,8 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *requestScanner) createQueryScanner(typ reflect.Type, key string) (scan RequestDecoder, err error) {
-	sc, err := r.reg.CreateParamDecoder(typ, "")
+func (r *Registry) createQueryDecoder(typ reflect.Type, key string, tags reflect.StructTag) (scan RequestDecoder, err error) {
+	sc, err := r.Decoder(typ, tags)
 
 	if err != nil {
 		return
