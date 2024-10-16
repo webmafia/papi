@@ -7,7 +7,6 @@ import (
 
 	"github.com/webbmaffian/papi"
 	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry/types"
 )
 
 var (
@@ -43,11 +42,11 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 		Decimal float64   `query:"decimal"`
 	}
 
-	return papi.GET(api, papi.Route[req, types.List[User]]{
+	return papi.GET(api, papi.Route[req, papi.List[User]]{
 		Path: "/users",
 		Tags: []*openapi.Tag{Users},
 
-		Handler: func(ctx *papi.RequestCtx, req *req, resp *types.List[User]) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
 			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
 			resp.Meta.Total = 123
