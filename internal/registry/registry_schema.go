@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/iterate"
 	"github.com/webbmaffian/papi/openapi"
 )
 
@@ -178,7 +178,7 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 			})
 
 			if flags, ok := fld.Tag.Lookup("flags"); ok {
-				if internal.HasFlag(flags, "required") {
+				if iterate.HasFlag(flags, "required") {
 					obj.Required = append(obj.Required, name)
 				}
 			}

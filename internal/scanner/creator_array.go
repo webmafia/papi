@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/iterate"
 	"github.com/webmafia/fast"
 )
 
@@ -21,7 +21,7 @@ func (c Creator) createArrayScanner(typ reflect.Type) (scan Scanner, err error) 
 	}
 
 	scan = func(p unsafe.Pointer, s string) (err error) {
-		for i, sub := range internal.IterateChunks(s, sep) {
+		for i, sub := range iterate.IterateChunks(s, sep) {
 			if i >= arrSize {
 				break
 			}

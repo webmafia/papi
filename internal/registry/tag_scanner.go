@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/iterate"
 )
 
 func ScanTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (err error) {
@@ -57,7 +57,7 @@ func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) 
 	for i := range numFields {
 		fld := typ.Field(i)
 
-		for k, v := range internal.IterateStructTags(fld.Tag) {
+		for k, v := range iterate.IterateStructTags(fld.Tag) {
 			if k != "tag" {
 				continue
 			}
@@ -84,9 +84,9 @@ func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) 
 	}
 
 	return func(dst unsafe.Pointer, src string) (err error) {
-		for k, v := range internal.IterateStructTags(src) {
+		for k, v := range iterate.IterateStructTags(src) {
 			if k == "flags" {
-				for flag := range internal.IterateFlags(v) {
+				for flag := range iterate.IterateFlags(v) {
 					idx := slices.Index(flags, flag)
 
 					if idx < 0 {

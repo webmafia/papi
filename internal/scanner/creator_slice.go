@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/iterate"
 	"github.com/webmafia/fast"
 )
 
@@ -29,7 +29,7 @@ func (c Creator) createSliceScanner(typ reflect.Type) (scan Scanner, err error) 
 		head := (*sliceHeader)(p)
 		var calcSize int
 
-		for range internal.IterateChunks(s, sep) {
+		for range iterate.IterateChunks(s, sep) {
 			calcSize++
 		}
 
@@ -42,7 +42,7 @@ func (c Creator) createSliceScanner(typ reflect.Type) (scan Scanner, err error) 
 			head.len = 0
 		}
 
-		for i, sub := range internal.IterateChunks(s, sep) {
+		for i, sub := range iterate.IterateChunks(s, sep) {
 			elemPtr := unsafe.Add(head.data, uintptr(i)*itemSize)
 
 			if err = elemScan(fast.Noescape(elemPtr), sub); err != nil {

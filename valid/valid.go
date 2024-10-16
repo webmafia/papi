@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webbmaffian/papi/internal/iterate"
 )
 
 func CreateStructValidator[T any]() (StructValidator[T], error) {
@@ -57,7 +57,7 @@ func appendStructValidators(valids *validators, typ reflect.Type, offset uintptr
 }
 
 func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr, field string, tag reflect.StructTag) (err error) {
-	for k, v := range internal.IterateStructTags(tag) {
+	for k, v := range iterate.IterateStructTags(tag) {
 		var valid validator
 
 		switch k {
@@ -93,7 +93,7 @@ func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr,
 		// case "unique":
 
 		case "flags":
-			if internal.HasFlag(v, "required") {
+			if iterate.HasFlag(v, "required") {
 				if valid, err = createRequiredValidator(offset, typ, field); err != nil {
 					return
 				}
