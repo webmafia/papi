@@ -58,7 +58,6 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 
 func (r userRoutes) CreateUser(api *papi.API) (err error) {
 	type req struct {
-		// Body io.Reader
 		Body User `body:"json"`
 	}
 
@@ -67,8 +66,6 @@ func (r userRoutes) CreateUser(api *papi.API) (err error) {
 		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
-			// buf, err := io.ReadAll(req.Body)
-			// _ = buf
 			*resp = req.Body
 			resp.ID = 101
 
@@ -76,26 +73,6 @@ func (r userRoutes) CreateUser(api *papi.API) (err error) {
 		},
 	})
 }
-
-// func (r userRoutes) UploadFile(api *papi.API[User]) (err error) {
-// 	type req struct {
-// 		Body *multipart.Form // TODO: Also accept *multipart.File
-// 	}
-
-// 	return papi.AddRoute(api, papi.Route[User, req, User]{
-// 		Method:  "POST",
-// 		Path:    "/files",
-// 		Summary: "Upload file",
-// 		Tags:    []*spec.Tag{Files},
-
-// 		Handler: func(ctx *papi.Ctx[User], req *req, resp *User) (err error) {
-// 			f := req.Body.File
-// 			fmt.Printf("%#v\n", f)
-
-// 			return
-// 		},
-// 	})
-// }
 
 func main() {
 	host := "localhost:3001"
