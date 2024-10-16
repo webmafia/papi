@@ -5,6 +5,7 @@ import (
 	"slices"
 	"unsafe"
 
+	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/registry/scanner"
 )
 
@@ -72,13 +73,9 @@ func validComparableEnum[T comparable](offset uintptr, field string, s string) (
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if val := *(*T)(unsafe.Add(ptr, offset)); val != zero && !slices.Contains(enum, val) {
-			errs.Append(FieldError{
-				err:    ErrInvalidEnum,
-				field:  field,
-				expect: s,
-			})
+			errs.Append(ErrFailedEnum.Explained(field, s))
 		}
 	}, nil
 }

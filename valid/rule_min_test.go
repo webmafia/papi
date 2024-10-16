@@ -4,18 +4,20 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 // Generic function to test min validation for any type.
 func testMinValidator[T any](t *testing.T, value T, min string, expectedErr bool) {
-	check, err := createMinValidator(0, reflect.TypeOf(value), "testField", min)
+	validator, err := createMinValidator(0, reflect.TypeOf(value), "testField", min)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	check(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for value: %v", value)

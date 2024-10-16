@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/internal/constraints"
 	"github.com/webbmaffian/papi/registry/scanner"
 )
@@ -68,13 +69,9 @@ func validNumMax[T constraints.Number](offset uintptr, field string, s string) (
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if val := *(*T)(unsafe.Add(ptr, offset)); val != 0 && val > max {
-			errs.Append(FieldError{
-				err:    ErrAboveMax,
-				field:  field,
-				expect: s,
-			})
+			errs.Append(ErrTooHigh.Explained(field, s))
 		}
 	}, nil
 }
@@ -86,13 +83,9 @@ func validSliceMax(offset uintptr, field string, s string) (validator, error) {
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if l := sliceLen(unsafe.Add(ptr, offset)); l != 0 && l > max {
-			errs.Append(FieldError{
-				err:    ErrAboveMax,
-				field:  field,
-				expect: s,
-			})
+			errs.Append(ErrTooLong.Explained(field, s))
 		}
 	}, nil
 }
@@ -104,13 +97,9 @@ func validStringMax(offset uintptr, field string, s string) (validator, error) {
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if l := stringLen(unsafe.Add(ptr, offset)); l != 0 && l > max {
-			errs.Append(FieldError{
-				err:    ErrAboveMax,
-				field:  field,
-				expect: s,
-			})
+			errs.Append(ErrTooLong.Explained(field, s))
 		}
 	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/openapi"
 	"github.com/webbmaffian/papi/registry"
@@ -124,11 +125,9 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				return
 			}
 
-			// TODO: Reuse errors from pool, and return any errors to client
-			var errs valid.FieldErrors
-			validate(&in, &errs)
+			var errs errors.Errors
 
-			if errs.HasError() {
+			if !validate(&in, &errs) {
 				return errs
 			}
 

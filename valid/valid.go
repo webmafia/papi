@@ -8,17 +8,17 @@ import (
 	"github.com/webbmaffian/papi/internal"
 )
 
-func CreateStructValidator[T any]() (Validator[T], error) {
+func CreateStructValidator[T any]() (StructValidator[T], error) {
 	valid, err := createStructValidator(reflect.TypeFor[T]())
 
 	if err != nil {
 		return nil, err
 	}
 
-	return *(*Validator[T])(unsafe.Pointer(&valid)), nil
+	return *(*StructValidator[T])(unsafe.Pointer(&valid)), nil
 }
 
-func createStructValidator(typ reflect.Type) (valid validator, err error) {
+func createStructValidator(typ reflect.Type) (valid structValidator, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}

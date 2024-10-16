@@ -3,6 +3,8 @@ package valid
 import (
 	"reflect"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 func createRequiredValidator(offset uintptr, typ reflect.Type, field string) (validator, error) {
@@ -12,13 +14,9 @@ func createRequiredValidator(offset uintptr, typ reflect.Type, field string) (va
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if isZero(unsafe.Add(ptr, offset)) {
-			errs.Append(FieldError{
-				err:    ErrRequired,
-				field:  field,
-				expect: "any value",
-			})
+			errs.Append(ErrRequired.Explained(field, "any value"))
 		}
 	}, nil
 }

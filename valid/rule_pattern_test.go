@@ -4,18 +4,20 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 // Generic function to test pattern validation for any type.
 func testPatternValidator[T any](t *testing.T, value T, pattern string, expectedErr bool) {
-	check, err := createPatternValidator(0, reflect.TypeOf(value), "testField", pattern)
+	validator, err := createPatternValidator(0, reflect.TypeOf(value), "testField", pattern)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	check(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for value: %v", value)

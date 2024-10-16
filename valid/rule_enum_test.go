@@ -4,18 +4,20 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 // Generic function to test enum validation for any type.
 func testEnumValidator[T any](t *testing.T, value T, allowedValues string, expectedErr bool) {
-	check, err := createEnumValidator(0, reflect.TypeOf(value), "testField", allowedValues)
+	validator, err := createEnumValidator(0, reflect.TypeOf(value), "testField", allowedValues)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	check(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for value: %v", value)

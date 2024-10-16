@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 // Define a complex struct with nested structs, slices, and pointers
@@ -33,8 +35,8 @@ func testStructValidator[T any](t *testing.T, value T, expectedErr bool, testCas
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	validator(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for test case %s with struct: %+v", testCaseName, value)

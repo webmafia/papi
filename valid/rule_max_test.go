@@ -4,17 +4,19 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 func testMaxValidator[T any](t *testing.T, value T, max string, expectedErr bool) {
-	check, err := createMaxValidator(0, reflect.TypeOf(value), "testField", max)
+	validator, err := createMaxValidator(0, reflect.TypeOf(value), "testField", max)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	check(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for value: %v", value)

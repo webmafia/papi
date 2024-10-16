@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 type sliceHeader struct {
@@ -44,7 +46,7 @@ func validArray(offset uintptr, typ reflect.Type, field string, s string, create
 	l := typ.Len()
 	size := elem.Size()
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		for i := range l {
 			valid(unsafe.Add(ptr, uintptr(i)*size), errs)
 		}
@@ -61,7 +63,7 @@ func validSlice(offset uintptr, typ reflect.Type, field string, s string, create
 
 	size := elem.Size()
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		data, l := sliceDataAndLen(unsafe.Add(ptr, offset))
 
 		for i := range l {
@@ -78,7 +80,7 @@ func validPointer(offset uintptr, typ reflect.Type, field string, s string, crea
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		valid(*(*unsafe.Pointer)(unsafe.Add(ptr, offset)), errs)
 	}, nil
 }

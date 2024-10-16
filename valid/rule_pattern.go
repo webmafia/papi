@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"regexp"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 func createPatternValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {
@@ -33,13 +35,9 @@ func validStringPattern(offset uintptr, field string, s string) (validator, erro
 		return nil, err
 	}
 
-	return func(ptr unsafe.Pointer, errs *FieldErrors) {
+	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if val := *(*string)(unsafe.Add(ptr, offset)); val != "" && !pattern.MatchString(val) {
-			errs.Append(FieldError{
-				err:    ErrInvalidPattern,
-				field:  field,
-				expect: s,
-			})
+			errs.Append(ErrFailedPattern.Explained(field, s))
 		}
 	}, nil
 }

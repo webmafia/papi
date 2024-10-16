@@ -4,17 +4,19 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/webbmaffian/papi/errors"
 )
 
 func testRequiredValidator[T any](t *testing.T, value T, expectedErr bool) {
-	check, err := createRequiredValidator(0, reflect.TypeOf(value), "testField")
+	validator, err := createRequiredValidator(0, reflect.TypeOf(value), "testField")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	fieldErrors := &FieldErrors{}
-	check(unsafe.Pointer(&value), fieldErrors)
+	var fieldErrors errors.Errors
+	validator(unsafe.Pointer(&value), &fieldErrors)
 
 	if expectedErr && !fieldErrors.HasError() {
 		t.Errorf("expected error but got none for value: %v", value)
