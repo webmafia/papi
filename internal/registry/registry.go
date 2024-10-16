@@ -2,7 +2,6 @@ package registry
 
 import (
 	"reflect"
-	"sync"
 
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/internal/scanner"
@@ -13,7 +12,6 @@ type Registry struct {
 	desc      map[reflect.Type]TypeDescription
 	json      *internal.JSONPool
 	scan      scanner.Creator
-	mu        sync.RWMutex
 }
 
 func NewRegistry(json *internal.JSONPool) (r *Registry, err error) {
