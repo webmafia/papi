@@ -1,12 +1,11 @@
 package papi
 
 import (
-	"errors"
 	"io"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	papierr "github.com/webbmaffian/papi/errors"
+	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/internal"
 	"github.com/webbmaffian/papi/internal/registry"
 	"github.com/webbmaffian/papi/internal/route"
@@ -22,10 +21,19 @@ type API struct {
 	opt    Options
 }
 
+// API options.
 type Options struct {
-	JsonAPI        jsoniter.API
-	OpenAPI        *openapi.Document
-	TransformError func(err error) papierr.ErrorDocumentor
+
+	// Which jsoniter API should be used - default `jsoniter.ConfigFastest`.
+	JsonAPI jsoniter.API
+
+	// An optional (but recommended) OpenAPI document. Provided document must be unused, a.k.a. have no registered operations,
+	// and will be filled with documentation for all routes.
+	OpenAPI *openapi.Document
+
+	// Any errors occured will be passed through this callback, where it has the chance to transform the error to an
+	// `errors.ErrorDocumentor` (if not already). Any error that isn't transformed will be replaced with a general error message.
+	TransformError func(err error) errors.ErrorDocumentor
 }
 
 func (opt *Options) setDefaults() {
@@ -34,8 +42,8 @@ func (opt *Options) setDefaults() {
 	}
 
 	if opt.TransformError == nil {
-		opt.TransformError = func(err error) papierr.ErrorDocumentor {
-			if e, ok := err.(papierr.ErrorDocumentor); ok {
+		opt.TransformError = func(err error) errors.ErrorDocumentor {
+			if e, ok := err.(errors.ErrorDocumentor); ok {
 				return e
 			}
 
@@ -44,6 +52,7 @@ func (opt *Options) setDefaults() {
 	}
 }
 
+// Create a new API service.
 func NewAPI(opt ...Options) (api *API, err error) {
 	api = &API{
 		server: fasthttp.Server{
@@ -56,7 +65,7 @@ func NewAPI(opt ...Options) (api *API, err error) {
 		api.opt = opt[0]
 
 		if api.opt.OpenAPI.NumOperations() != 0 {
-			return nil, errors.New("there must not be any existing operations in OpenAPI documentation")
+			return nil, ErrInvalidOpenAPI
 		}
 	}
 
@@ -76,7 +85,7 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	return
 }
 
-func (api *API) sendError(c *fasthttp.RequestCtx, err papierr.ErrorDocumentor) {
+func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
 	s := api.json.AcquireStream(c)
 	defer api.json.ReleaseStream(s)
 
@@ -109,13 +118,15 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 	}
 }
 
+// Listen on the provided address (e.g. `localhost:3000`).
 func (api *API) ListenAndServe(addr string) error {
 	return api.server.ListenAndServe(addr)
 }
 
+// Write API documentation to an `io.Writer`.`
 func (api *API) WriteOpenAPI(w io.Writer) error {
 	if api.opt.OpenAPI == nil {
-		return errors.New("no OpenAPI documentation initialized")
+		return ErrMissingOpenAPI
 	}
 
 	s := api.json.AcquireStream(w)
@@ -130,4 +141,9 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 	}
 
 	return s.Flush()
+}
+
+// Register a custom type, that will override any defaults.
+func (api *API) RegisterType(typs ...registry.TypeRegistrar) (err error) {
+	return api.reg.RegisterType(typs...)
 }

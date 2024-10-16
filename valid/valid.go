@@ -8,6 +8,7 @@ import (
 	"github.com/webbmaffian/papi/internal/iterate"
 )
 
+// Create a validator that can be reused for a specific struct type.
 func CreateStructValidator[T any]() (StructValidator[T], error) {
 	valid, err := createStructValidator(reflect.TypeFor[T]())
 

@@ -4,7 +4,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// An immutable error used for spawning new "explained" errors
+// An immutable error used for spawning new "explained" errors.
 type FrozenError interface {
 	ErrorDocumentor
 	Explained(location, expect string) Error
@@ -16,7 +16,7 @@ type frozenError struct {
 	message string // Error message (e.g. "Too short")
 }
 
-// Create an immutable ("frozen") error that is used for spawning new "explained" errors
+// Create an immutable ("frozen") error that is used for spawning new "explained" errors.
 func NewFrozenError(code string, message string, statusCode ...int) FrozenError {
 	c := 400
 
@@ -31,7 +31,7 @@ func NewFrozenError(code string, message string, statusCode ...int) FrozenError 
 	}
 }
 
-// Returns an explained copy
+// Returns an `Error` with additional information.
 func (err *frozenError) Explained(location, expect string) Error {
 	return Error{
 		status:   err.status,

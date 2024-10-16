@@ -5,21 +5,18 @@ import jsoniter "github.com/json-iterator/go"
 const Version = "3.0.0"
 
 type Document struct {
-	Info    Info
-	Servers []Server
+	info    Info
+	servers []Server
 	paths   Paths
 }
 
+// Create a new OpenAPI root document that is ready to be used in the API service.
 func NewDocument(info Info, servers ...Server) *Document {
 	return &Document{
-		Info:    info,
-		Servers: servers,
+		info:    info,
+		servers: servers,
 		paths:   make(Paths),
 	}
-}
-
-func (doc *Document) AddOperation(path string, op *Operation) (err error) {
-	return doc.paths.AddOperation(path, op)
 }
 
 func (doc *Document) NumOperations() int {
@@ -40,19 +37,19 @@ func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
 
 	s.WriteMore()
 	s.WriteObjectField("info")
-	doc.Info.JsonEncode(ctx, s)
+	doc.info.JsonEncode(ctx, s)
 
-	if len(doc.Servers) > 0 {
+	if len(doc.servers) > 0 {
 		s.WriteMore()
 		s.WriteObjectField("servers")
 		s.WriteArrayStart()
 
-		for i := range doc.Servers {
+		for i := range doc.servers {
 			if i != 0 {
 				s.WriteMore()
 			}
 
-			doc.Servers[i].JsonEncode(ctx, s)
+			doc.servers[i].JsonEncode(ctx, s)
 		}
 
 		s.WriteArrayEnd()

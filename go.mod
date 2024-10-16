@@ -7,7 +7,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/valyala/fasthttp v1.52.0
-	github.com/webmafia/fast v0.6.0
+	github.com/webmafia/fast v0.10.0
 )
 
 require (

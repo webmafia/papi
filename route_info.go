@@ -4,26 +4,18 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 )
 
-type AdvancedRoute[I any, O any] struct {
-	OperationId string
-	Method      string
-	Path        string
-	Summary     string
-	Description string
-	Tags        []*openapi.Tag
-	Handler     func(c *RequestCtx, in *I, out *O) error
-}
-
-func (adv *AdvancedRoute[I, O]) fromRoute(r *Route[I, O]) {
-	adv.Path = r.Path
-	adv.Description = r.Description
-	adv.Tags = r.Tags
-	adv.Handler = r.Handler
-}
-
+// Route information.
 type Route[I any, O any] struct {
-	Path        string
+
+	// Mandatory route path. Can contain `{params}`.
+	Path string
+
+	// An optional description of the route (longer than the `Summary`).
 	Description string
-	Tags        []*openapi.Tag
-	Handler     func(c *RequestCtx, in *I, out *O) error
+
+	// Optional OpenAPI tags.
+	Tags []*openapi.Tag
+
+	// Mandatory handler that will be called for the route.
+	Handler func(c *RequestCtx, in *I, out *O) error
 }

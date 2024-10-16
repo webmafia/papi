@@ -11,7 +11,10 @@ func Example_toBytes() {
 	fmt.Println(i)
 	fmt.Println(toBytes(&i))
 
-	// Output: TODO
+	// Output:
+	//
+	// 1234
+	// [210 4]
 }
 
 func Benchmark_toBytes(b *testing.B) {

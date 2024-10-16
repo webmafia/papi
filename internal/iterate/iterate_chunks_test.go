@@ -7,7 +7,7 @@ import (
 
 func ExampleIterateChunks() {
 	var i int
-	for s := range IterateChunks("123,456,789,,,,,", ',') {
+	for _, s := range IterateChunks("123,456,789,,,,,", ',') {
 		fmt.Println(s)
 		i++
 	}

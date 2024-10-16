@@ -13,6 +13,8 @@ import (
 	"github.com/webbmaffian/papi/valid"
 )
 
+// Register a group of routes. Any exported methods with a signature of `func(api *papi.API) error` will be called.
+// These methods should call either `papi.GET`, `papi.PUT`, `papi.POST`, or `papi.DELETE`.
 func (api *API) RegisterRoutes(types ...any) (err error) {
 	for i := range types {
 		val := reflect.ValueOf(types[i])
@@ -34,67 +36,63 @@ func (api *API) RegisterRoutes(types ...any) (err error) {
 	return
 }
 
+// Add a route with GET method. Input will be validated based on OpenAPI schema rules.
 func GET[I, O any](api *API, r Route[I, O]) (err error) {
 	var route AdvancedRoute[I, O]
 
 	route.fromRoute(&r)
 	route.Method = "GET"
 
-	if err = addToDocs(api, &route); err != nil {
-		return
-	}
-
 	return addRoute(api, route)
 }
 
+// Add a route with PUT method. Input will be validated based on OpenAPI schema rules.
 func PUT[I, O any](api *API, r Route[I, O]) (err error) {
 	var route AdvancedRoute[I, O]
 
 	route.fromRoute(&r)
 	route.Method = "PUT"
 
-	if err = addToDocs(api, &route); err != nil {
-		return
-	}
-
 	return addRoute(api, route)
 }
 
+// Add a route with POST method. Input will be validated based on OpenAPI schema rules.
 func POST[I, O any](api *API, r Route[I, O]) (err error) {
 	var route AdvancedRoute[I, O]
 
 	route.fromRoute(&r)
 	route.Method = "POST"
 
-	if err = addToDocs(api, &route); err != nil {
-		return
-	}
-
 	return addRoute(api, route)
 }
 
+// Add a route with DELETE method. Input will be validated based on OpenAPI schema rules.
 func DELETE[I, O any](api *API, r Route[I, O]) (err error) {
 	var route AdvancedRoute[I, O]
 
 	route.fromRoute(&r)
 	route.Method = "DELETE"
 
-	if err = addToDocs(api, &route); err != nil {
-		return
-	}
-
 	return addRoute(api, route)
 }
 
-func AddRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
+func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
+	if r.Path == "" {
+		return ErrMissingRoutePath
+	}
+
+	if r.Handler == nil {
+		return ErrMissingRouteHandler
+	}
+
+	if r.Method == "" {
+		return ErrMissingRouteHandler
+	}
+
 	if err = addToDocs(api, &r); err != nil {
 		return
 	}
 
-	return addRoute(api, r)
-}
-
-func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	validate, err := valid.CreateStructValidator[I]()
 
 	if err != nil {
@@ -155,7 +153,7 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 	}
 
 	if op.Id == "" {
-		title, id := internal.ParseName(internal.CallerName(2))
+		title, id := internal.ParseName(internal.CallerName(3))
 		op.Id = id
 
 		if op.Summary == "" {
@@ -167,5 +165,5 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 		return
 	}
 
-	return api.opt.OpenAPI.AddOperation(r.Path, op)
+	return internal.AddOperationToDocument(api.opt.OpenAPI, r.Path, op)
 }

@@ -10,7 +10,7 @@ func ExampleParseName() {
 
 	fmt.Println(ParseName(str))
 
-	// Output: TODO
+	// Output: Foo bar baz ASD haha foo-bar-baz-asd-haha
 }
 
 func BenchmarkParseName(b *testing.B) {
@@ -27,7 +27,7 @@ func Example_calcAllow() {
 	str := []byte("FooBAR")
 
 	fmt.Println(calcAlloc(str))
-	// Output: TODO
+	// Output: 7
 }
 
 func Benchmark_calcAlloc(b *testing.B) {
@@ -43,5 +43,5 @@ func Benchmark_calcAlloc(b *testing.B) {
 func ExampleCallerName() {
 	fmt.Println(CallerName(0))
 
-	// Output: TODO
+	// Output: ExampleCallerName
 }

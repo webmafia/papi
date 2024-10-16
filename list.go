@@ -14,6 +14,7 @@ import (
 
 var _ registry.TypeDescriber = (*List[struct{}])(nil)
 
+// A streaming list response.
 type List[T any] struct {
 	meta struct {
 		Total int `json:"total"`
@@ -23,6 +24,7 @@ type List[T any] struct {
 	written bool
 }
 
+// Write item to stream.
 func (l *List[T]) Write(v *T) {
 	if l.written {
 		l.s.WriteMore()
@@ -33,10 +35,12 @@ func (l *List[T]) Write(v *T) {
 	l.enc.Encode(fast.Noescape(unsafe.Pointer(v)), l.s)
 }
 
+// Set the total number of items that exists (used for e.g. pagination).
 func (l *List[T]) SetTotal(i int) {
 	l.meta.Total = i
 }
 
+// TypeDescription implements registry.TypeDescriber.
 func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription {
 	return registry.TypeDescription{
 		Schema: func(_ reflect.StructTag) (schema openapi.Schema, err error) {

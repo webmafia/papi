@@ -13,7 +13,10 @@ func ExampleHasher() {
 	h.WriteString("foobar")
 	fmt.Println(h.Hash())
 
-	// Output: TODO
+	// Output:
+	//
+	// 17241709254077376921
+	// 11721187498075204345
 }
 
 func ExampleHash() {
@@ -30,7 +33,7 @@ func ExampleHash() {
 
 	fmt.Println(Hash(Array{Min: 1}))
 
-	// Output: TODO
+	// Output: 8852669417329623389
 }
 
 func BenchmarkHasher(b *testing.B) {
@@ -60,6 +63,6 @@ func BenchmarkHash(b *testing.B) {
 	h.Reset()
 
 	for range b.N {
-		Hash(Array{Min: 123})
+		_ = Hash(Array{Min: 123})
 	}
 }

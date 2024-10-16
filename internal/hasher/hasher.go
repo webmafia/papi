@@ -84,6 +84,8 @@ func (h *Hasher) WriteBool(v bool) (int, error) {
 }
 
 func (h *Hasher) WriteAny(v any) (int, error) {
+	// return 0, nil
+
 	switch value := v.(type) {
 	case int:
 		return h.WriteInt(value)
@@ -171,6 +173,6 @@ func (h *Hasher) writeReflect(v any) (int, error) {
 func Hash(v any) uint64 {
 	var h Hasher
 	h.Reset()
-	h.WriteAny(v)
+	h.WriteAny(*fast.NoescapeVal(&v))
 	return h.Hash()
 }
