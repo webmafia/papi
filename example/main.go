@@ -27,7 +27,7 @@ func (r userRoutes) GetUserByID(api *papi.API) (err error) {
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
-			resp.Name = "helluuu"
+			resp.Name = "John Doe"
 
 			return
 		},
