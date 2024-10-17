@@ -109,7 +109,7 @@ func (r Users) GetUserByID(api *papi.API) (err error) {
 	return papi.GET(api, papi.Route[req, User]{
 		Path: "/users/{id}",
 
-		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *domain.User) (err error) {
 			resp.ID = 123
 			resp.Name = "John Doe"
 
