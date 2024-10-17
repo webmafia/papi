@@ -1,5 +1,5 @@
 # papi
-<img alt="Papi" src="./docs/papi-mug.webp" align="right" />
+<img alt="Papi" src="./docs/papi.webp" align="right" />
 
 Performant API framework in Go.
 - Reduced boilerplate
