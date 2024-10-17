@@ -48,6 +48,9 @@ func createMinValidator(offset uintptr, typ reflect.Type, field string, s string
 	case reflect.Float64:
 		return validNumMin[float64](offset, field, s)
 
+	case reflect.Array:
+		return validArray(offset, typ, field, s, createMinValidator)
+
 	case reflect.Slice:
 		return validSliceMin(offset, field, s)
 
