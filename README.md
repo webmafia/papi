@@ -35,7 +35,6 @@ type req struct {}
 
 papi.GET(api, papi.Route[req, domain.User]{
 	Path: "/users/{id}",
-	Tags: []*openapi.Tag{Users},
 
 	// A handler always accepts a request- and response type, and returns any error occured.
 	Handler: func(ctx *papi.RequestCtx, req *req, resp *domain.User) (err error) {
