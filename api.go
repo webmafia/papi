@@ -1,7 +1,9 @@
 package papi
 
 import (
+	"context"
 	"io"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
@@ -58,6 +60,7 @@ func NewAPI(opt ...Options) (api *API, err error) {
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
+			Name:                         "papi",
 		},
 	}
 
@@ -121,6 +124,22 @@ func (api *API) handler(c *fasthttp.RequestCtx) {
 // Listen on the provided address (e.g. `localhost:3000`).
 func (api *API) ListenAndServe(addr string) error {
 	return api.server.ListenAndServe(addr)
+}
+
+// Close API for new requests, and close all current requests after specified grace period (default 3 seconds).
+func (api *API) Close(grace ...time.Duration) error {
+	var wait time.Duration
+
+	if len(grace) > 0 {
+		wait = grace[0]
+	} else {
+		wait = 3 * time.Second
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	defer cancel()
+
+	return api.server.ShutdownWithContext(ctx)
 }
 
 // Write API documentation to an `io.Writer`.`
