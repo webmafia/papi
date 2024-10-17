@@ -96,7 +96,7 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 
 		var written bool
 
-		for tag := range ctx.tags {
+		for _, tag := range ctx.tags {
 			if written {
 				s.WriteMore()
 			} else {

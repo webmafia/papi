@@ -161,6 +161,12 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 		}
 	}
 
+	if len(op.Tags) == 0 {
+		op.Tags = []openapi.Tag{
+			openapi.NewTag(internal.CallerType(3)),
+		}
+	}
+
 	if err = api.reg.DescribeOperation(op, iTyp, oTyp); err != nil {
 		return
 	}

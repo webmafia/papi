@@ -6,19 +6,19 @@ import (
 )
 
 type encoderContext struct {
-	tags map[*Tag]struct{}
+	tags map[string]Tag
 	refs map[string]*Ref
 }
 
 func newEncoderContext() *encoderContext {
 	return &encoderContext{
-		tags: make(map[*Tag]struct{}),
+		tags: make(map[string]Tag),
 		refs: make(map[string]*Ref),
 	}
 }
 
-func (ctx *encoderContext) addTag(tag *Tag) {
-	ctx.tags[tag] = struct{}{}
+func (ctx *encoderContext) addTag(tag Tag) {
+	ctx.tags[tag.Name] = tag
 }
 
 func (ctx *encoderContext) addRef(ref *Ref) (err error) {

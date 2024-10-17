@@ -13,7 +13,7 @@ type Operation struct {
 	Parameters  []Parameter
 	RequestBody Schema
 	Response    Schema
-	Tags        []*Tag
+	Tags        []Tag
 }
 
 func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {

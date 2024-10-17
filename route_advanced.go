@@ -8,14 +8,13 @@ type AdvancedRoute[I any, O any] struct {
 	Path        string
 	Summary     string
 	Description string
-	Tags        []*openapi.Tag
+	Tags        []openapi.Tag
 	Handler     func(c *RequestCtx, in *I, out *O) error
 }
 
 func (adv *AdvancedRoute[I, O]) fromRoute(r *Route[I, O]) {
 	adv.Path = r.Path
 	adv.Description = r.Description
-	adv.Tags = r.Tags
 	adv.Handler = r.Handler
 }
 

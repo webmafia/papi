@@ -31,6 +31,35 @@ func CallerName(skip int) string {
 	return name
 }
 
+func CallerType(skip int) string {
+	pc, _, _, ok := runtime.Caller(skip + 1)
+
+	if !ok {
+		return ""
+	}
+
+	f := runtime.FuncForPC(pc)
+
+	if f == nil {
+		return ""
+	}
+
+	name := f.Name()
+
+	end := strings.LastIndexByte(name, '.')
+
+	if end > 0 {
+		name = name[:end]
+		start := strings.LastIndexByte(name, '.')
+
+		if start > 0 {
+			name = name[start+1:]
+		}
+	}
+
+	return name
+}
+
 func ParseName(s string) (title, operationId string) {
 	b := fast.StringToBytes(s)
 	l := len(b)

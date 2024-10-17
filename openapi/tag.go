@@ -7,11 +7,16 @@ type Tag struct {
 	Description string
 }
 
-func NewTag(name, description string) *Tag {
-	return &Tag{
-		Name:        name,
-		Description: description,
+func NewTag(name string, description ...string) Tag {
+	t := Tag{
+		Name: name,
 	}
+
+	if len(description) > 0 {
+		t.Description = description[0]
+	}
+
+	return t
 }
 
 func (t *Tag) JsonEncode(_ *encoderContext, s *jsoniter.Stream) {

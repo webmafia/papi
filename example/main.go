@@ -9,21 +9,15 @@ import (
 	"github.com/webbmaffian/papi/openapi"
 )
 
-var (
-	Users = openapi.NewTag("users", "Users")
-	Files = openapi.NewTag("files", "Files")
-)
+type Users struct{}
 
-type userRoutes struct{}
-
-func (r userRoutes) GetUserByID(api *papi.API) (err error) {
+func (r Users) GetUserByID(api *papi.API) (err error) {
 	type req struct {
 		Id int `param:"id"`
 	}
 
 	return papi.GET(api, papi.Route[req, User]{
 		Path: "/users/{id}",
-		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			resp.ID = req.Id
@@ -34,7 +28,7 @@ func (r userRoutes) GetUserByID(api *papi.API) (err error) {
 	})
 }
 
-func (r userRoutes) ListUsers(api *papi.API) (err error) {
+func (r Users) ListUsers(api *papi.API) (err error) {
 	type req struct {
 		Status  string    `query:"status"`
 		Before  time.Time `query:"before"`
@@ -44,7 +38,6 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 
 	return papi.GET(api, papi.Route[req, papi.List[User]]{
 		Path: "/users",
-		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
@@ -56,14 +49,13 @@ func (r userRoutes) ListUsers(api *papi.API) (err error) {
 	})
 }
 
-func (r userRoutes) CreateUser(api *papi.API) (err error) {
+func (r Users) CreateUser(api *papi.API) (err error) {
 	type req struct {
 		Body User `body:"json"`
 	}
 
 	return papi.POST(api, papi.Route[req, User]{
 		Path: "/users",
-		Tags: []*openapi.Tag{Users},
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *User) (err error) {
 			*resp = req.Body
@@ -95,7 +87,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := api.RegisterRoutes(userRoutes{}); err != nil {
+	if err := api.RegisterRoutes(Users{}); err != nil {
 		panic(err)
 	}
 
