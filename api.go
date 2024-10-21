@@ -9,10 +9,10 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/webbmaffian/papi/errors"
 	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/internal/registry"
 	"github.com/webbmaffian/papi/internal/route"
 	"github.com/webbmaffian/papi/internal/types"
 	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry"
 )
 
 type API struct {

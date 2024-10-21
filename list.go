@@ -7,8 +7,8 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/internal/registry"
 	"github.com/webbmaffian/papi/openapi"
+	"github.com/webbmaffian/papi/registry"
 	"github.com/webmafia/fast"
 )
 
