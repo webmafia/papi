@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webbmaffian/papi/internal"
+	"github.com/webmafia/papi/internal"
 )
 
 func Example_createTagScanner() {

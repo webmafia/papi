@@ -2,7 +2,7 @@ package openapi
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	// "github.com/webbmaffian/papi/spec/schema"
+	// "github.com/webmafia/papi/spec/schema"
 )
 
 type Operation struct {

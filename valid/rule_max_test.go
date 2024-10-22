@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 func testMaxValidator[T any](t *testing.T, value T, max string, expectedErr bool) {

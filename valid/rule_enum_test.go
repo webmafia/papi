@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 // Generic function to test enum validation for any type.

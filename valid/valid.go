@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal/iterate"
+	"github.com/webmafia/papi/internal/iterate"
 )
 
 // Create a validator that can be reused for a specific struct type.

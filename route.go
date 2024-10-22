@@ -5,12 +5,12 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/errors"
-	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/internal/route"
-	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry"
-	"github.com/webbmaffian/papi/valid"
+	"github.com/webmafia/papi/errors"
+	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/internal/route"
+	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/registry"
+	"github.com/webmafia/papi/valid"
 )
 
 // Register a group of routes. Any exported methods with a signature of `func(api *papi.API) error` will be called.

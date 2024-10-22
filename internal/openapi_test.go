@@ -3,7 +3,7 @@ package internal
 import (
 	"testing"
 
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi/openapi"
 )
 
 // Ensure that the local `document` is exactly the same as `openapi.Document`.

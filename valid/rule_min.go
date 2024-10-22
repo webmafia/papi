@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/errors"
-	"github.com/webbmaffian/papi/internal/constraints"
-	"github.com/webbmaffian/papi/internal/scanner"
+	"github.com/webmafia/papi/errors"
+	"github.com/webmafia/papi/internal/constraints"
+	"github.com/webmafia/papi/internal/scanner"
 )
 
 func createMinValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {

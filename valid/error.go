@@ -1,7 +1,7 @@
 package valid
 
 import (
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 var (

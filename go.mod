@@ -1,4 +1,4 @@
-module github.com/webbmaffian/papi
+module github.com/webmafia/papi
 
 go 1.23
 

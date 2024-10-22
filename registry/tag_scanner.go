@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal/iterate"
+	"github.com/webmafia/papi/internal/iterate"
 )
 
 func ScanTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (err error) {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 func createPatternValidator(offset uintptr, typ reflect.Type, field string, s string) (validator, error) {

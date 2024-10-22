@@ -3,7 +3,7 @@ package internal
 import (
 	"unsafe"
 
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi/openapi"
 )
 
 // Must be synchronized with `openapi.Document`.

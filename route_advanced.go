@@ -1,6 +1,6 @@
 package papi
 
-import "github.com/webbmaffian/papi/openapi"
+import "github.com/webmafia/papi/openapi"
 
 type AdvancedRoute[I any, O any] struct {
 	OperationId string

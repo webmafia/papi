@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/internal/route"
+	"github.com/webmafia/papi/internal/route"
 )
 
 func (r *Registry) createParamDecoder(typ reflect.Type, idx int, tags reflect.StructTag) (scan RequestDecoder, err error) {

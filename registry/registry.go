@@ -3,8 +3,8 @@ package registry
 import (
 	"reflect"
 
-	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/internal/scanner"
+	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/internal/scanner"
 )
 
 type Registry struct {

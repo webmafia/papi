@@ -7,12 +7,12 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
-	"github.com/webbmaffian/papi/errors"
-	"github.com/webbmaffian/papi/internal"
-	"github.com/webbmaffian/papi/internal/route"
-	"github.com/webbmaffian/papi/internal/types"
-	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webmafia/papi/errors"
+	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/internal/route"
+	"github.com/webmafia/papi/internal/types"
+	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/registry"
 )
 
 type API struct {

@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/internal/iterate"
 	"github.com/webmafia/fast"
+	"github.com/webmafia/papi/internal/iterate"
 )
 
 func (c Creator) createArrayScanner(typ reflect.Type) (scan Scanner, err error) {

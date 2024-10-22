@@ -3,7 +3,7 @@ package papi
 import (
 	errs "errors"
 
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 // API error

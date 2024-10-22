@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/webbmaffian/papi/internal/hasher"
+	"github.com/webmafia/papi/internal/hasher"
 )
 
 var _ Schema = (*Object)(nil)

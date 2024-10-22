@@ -3,7 +3,7 @@ package registry
 import (
 	"reflect"
 
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi/openapi"
 )
 
 var typeDescriber = reflect.TypeFor[TypeDescriber]()

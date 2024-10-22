@@ -5,8 +5,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/openapi"
-	"github.com/webbmaffian/papi/registry"
+	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/registry"
 )
 
 func TimeType() registry.TypeRegistrar {

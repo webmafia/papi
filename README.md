@@ -12,7 +12,7 @@ Performant API framework in Go.
 
 ## Installation
 ```sh
-go get github.com/webbmaffian/papi
+go get github.com/webmafia/papi
 ```
 
 ## Usage

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi/openapi"
 )
 
 func (s *Registry) DescribeOperation(op *openapi.Operation, in, out reflect.Type) (err error) {

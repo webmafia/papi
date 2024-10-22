@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/webbmaffian/papi"
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi"
+	"github.com/webmafia/papi/openapi"
 )
 
 type Users struct{}

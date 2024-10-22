@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/webbmaffian/papi/internal/iterate"
-	"github.com/webbmaffian/papi/openapi"
+	"github.com/webmafia/papi/internal/iterate"
+	"github.com/webmafia/papi/openapi"
 )
 
 func (r *Registry) Schema(typ reflect.Type, tag ...reflect.StructTag) (schema openapi.Schema, err error) {

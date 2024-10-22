@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/webbmaffian/papi/errors"
+	"github.com/webmafia/papi/errors"
 )
 
 func createRequiredValidator(offset uintptr, typ reflect.Type, field string) (validator, error) {
