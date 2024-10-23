@@ -116,7 +116,7 @@ func (r *Router) Lookup(method []byte, p []byte) (cb func(c *fasthttp.RequestCtx
 
 	n = r.lookup(n, p, params)
 
-	if n == nil {
+	if n == nil || n.route == nil {
 		return
 	}
 
