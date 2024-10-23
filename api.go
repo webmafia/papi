@@ -39,6 +39,8 @@ type Options struct {
 
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
+
+	AllowCredentials bool
 }
 
 func (opt *Options) setDefaults() {
@@ -104,11 +106,13 @@ func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
 	if api.opt.CORS == "*" {
-		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 		c.Response.Header.SetBytesV("Access-Control-Allow-Origin", c.Request.Header.Peek("Origin"))
 	} else if api.opt.CORS != "" {
-		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 		c.Response.Header.Set("Access-Control-Allow-Origin", api.opt.CORS)
+	}
+
+	if api.opt.AllowCredentials {
+		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 	}
 
 	cb, params, ok := api.router.Lookup(c.Method(), c.Path())
