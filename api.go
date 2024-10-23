@@ -36,6 +36,9 @@ type Options struct {
 	// Any errors occured will be passed through this callback, where it has the chance to transform the error to an
 	// `errors.ErrorDocumentor` (if not already). Any error that isn't transformed will be replaced with a general error message.
 	TransformError func(err error) errors.ErrorDocumentor
+
+	// Header for Cross-Origin Resource Sharing (CORS).
+	CORS string
 }
 
 func (opt *Options) setDefaults() {
@@ -100,6 +103,14 @@ func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
 }
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
+	if api.opt.CORS == "*" {
+		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+		c.Response.Header.SetBytesV("Access-Control-Allow-Origin", c.Request.Header.Peek("Origin"))
+	} else if api.opt.CORS != "" {
+		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+		c.Response.Header.Set("Access-Control-Allow-Origin", api.opt.CORS)
+	}
+
 	cb, params, ok := api.router.Lookup(c.Method(), c.Path())
 	defer api.router.ReleaseParams(params)
 
