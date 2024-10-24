@@ -10,7 +10,7 @@ Performant API framework in Go.
 - Automatic validation (based on OpenAPI schema rules)
 - Encourages dependency injection
 
-<span style="color: red">**WARNING: This hasn't reached version 1.0.0 and is not production ready yet.**</span>
+**WARNING: This hasn't reached version 1.0.0 and is not production ready yet.**
 
 ## Installation
 ```sh
