@@ -100,6 +100,7 @@ func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
 
 	c.Response.Reset()
 	c.SetStatusCode(err.Status())
+	api.cors(c)
 
 	err.ErrorDocument(s)
 	s.Flush()
@@ -192,7 +193,7 @@ func (api *API) cors(c *fasthttp.RequestCtx) (abort bool) {
 	}
 
 	c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
-	c.Response.Header.Set("Access-Control-Allow-Headers", "authorization")
+	c.Response.Header.Set("Access-Control-Allow-Headers", "authorization,content-type")
 	c.Response.Header.Set("Access-Control-Allow-Methods", "HEAD,GET,POST,PUT,DELETE,OPTIONS")
 	c.Response.Header.Set("Access-Control-Allow-Origin", cors)
 
