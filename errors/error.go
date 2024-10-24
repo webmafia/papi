@@ -18,6 +18,7 @@ type Error struct {
 	message  string // Error message (e.g. "Too short")
 	location string // What the error concerns (e.g. the specific field "password")
 	expect   string // What was expected (e.g. "7", as in "min 7 characters")
+	details  string // Technical details about the underlying error
 }
 
 func NewError(code string, message string, statusCode ...int) Error {
@@ -54,6 +55,12 @@ func (err Error) JsonEncode(s *jsoniter.Stream) {
 		s.WriteMore()
 		s.WriteObjectField("expect")
 		s.WriteString(err.expect)
+	}
+
+	if err.details != "" {
+		s.WriteMore()
+		s.WriteObjectField("details")
+		s.WriteString(err.details)
 	}
 
 	s.WriteObjectEnd()
@@ -94,6 +101,10 @@ func (err Error) Location() string {
 
 func (err Error) Expect() string {
 	return err.expect
+}
+
+func (err Error) Details() string {
+	return err.details
 }
 
 func (err *Error) Reset() {

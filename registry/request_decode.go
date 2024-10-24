@@ -65,7 +65,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string) (s
 				return
 			}
 
-			if sc, err = r.createParamDecoder(fld.Type, idx, fld.Tag); err != nil {
+			if sc, err = r.createParamDecoder(fld.Type, tags.Param, idx, fld.Tag); err != nil {
 				return
 			}
 

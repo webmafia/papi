@@ -19,7 +19,9 @@ func (r *Registry) createQueryDecoder(typ reflect.Type, key string, tags reflect
 		val := c.QueryArgs().Peek(key)
 
 		if len(val) > 0 {
-			return sc(p, fast.BytesToString(val))
+			if err := sc(p, fast.BytesToString(val)); err != nil {
+				return ErrFailedDecodeQuery.Detailed(err.Error(), key)
+			}
 		}
 
 		return nil

@@ -14,7 +14,12 @@ func (r *Registry) createJsonDecoder(typ reflect.Type) (scan RequestDecoder, err
 		defer r.json.ReleaseIterator(iter)
 
 		dec.Decode(p, iter)
-		return iter.Error
+
+		if iter.Error != nil {
+			return ErrFailedDecodeBody.Detailed(iter.Error.Error())
+		}
+
+		return nil
 	}
 
 	return

@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/papi/internal/route"
 )
 
-func (r *Registry) createParamDecoder(typ reflect.Type, idx int, tags reflect.StructTag) (scan RequestDecoder, err error) {
+func (r *Registry) createParamDecoder(typ reflect.Type, key string, idx int, tags reflect.StructTag) (scan RequestDecoder, err error) {
 	sc, err := r.Decoder(typ, tags)
 
 	if err != nil {
@@ -17,6 +17,11 @@ func (r *Registry) createParamDecoder(typ reflect.Type, idx int, tags reflect.St
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
 		params := route.RequestParams(c)
-		return sc(p, params.Value(idx))
+
+		if err := sc(p, params.Value(idx)); err != nil {
+			return ErrFailedDecodeParam.Detailed(err.Error(), key)
+		}
+
+		return nil
 	}, nil
 }

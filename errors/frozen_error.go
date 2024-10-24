@@ -7,7 +7,8 @@ import (
 // An immutable error used for spawning new "explained" errors.
 type FrozenError interface {
 	ErrorDocumentor
-	Explained(location, expect string) Error
+	Explained(location string, expect ...string) Error
+	Detailed(details string, location ...string) Error
 }
 
 type frozenError struct {
@@ -32,14 +33,35 @@ func NewFrozenError(code string, message string, statusCode ...int) FrozenError 
 }
 
 // Returns an `Error` with additional information.
-func (err *frozenError) Explained(location, expect string) Error {
-	return Error{
+func (err *frozenError) Explained(location string, expect ...string) Error {
+	e := Error{
 		status:   err.status,
 		code:     err.code,
 		message:  err.message,
 		location: location,
-		expect:   expect,
 	}
+
+	if len(expect) > 0 {
+		e.expect = expect[0]
+	}
+
+	return e
+}
+
+// Returns an `Error` with additional information.
+func (err *frozenError) Detailed(details string, location ...string) Error {
+	e := Error{
+		status:  err.status,
+		code:    err.code,
+		message: err.message,
+		details: details,
+	}
+
+	if len(location) > 0 {
+		e.location = location[0]
+	}
+
+	return e
 }
 
 func (err *frozenError) Status() int {
