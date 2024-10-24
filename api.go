@@ -55,7 +55,7 @@ func (opt *Options) setDefaults() {
 				return e
 			}
 
-			return ErrUnknownError
+			return ErrUnknownError.Explained("", err.Error())
 		}
 	}
 }
