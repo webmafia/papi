@@ -7,6 +7,7 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fast"
 	"github.com/webmafia/papi/errors"
 	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/internal/route"
@@ -105,14 +106,8 @@ func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
 }
 
 func (api *API) handler(c *fasthttp.RequestCtx) {
-	if api.opt.CORS == "*" {
-		c.Response.Header.SetBytesV("Access-Control-Allow-Origin", c.Request.Header.Peek("Origin"))
-	} else if api.opt.CORS != "" {
-		c.Response.Header.Set("Access-Control-Allow-Origin", api.opt.CORS)
-	}
-
-	if api.opt.AllowCredentials {
-		c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	if api.cors(c) {
+		return
 	}
 
 	cb, params, ok := api.router.Lookup(c.Method(), c.Path())
@@ -180,4 +175,26 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 // Register a custom type, that will override any defaults.
 func (api *API) RegisterType(typs ...registry.TypeRegistrar) (err error) {
 	return api.reg.RegisterType(typs...)
+}
+
+// TODO: Real implementation
+func (api *API) cors(c *fasthttp.RequestCtx) (abort bool) {
+	cors := api.opt.CORS
+
+	if cors == "" {
+		return
+	}
+
+	if api.opt.CORS == "*" {
+		if origin := c.Request.Header.Peek("Origin"); len(origin) > 0 {
+			cors = fast.BytesToString(origin)
+		}
+	}
+
+	c.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	c.Response.Header.Set("Access-Control-Allow-Headers", "authorization")
+	c.Response.Header.Set("Access-Control-Allow-Methods", "HEAD,GET,POST,PUT,DELETE,OPTIONS")
+	c.Response.Header.Set("Access-Control-Allow-Origin", cors)
+
+	return c.IsOptions()
 }
