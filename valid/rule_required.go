@@ -16,7 +16,7 @@ func createRequiredValidator(offset uintptr, typ reflect.Type, field string) (va
 
 	return func(ptr unsafe.Pointer, errs *errors.Errors) {
 		if isZero(unsafe.Add(ptr, offset)) {
-			errs.Append(ErrRequired.Explained(field, "any value"))
+			errs.Append(ErrRequired.Explained(field))
 		}
 	}, nil
 }
