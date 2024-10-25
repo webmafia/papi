@@ -9,4 +9,5 @@ type Schema interface {
 	hasher.Hashable
 	GetTitle() string
 	encodeSchema(ctx *encoderContext, s *jsoniter.Stream) error
+	encodeValue(s *jsoniter.Stream, val string) error
 }

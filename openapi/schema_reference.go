@@ -50,6 +50,10 @@ func (sch *Ref) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err error
 	return
 }
 
+func (sch *Ref) encodeValue(s *jsoniter.Stream, val string) error {
+	return sch.encodeValue(s, val)
+}
+
 func (sch *Ref) Hash() uint64 {
 	return sch.Schema.Hash()
 }

@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"fmt"
+	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/webmafia/papi/internal/hasher"
@@ -12,6 +13,7 @@ var _ Schema = (*Boolean)(nil)
 type Boolean struct {
 	Title       string `tag:"title"`
 	Description string `tag:"description"`
+	Default     string `tag:"default"`
 	Nullable    bool   `tag:"flags:nullable"`
 	ReadOnly    bool   `tag:"flags:readonly"`
 	WriteOnly   bool   `tag:"flags:writeonly"`
@@ -61,6 +63,12 @@ func (sch *Boolean) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err e
 		s.WriteBool(sch.WriteOnly)
 	}
 
+	if sch.Default != "" {
+		s.WriteMore()
+		s.WriteObjectField("default")
+		sch.encodeValue(s, sch.Default)
+	}
+
 	s.WriteObjectEnd()
 
 	if s.Error != nil {
@@ -68,6 +76,20 @@ func (sch *Boolean) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err e
 	}
 
 	return
+}
+
+func (sch *Boolean) encodeValue(s *jsoniter.Stream, val string) error {
+	val = strings.ToLower(val)
+
+	if val == "true" {
+		s.WriteTrue()
+	} else if val == "false" {
+		s.WriteFalse()
+	} else {
+		return fmt.Errorf("invalid boolean: '%s'", val)
+	}
+
+	return nil
 }
 
 func (sch *Boolean) Hash() uint64 {

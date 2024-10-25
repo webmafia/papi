@@ -91,6 +91,13 @@ func appendFieldValidators(valids *validators, typ reflect.Type, offset uintptr,
 
 			valids.append(valid)
 
+		case "default":
+			if valid, err = createDefaultValidator(offset, typ, field, v); err != nil {
+				return
+			}
+
+			valids.append(valid)
+
 		// case "unique":
 
 		case "flags":

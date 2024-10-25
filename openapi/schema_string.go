@@ -17,6 +17,7 @@ type String struct {
 	Pattern     string   `tag:"pattern"`
 	Min         int      `tag:"min"`
 	Max         int      `tag:"max"`
+	Default     string   `tag:"default"`
 	Nullable    bool     `tag:"flags:nullable"`
 	ReadOnly    bool     `tag:"flags:readonly"`
 	WriteOnly   bool     `tag:"flags:writeonly"`
@@ -106,6 +107,12 @@ func (sch *String) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err er
 		s.WriteInt(sch.Max)
 	}
 
+	if sch.Default != "" {
+		s.WriteMore()
+		s.WriteObjectField("default")
+		sch.encodeValue(s, sch.Default)
+	}
+
 	s.WriteObjectEnd()
 
 	if s.Error != nil {
@@ -113,6 +120,11 @@ func (sch *String) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err er
 	}
 
 	return
+}
+
+func (sch *String) encodeValue(s *jsoniter.Stream, val string) error {
+	s.WriteString(val)
+	return nil
 }
 
 func (sch *String) Hash() uint64 {

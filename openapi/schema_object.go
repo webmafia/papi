@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"errors"
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
@@ -111,6 +112,10 @@ func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err er
 	}
 
 	return
+}
+
+func (sch *Object) encodeValue(s *jsoniter.Stream, val string) error {
+	return errors.New("default objects not supported")
 }
 
 func (sch *Object) Hash() uint64 {

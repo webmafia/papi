@@ -6,6 +6,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/webmafia/papi/internal/constraints"
 	"github.com/webmafia/papi/internal/hasher"
+	"github.com/webmafia/papi/internal/scanner"
 )
 
 var _ Schema = (*Integer[int])(nil)
@@ -15,6 +16,7 @@ type Integer[T constraints.Integer] struct {
 	Description string `tag:"description"`
 	Min         T      `tag:"min"`
 	Max         T      `tag:"max"`
+	Default     string `tag:"default"`
 	Nullable    bool   `tag:"flags:nullable"`
 	ReadOnly    bool   `tag:"flags:readonly"`
 	WriteOnly   bool   `tag:"flags:writeonly"`
@@ -64,6 +66,12 @@ func (sch *Integer[T]) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (er
 		s.WriteBool(sch.WriteOnly)
 	}
 
+	if sch.Default != "" {
+		s.WriteMore()
+		s.WriteObjectField("default")
+		sch.encodeValue(s, sch.Default)
+	}
+
 	s.WriteMore()
 	s.WriteObjectField("minimum")
 	s.WriteVal(sch.Min)
@@ -79,6 +87,18 @@ func (sch *Integer[T]) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (er
 	}
 
 	return
+}
+
+func (sch *Integer[T]) encodeValue(s *jsoniter.Stream, val string) error {
+	var i T
+
+	if err := scanner.ScanString(&i, val); err != nil {
+		return err
+	}
+
+	s.WriteVal(i)
+
+	return nil
 }
 
 func (sch *Integer[T]) Hash() uint64 {

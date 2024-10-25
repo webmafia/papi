@@ -13,6 +13,11 @@ func getScanner[T any](dst *T) (scan Scanner, err error) {
 	return c.CreateScanner(reflect.TypeOf(dst).Elem())
 }
 
+//go:inline
+func CreateScanner(typ reflect.Type) (scan Scanner, err error) {
+	return c.CreateScanner(typ)
+}
+
 func GetScanner[T any](dst *T) (scan func(*T, string) error, err error) {
 	sc, err := getScanner(dst)
 

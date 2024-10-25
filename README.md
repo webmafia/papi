@@ -83,13 +83,14 @@ type req struct{
 
 The following validation tags are supported in the request input (as well as in any nested structs):
 
-| Tag                | Int / Float            | String                 | Slice                              | Array            |
-| ------------------ | ---------------------- | ---------------------- | ---------------------------------- | ---------------- |
-| `min:"*"`          | Minimum value          | Minimum length         | Minimum length                     | -                |
-| `max:"*"`          | Maximum value          | Maximum length         | Maximum length                     | -                |
-| `enum:"*,*,*"`     | One of specific values | One of specific values | -                                  | -                |
-| `pattern:"*"`      | -                      | Regular expression     | -                                  | -                |
-| `flags:"required"` | Must be non-zero       | Must be non-zero       | Must have at least 1 non-zero item | Must be non-zero |
+| Tag                | Int / Float            | String                 | Slice                              | Array                |
+| ------------------ | ---------------------- | ---------------------- | ---------------------------------- | -------------------- |
+| `min:"*"`          | Minimum value          | Minimum length         | Minimum length                     | -                    |
+| `max:"*"`          | Maximum value          | Maximum length         | Maximum length                     | -                    |
+| `enum:"*,*,*"`     | One of specific values | One of specific values | -                                  | -                    |
+| `pattern:"*"`      | -                      | Regular expression     | -                                  | -                    |
+| `default:"*"`      | Sets default if zero   | Sets default if zero   | Sets default if zero               | Sets default if zero |
+| `flags:"required"` | Must be non-zero       | Must be non-zero       | Must have at least 1 non-zero item | Must be non-zero     |
 
 Please note:
 - If slices and arrays don't support a tag, it's passed to their children.

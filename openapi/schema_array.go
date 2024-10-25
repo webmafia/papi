@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"errors"
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
@@ -15,10 +16,11 @@ type Array struct {
 	Min         int    `tag:"min"`
 	Max         int    `tag:"max"`
 	Items       Schema
-	Nullable    bool `tag:"flags:nullable"`
-	ReadOnly    bool `tag:"flags:readonly"`
-	WriteOnly   bool `tag:"flags:writeonly"`
-	UniqueItems bool `tag:"flags:unique"`
+	Default     []string `tag:"default"`
+	Nullable    bool     `tag:"flags:nullable"`
+	ReadOnly    bool     `tag:"flags:readonly"`
+	WriteOnly   bool     `tag:"flags:writeonly"`
+	UniqueItems bool     `tag:"flags:unique"`
 }
 
 func (sch *Array) GetTitle() string {
@@ -89,6 +91,24 @@ func (sch *Array) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err err
 		s.WriteBool(sch.UniqueItems)
 	}
 
+	if len(sch.Default) > 0 {
+		s.WriteMore()
+		s.WriteObjectField("default")
+		s.WriteArrayStart()
+
+		for i := range sch.Default {
+			if i != 0 {
+				s.WriteMore()
+			}
+
+			if err = sch.Items.encodeValue(s, sch.Default[i]); err != nil {
+				return
+			}
+		}
+
+		s.WriteArrayEnd()
+	}
+
 	s.WriteObjectEnd()
 
 	if s.Error != nil {
@@ -96,6 +116,10 @@ func (sch *Array) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err err
 	}
 
 	return
+}
+
+func (sch *Array) encodeValue(s *jsoniter.Stream, val string) error {
+	return errors.New("default nested arrays not supported")
 }
 
 func (sch *Array) Hash() uint64 {
