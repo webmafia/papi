@@ -44,7 +44,11 @@ type Options struct {
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
 
-	TokenSecret []byte
+	// An authentication handler
+	Gatekeeper *token.Gatekeeper
+
+	// Whether the permission tag is optional in routes. Does only apply when there is a gatekeeper set. Default false.
+	OptionalPermissionTag bool
 }
 
 func (opt *Options) setDefaults() {
@@ -81,16 +85,10 @@ func NewAPI(opt ...Options) (api *API, err error) {
 		}
 	}
 
-	tokGen, err := token.NewGenerator(api.opt.TokenSecret)
-
-	if err != nil {
-		return
-	}
-
 	api.opt.setDefaults()
 	api.json = internal.NewJSONPool(api.opt.JsonAPI)
 
-	if api.reg, err = registry.NewRegistry(tokGen, api.json); err != nil {
+	if api.reg, err = registry.NewRegistry(api.json, api.opt.Gatekeeper, !api.opt.OptionalPermissionTag); err != nil {
 		return
 	}
 
@@ -182,12 +180,12 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 	return s.Flush()
 }
 
-func (api *API) IteratePolicies() iter.Seq2[policy.PolicyKey, []byte] {
+func (api *API) IteratePolicies() iter.Seq2[policy.PolicyKey, policy.Policy] {
 	return api.reg.Policies().Iterate()
 }
 
-func (api *API) AddPolicy(role string, action string, resource string, condJson []byte) error {
-	return api.reg.Policies().Add(role, action, resource, condJson)
+func (api *API) AddPolicy(role string, perm policy.Permission, prio int64, condJson []byte) error {
+	return api.reg.Policies().Add(role, perm, prio, condJson)
 }
 
 // Register a custom type, that will override any defaults.

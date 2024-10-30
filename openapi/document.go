@@ -67,11 +67,53 @@ func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
 }
 
 func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
-	if len(ctx.refs) > 0 {
-		s.WriteMore()
-		s.WriteObjectField("components")
+	s.WriteMore()
+	s.WriteObjectField("components")
+	s.WriteObjectStart()
+
+	/*
+		"securitySchemes": {
+			"token": {
+				"description": "API token",
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "base32hex"
+			}
+		}
+	*/
+
+	if ctx.auth {
+		s.WriteObjectField("securitySchemes")
 		s.WriteObjectStart()
 
+		s.WriteObjectField("token")
+		s.WriteObjectStart()
+
+		s.WriteObjectField("description")
+		s.WriteString("API token")
+
+		s.WriteMore()
+		s.WriteObjectField("type")
+		s.WriteString("http")
+
+		s.WriteMore()
+		s.WriteObjectField("scheme")
+		s.WriteString("bearer")
+
+		s.WriteMore()
+		s.WriteObjectField("bearerFormat")
+		s.WriteString("base32hex")
+
+		s.WriteObjectEnd()
+
+		s.WriteObjectEnd()
+
+		if len(ctx.refs) > 0 {
+			s.WriteMore()
+		}
+	}
+
+	if len(ctx.refs) > 0 {
 		s.WriteObjectField("schemas")
 		s.WriteObjectStart()
 
@@ -85,9 +127,9 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 		}
 
 		s.WriteObjectEnd()
-
-		s.WriteObjectEnd()
 	}
+
+	s.WriteObjectEnd()
 
 	if len(ctx.tags) > 0 {
 		s.WriteMore()

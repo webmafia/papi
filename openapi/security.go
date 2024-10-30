@@ -5,30 +5,22 @@ import (
 )
 
 type Security struct {
-	Action   string
-	Resource string
-	Valid    bool
+	Scope string
 }
 
 func (sec Security) IsZero() bool {
-	return sec.Action == "" || sec.Resource == ""
-}
-
-func (sec Security) String() string {
-	if sec.IsZero() {
-		return ""
-	}
-
-	return sec.Action + ":" + sec.Resource
+	return sec.Scope == ""
 }
 
 func (ss Security) JsonEncode(_ *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectStart()
 
-	s.WriteObjectField("token")
-	s.WriteArrayStart()
-	s.WriteString(ss.String())
-	s.WriteArrayEnd()
+	if !ss.IsZero() {
+		s.WriteObjectField("token")
+		s.WriteArrayStart()
+		s.WriteString(ss.Scope)
+		s.WriteArrayEnd()
+	}
 
 	s.WriteObjectEnd()
 }

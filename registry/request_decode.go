@@ -11,19 +11,20 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/policy"
 )
 
 type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
 
 type inputTags struct {
-	Body     string `tag:"body" enum:"json"`
-	Param    string `tag:"param"`
-	Query    string `tag:"query"`
-	Security string `tag:"security"`
+	Body       string `tag:"body" enum:"json"`
+	Param      string `tag:"param"`
+	Query      string `tag:"query"`
+	Permission string `tag:"permission"`
 }
 
 func (t inputTags) IsZero() bool {
-	return t.Body == "" && t.Param == "" && t.Query == "" && t.Security == ""
+	return t.Body == "" && t.Param == "" && t.Query == "" && t.Permission == ""
 }
 
 type fieldScanner struct {
@@ -31,13 +32,14 @@ type fieldScanner struct {
 	scan   RequestDecoder
 }
 
-func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, err error) {
+func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm policy.Permission, err error) {
 	return r.createRequestDecoder(typ, paramKeys, caller)
 }
 
-func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, err error) {
+func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm policy.Permission, err error) {
 	if typ.Kind() != reflect.Struct {
-		return nil, errors.New("invalid struct")
+		err = errors.New("invalid struct")
+		return
 	}
 
 	numFields := typ.NumField()
@@ -56,10 +58,18 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		// If there are no tags, and the field type is a struct, dive into it
 		if tags.IsZero() {
 			if fld.Type.Kind() == reflect.Struct {
-				fldScan, err := r.createRequestDecoder(fld.Type, paramKeys, caller)
+				fldScan, subPerm, err := r.createRequestDecoder(fld.Type, paramKeys, caller)
 
 				if err != nil {
-					return nil, err
+					return nil, "", err
+				}
+
+				if subPerm != "" {
+					if perm != "" {
+						return nil, "", fmt.Errorf("%s.%s in %s has a permission tag, but permission for the route is already set", typ.Name(), fld.Name, caller.Name())
+					}
+
+					perm = subPerm
 				}
 
 				flds = append(flds, fieldScanner{
@@ -81,7 +91,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				scan:   sc,
 			})
 		} else if tags.Body != "" {
-			return nil, errors.New("the only valid 'body' tag value is 'json'")
+			return nil, "", errors.New("the only valid 'body' tag value is 'json'")
 		}
 
 		if tags.Param != "" {
@@ -113,26 +123,38 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			})
 		}
 
-		if tags.Security != "" {
-			action, resource, ok := strings.Cut(tags.Security, ":")
+		if tags.Permission != "" {
+			// if r.guard == nil {
+			// 	return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API guard is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
+			// }
 
-			if !ok {
-				resource = strings.ToLower(internal.CallerTypeFromFunc(caller))
+			if tags.Permission != "-" {
+				perm = policy.Permission(tags.Permission)
+
+				if !perm.HasResource() {
+					perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
+				}
+
+				if err = r.policies.Register(perm, fld.Type); err != nil {
+					return
+				}
+
+				if r.guard == nil {
+					if sc, err = r.createSecurityDecoder(fld.Type, perm); err != nil {
+						return
+					}
+
+					flds = append(flds, fieldScanner{
+						offset: fld.Offset,
+						scan:   sc,
+					})
+				}
 			}
-
-			if err = r.policies.Register(action, resource, fld.Type); err != nil {
-				return
-			}
-
-			if sc, err = r.createSecurityDecoder(fld.Type, action, resource); err != nil {
-				return
-			}
-
-			flds = append(flds, fieldScanner{
-				offset: fld.Offset,
-				scan:   sc,
-			})
 		}
+	}
+
+	if r.forcePermTag && perm != "" && r.guard != nil {
+		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when an API guard is set", caller.Name())
 	}
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
@@ -143,5 +165,5 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 
 		return
-	}, nil
+	}, perm, nil
 }

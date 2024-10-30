@@ -1,14 +1,11 @@
 package token
 
 import (
-	"encoding/base32"
 	"unsafe"
 
 	"github.com/webmafia/fast"
 	"github.com/webmafia/identifier"
 )
-
-var encoder = base32.HexEncoding.WithPadding(base32.NoPadding)
 
 var (
 	binLen int

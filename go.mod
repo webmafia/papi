@@ -8,6 +8,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/valyala/fasthttp v1.52.0
 	github.com/webmafia/fast v0.10.0
+	github.com/webmafia/lru v1.0.0
 )
 
 require github.com/klauspost/cpuid/v2 v2.0.12 // indirect

@@ -8,6 +8,7 @@ import (
 type encoderContext struct {
 	tags map[string]Tag
 	refs map[string]*Ref
+	auth bool
 }
 
 func newEncoderContext() *encoderContext {

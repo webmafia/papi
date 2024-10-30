@@ -10,6 +10,7 @@ import (
 	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/policy"
 	"github.com/webmafia/papi/registry"
 	"github.com/webmafia/papi/valid"
 )
@@ -91,11 +92,6 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	}
 
 	pc := internal.Caller(2)
-
-	if err = addToDocs(api, &r, pc); err != nil {
-		return
-	}
-
 	validate, err := valid.CreateStructValidator[I]()
 
 	if err != nil {
@@ -105,10 +101,15 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		var (
 			decodeRequest registry.RequestDecoder
+			perm          policy.Permission
 			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
-		if decodeRequest, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params, pc); err != nil {
+		if decodeRequest, perm, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params, pc); err != nil {
+			return
+		}
+
+		if err = addToDocs(api, &r, perm, pc); err != nil {
 			return
 		}
 
@@ -139,7 +140,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	})
 }
 
-func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], pc *runtime.Func) (err error) {
+func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], perm policy.Permission, pc *runtime.Func) (err error) {
 	if api.opt.OpenAPI == nil {
 		return
 	}
@@ -152,7 +153,10 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], pc *runtime.Func) (er
 		Method:      r.Method,
 		Summary:     r.Summary,
 		Description: r.Description,
-		Tags:        r.Tags,
+		Security: openapi.Security{
+			Scope: perm.String(),
+		},
+		Tags: r.Tags,
 	}
 
 	if op.Id == "" {

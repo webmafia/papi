@@ -10,21 +10,23 @@ import (
 )
 
 type Registry struct {
-	scanCache map[reflect.Type]Decoder
-	desc      map[reflect.Type]TypeDescription
-	json      *internal.JSONPool
-	scan      scanner.Creator
-	policies  *policy.Store
-	tokGen    *token.Generator
+	scanCache    map[reflect.Type]Decoder
+	desc         map[reflect.Type]TypeDescription
+	json         *internal.JSONPool
+	scan         scanner.Creator
+	policies     *policy.Store
+	guard        *token.Gatekeeper
+	forcePermTag bool
 }
 
-func NewRegistry(tokGen *token.Generator, json *internal.JSONPool) (r *Registry, err error) {
+func NewRegistry(json *internal.JSONPool, guard *token.Gatekeeper, forcePermTag bool) (r *Registry, err error) {
 	r = &Registry{
-		scanCache: make(map[reflect.Type]Decoder),
-		desc:      make(map[reflect.Type]TypeDescription),
-		json:      json,
-		policies:  policy.NewStore(json),
-		tokGen:    tokGen,
+		scanCache:    make(map[reflect.Type]Decoder),
+		desc:         make(map[reflect.Type]TypeDescription),
+		json:         json,
+		policies:     policy.NewStore(json),
+		guard:        guard,
+		forcePermTag: forcePermTag,
 	}
 
 	r.scan = scanner.NewCreator(r.scanner)

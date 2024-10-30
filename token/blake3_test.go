@@ -1,68 +1,64 @@
 package token
 
 import (
+	"context"
 	"fmt"
 	"testing"
 )
 
-func ExampleGenerator() {
-	var key [32]byte
-
-	g, err := NewGenerator(key[:])
+func ExampleGatekeeper() {
+	s, err := GenerateSecret()
 
 	if err != nil {
 		panic(err)
 	}
 
-	tok, err := g.CreateToken(nil)
+	g, err := NewGatekeeper(s, dummyStore{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	tok, err := g.CreateToken(context.Background(), nil)
 
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println(tok)
-	fmt.Println(g.ValidateToken(tok))
+	fmt.Println(g.ValidateToken(context.Background(), tok))
 	fmt.Println(tok.Payload())
-	view, _ := g.GetValidatedTokenView(tok.bytes())
-	fmt.Println(view.Payload())
 
 	// Output: TODO
 }
 
-func BenchmarkGenerator(b *testing.B) {
-	var key [32]byte
-	g, err := NewGenerator(key[:])
+func BenchmarkGatekeeper(b *testing.B) {
+	s, err := GenerateSecret()
 
 	if err != nil {
-		panic(err)
+		b.Fatal(err)
+	}
+
+	g, err := NewGatekeeper(s, dummyStore{})
+
+	if err != nil {
+		b.Fatal(err)
 	}
 
 	b.ResetTimer()
 
 	b.Run("CreateToken", func(b *testing.B) {
 		for range b.N {
-			_, _ = g.CreateToken(nil)
+			_, _ = g.CreateToken(context.Background(), nil)
 		}
 	})
 
 	b.Run("ValidateToken", func(b *testing.B) {
-		tok, _ := g.CreateToken(nil)
+		tok, _ := g.CreateToken(context.Background(), nil)
 		b.ResetTimer()
 
 		for range b.N {
-			_ = g.ValidateToken(tok)
-		}
-	})
-
-	b.Run("GetValidatedTokenView", func(b *testing.B) {
-		tok, _ := g.CreateToken(nil)
-		buf := tok.bytes()
-		b.ResetTimer()
-
-		for range b.N {
-			if _, err := g.GetValidatedTokenView(buf); err != nil {
-				b.Fatal(err)
-			}
+			_, _ = g.ValidateToken(context.Background(), tok)
 		}
 	})
 }

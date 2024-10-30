@@ -33,7 +33,14 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteString(op.Id)
 
 	s.WriteMore()
+	s.WriteObjectField("security")
+	s.WriteArrayStart()
 	op.Security.JsonEncode(ctx, s)
+	s.WriteArrayEnd()
+
+	if !op.Security.IsZero() {
+		ctx.auth = true
+	}
 
 	if len(op.Parameters) > 0 {
 		s.WriteMore()

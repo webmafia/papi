@@ -5,11 +5,14 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/modern-go/reflect2"
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/papi/policy"
 	"github.com/webmafia/papi/token"
 )
 
-func (r *Registry) createSecurityDecoder(typ reflect.Type, action, resource string) (scan RequestDecoder, err error) {
+func (r *Registry) createSecurityDecoder(typ reflect.Type, perm policy.Permission) (scan RequestDecoder, err error) {
+	typ2 := reflect2.Type2(typ)
 	tokenPrefix := []byte("Bearer ")
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
@@ -17,24 +20,29 @@ func (r *Registry) createSecurityDecoder(typ reflect.Type, action, resource stri
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
 		if !ok {
-			if action == "" {
-				return nil
-			}
-
 			return token.ErrInvalidAuthToken
 		}
 
-		tok, err := r.tokGen.GetValidatedTokenView(bearer)
+		var tok token.Token
+
+		if err = tok.UnmarshalText(bearer); err != nil {
+			return err
+		}
+
+		user, err := r.guard.ValidateToken(c, tok)
 
 		if err != nil {
 			return err
 		}
 
-		c.SetUserValue("token", tok)
+		cond, err := r.policies.Get(user.UserRoles(), perm)
 
-		if action != "" {
-			// TODO: Get role from token, then check policy.
+		if err != nil {
+			return err
 		}
+
+		typ2.UnsafeSet(p, cond)
+		c.SetUserValue("user", user)
 
 		return nil
 	}, nil
