@@ -4,14 +4,35 @@ import (
 	"context"
 )
 
-var _ TokenStore = dummyStore{}
+var (
+	_ TokenStore = dummyStore{}
+	_ User       = dummyUser{}
+)
 
-type dummyStore struct{}
+func DummyStore(roles ...string) TokenStore {
+	return dummyStore{
+		user: dummyUser{
+			roles: roles,
+		},
+	}
+}
 
-func (dummyStore) Lookup(ctx context.Context, tok Token) (user User, err error) {
-	return
+type dummyStore struct {
+	user dummyUser
+}
+
+func (d dummyStore) Lookup(ctx context.Context, tok Token) (user User, err error) {
+	return d.user, nil
 }
 
 func (dummyStore) Store(ctx context.Context, tok Token) error {
 	return nil
+}
+
+type dummyUser struct {
+	roles []string
+}
+
+func (d dummyUser) UserRoles() []string {
+	return d.roles
 }

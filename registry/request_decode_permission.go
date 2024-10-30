@@ -29,7 +29,7 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm policy.Permiss
 			return err
 		}
 
-		user, err := r.guard.ValidateToken(c, tok)
+		user, err := r.gatekeeper.ValidateToken(c, tok)
 
 		if err != nil {
 			return err

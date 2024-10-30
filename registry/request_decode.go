@@ -20,7 +20,7 @@ type inputTags struct {
 	Body       string `tag:"body" enum:"json"`
 	Param      string `tag:"param"`
 	Query      string `tag:"query"`
-	Permission string `tag:"permission"`
+	Permission string `tag:"perm"`
 }
 
 func (t inputTags) IsZero() bool {
@@ -124,8 +124,8 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 
 		if tags.Permission != "" {
-			if r.forcePermTag && r.guard == nil {
-				return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API guard is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
+			if r.forcePermTag && r.gatekeeper == nil {
+				return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API gatekeeper is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
 			}
 
 			if tags.Permission != "-" {
@@ -139,7 +139,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 					return
 				}
 
-				if r.guard == nil {
+				if r.gatekeeper != nil {
 					if sc, err = r.createPermissionDecoder(fld.Type, perm); err != nil {
 						return
 					}
@@ -153,8 +153,8 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 	}
 
-	if r.forcePermTag && perm != "" && r.guard != nil {
-		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when an API guard is set", caller.Name())
+	if r.forcePermTag && perm != "" && r.gatekeeper != nil {
+		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when an API gatekeeper is set", caller.Name())
 	}
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {

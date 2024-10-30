@@ -15,17 +15,17 @@ type Registry struct {
 	json         *internal.JSONPool
 	scan         scanner.Creator
 	policies     *policy.Store
-	guard        *token.Gatekeeper
+	gatekeeper   *token.Gatekeeper
 	forcePermTag bool
 }
 
-func NewRegistry(json *internal.JSONPool, guard *token.Gatekeeper, forcePermTag bool) (r *Registry, err error) {
+func NewRegistry(json *internal.JSONPool, gatekeeper *token.Gatekeeper, forcePermTag bool) (r *Registry, err error) {
 	r = &Registry{
 		scanCache:    make(map[reflect.Type]Decoder),
 		desc:         make(map[reflect.Type]TypeDescription),
 		json:         json,
 		policies:     policy.NewStore(json),
-		guard:        guard,
+		gatekeeper:   gatekeeper,
 		forcePermTag: forcePermTag,
 	}
 
