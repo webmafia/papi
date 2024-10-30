@@ -11,7 +11,7 @@ import (
 	"github.com/webmafia/papi/token"
 )
 
-func (r *Registry) createSecurityDecoder(typ reflect.Type, perm policy.Permission) (scan RequestDecoder, err error) {
+func (r *Registry) createPermissionDecoder(typ reflect.Type, perm policy.Permission) (scan RequestDecoder, err error) {
 	typ2 := reflect2.Type2(typ)
 	tokenPrefix := []byte("Bearer ")
 

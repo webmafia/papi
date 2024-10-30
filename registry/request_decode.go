@@ -124,9 +124,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 
 		if tags.Permission != "" {
-			// if r.guard == nil {
-			// 	return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API guard is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
-			// }
+			if r.forcePermTag && r.guard == nil {
+				return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API guard is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
+			}
 
 			if tags.Permission != "-" {
 				perm = policy.Permission(tags.Permission)
@@ -140,7 +140,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				}
 
 				if r.guard == nil {
-					if sc, err = r.createSecurityDecoder(fld.Type, perm); err != nil {
+					if sc, err = r.createPermissionDecoder(fld.Type, perm); err != nil {
 						return
 					}
 
