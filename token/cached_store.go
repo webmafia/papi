@@ -7,6 +7,11 @@ import (
 	"github.com/webmafia/lru"
 )
 
+type CachedTokenStore interface {
+	TokenStore
+	ClearCache()
+}
+
 var _ TokenStore = (*cachedStore)(nil)
 
 type cachedStore struct {
@@ -14,7 +19,7 @@ type cachedStore struct {
 	store TokenStore
 }
 
-func NewCachedStore(store TokenStore, capacity int) TokenStore {
+func NewCachedStore(store TokenStore, capacity int) CachedTokenStore {
 
 	// Abort if already cached
 	if s, ok := store.(*cachedStore); ok {
@@ -38,4 +43,8 @@ func (c *cachedStore) Lookup(ctx context.Context, tok Token) (user User, err err
 func (c *cachedStore) Store(ctx context.Context, tok Token) error {
 	c.cache.Remove(tok.Id())
 	return c.store.Store(ctx, tok)
+}
+
+func (c *cachedStore) ClearCache() {
+	c.cache.Reset()
 }

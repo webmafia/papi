@@ -29,16 +29,28 @@ func NewGatekeeper(secret Secret, store TokenStore) (g *Gatekeeper, err error) {
 	}, nil
 }
 
-func (g *Gatekeeper) CreateToken(ctx context.Context, payload []byte) (t Token, err error) {
+// Create a token with an optional payload (e.g. a user ID) that will be stored in the token.
+// The payload cannot exceed 24 bytes, and will be padded with random bytes.
+func (g *Gatekeeper) CreateToken(ctx context.Context, payload ...[]byte) (t Token, err error) {
 	t = Token{
 		id: identifier.Generate(),
 	}
 
-	if _, err = rand.Read(fast.NoescapeBytes(t.payload[:])); err != nil {
+	var payloadSize int
+
+	if len(payload) > 0 {
+		if len(payload[0]) > 24 {
+			err = errors.New("payload cannot exceed 24 bytes")
+			return
+		}
+
+		payloadSize = copy(t.payload[:], payload[0])
+	}
+
+	if _, err = rand.Read(fast.NoescapeBytes(t.payload[payloadSize:])); err != nil {
 		return
 	}
 
-	copy(t.payload[:], payload)
 	b := t.bytes()
 
 	if err = g.sign(b[:0], b[32:]); err != nil {
