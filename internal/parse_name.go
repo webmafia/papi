@@ -8,14 +8,10 @@ import (
 )
 
 func CallerName(skip int) string {
-	pc, _, _, ok := runtime.Caller(skip + 1)
+	return CallerNameFromFunc(Caller(skip + 1))
+}
 
-	if !ok {
-		return ""
-	}
-
-	f := runtime.FuncForPC(pc)
-
+func CallerNameFromFunc(f *runtime.Func) string {
 	if f == nil {
 		return ""
 	}
@@ -32,14 +28,10 @@ func CallerName(skip int) string {
 }
 
 func CallerType(skip int) string {
-	pc, _, _, ok := runtime.Caller(skip + 1)
+	return CallerTypeFromFunc(Caller(skip + 1))
+}
 
-	if !ok {
-		return ""
-	}
-
-	f := runtime.FuncForPC(pc)
-
+func CallerTypeFromFunc(f *runtime.Func) string {
 	if f == nil {
 		return ""
 	}
@@ -58,6 +50,16 @@ func CallerType(skip int) string {
 	}
 
 	return name
+}
+
+func Caller(skip int) *runtime.Func {
+	pc, _, _, ok := runtime.Caller(skip + 1)
+
+	if !ok {
+		return nil
+	}
+
+	return runtime.FuncForPC(pc)
 }
 
 func ParseName(s string) (title, operationId string) {

@@ -9,7 +9,8 @@ func createZeroChecker(t reflect.Type) (func(ptr unsafe.Pointer) bool, error) {
 	switch kind := t.Kind(); kind {
 	case reflect.Int:
 		return func(ptr unsafe.Pointer) bool {
-			return *(*int)(ptr) == 0
+			v := (*int)(ptr)
+			return *v == 0
 		}, nil
 	case reflect.Int8:
 		return func(ptr unsafe.Pointer) bool {

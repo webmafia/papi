@@ -3,6 +3,7 @@ package papi
 import (
 	"context"
 	"io"
+	"iter"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -13,7 +14,9 @@ import (
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/internal/types"
 	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/policy"
 	"github.com/webmafia/papi/registry"
+	"github.com/webmafia/papi/token"
 )
 
 type API struct {
@@ -41,7 +44,7 @@ type Options struct {
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
 
-	AllowCredentials bool
+	TokenSecret []byte
 }
 
 func (opt *Options) setDefaults() {
@@ -78,10 +81,16 @@ func NewAPI(opt ...Options) (api *API, err error) {
 		}
 	}
 
+	tokGen, err := token.NewGenerator(api.opt.TokenSecret)
+
+	if err != nil {
+		return
+	}
+
 	api.opt.setDefaults()
 	api.json = internal.NewJSONPool(api.opt.JsonAPI)
 
-	if api.reg, err = registry.NewRegistry(api.json); err != nil {
+	if api.reg, err = registry.NewRegistry(tokGen, api.json); err != nil {
 		return
 	}
 
@@ -171,6 +180,14 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 	}
 
 	return s.Flush()
+}
+
+func (api *API) IteratePolicies() iter.Seq2[policy.PolicyKey, []byte] {
+	return api.reg.Policies().Iterate()
+}
+
+func (api *API) AddPolicy(role string, action string, resource string, condJson []byte) error {
+	return api.reg.Policies().Add(role, action, resource, condJson)
 }
 
 // Register a custom type, that will override any defaults.

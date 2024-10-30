@@ -2,6 +2,7 @@ package papi
 
 import (
 	"reflect"
+	"runtime"
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
@@ -89,7 +90,9 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 		return ErrMissingRouteHandler
 	}
 
-	if err = addToDocs(api, &r); err != nil {
+	pc := internal.Caller(2)
+
+	if err = addToDocs(api, &r, pc); err != nil {
 		return
 	}
 
@@ -105,7 +108,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
-		if decodeRequest, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params); err != nil {
+		if decodeRequest, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params, pc); err != nil {
 			return
 		}
 
@@ -136,7 +139,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	})
 }
 
-func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
+func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], pc *runtime.Func) (err error) {
 	if api.opt.OpenAPI == nil {
 		return
 	}
@@ -153,7 +156,7 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 	}
 
 	if op.Id == "" {
-		title, id := internal.ParseName(internal.CallerName(3))
+		title, id := internal.ParseName(internal.CallerNameFromFunc(pc))
 		op.Id = id
 
 		if op.Summary == "" {
@@ -163,7 +166,7 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O]) (err error) {
 
 	if len(op.Tags) == 0 {
 		op.Tags = []openapi.Tag{
-			openapi.NewTag(internal.CallerType(3)),
+			openapi.NewTag(internal.CallerTypeFromFunc(pc)),
 		}
 	}
 

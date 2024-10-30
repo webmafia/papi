@@ -2,7 +2,6 @@ package openapi
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	// "github.com/webmafia/papi/spec/schema"
 )
 
 type Operation struct {
@@ -10,6 +9,7 @@ type Operation struct {
 	Method      string
 	Summary     string
 	Description string
+	Security    Security
 	Parameters  []Parameter
 	RequestBody Schema
 	Response    Schema
@@ -31,6 +31,9 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteMore()
 	s.WriteObjectField("operationId")
 	s.WriteString(op.Id)
+
+	s.WriteMore()
+	op.Security.JsonEncode(ctx, s)
 
 	if len(op.Parameters) > 0 {
 		s.WriteMore()

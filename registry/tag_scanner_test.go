@@ -20,7 +20,7 @@ func Example_createTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	reg, err := NewRegistry(internal.NewJSONPool(jsoniter.ConfigFastest))
+	reg, err := NewRegistry(nil, internal.NewJSONPool(jsoniter.ConfigFastest))
 
 	if err != nil {
 		panic(err)
