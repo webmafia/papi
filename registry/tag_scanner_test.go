@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
-
-	jsoniter "github.com/json-iterator/go"
-	"github.com/webmafia/papi/internal"
 )
 
 func Example_createTagScanner() {
@@ -20,7 +17,7 @@ func Example_createTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	reg, err := NewRegistry(internal.NewJSONPool(jsoniter.ConfigFastest), nil, false)
+	reg, err := NewRegistry(nil, false)
 
 	if err != nil {
 		panic(err)

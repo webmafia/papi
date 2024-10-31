@@ -5,13 +5,14 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/papi/internal/json"
 )
 
 func (r *Registry) createJsonDecoder(typ reflect.Type) (scan RequestDecoder, err error) {
-	dec := r.json.DecoderOf(typ)
+	dec := json.DecoderOf(typ)
 	scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
-		iter := r.json.AcquireIterator(c.Request.BodyStream())
-		defer r.json.ReleaseIterator(iter)
+		iter := json.AcquireIterator(c.Request.BodyStream())
+		defer json.ReleaseIterator(iter)
 
 		dec.Decode(p, iter)
 

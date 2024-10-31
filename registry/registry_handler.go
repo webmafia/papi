@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/papi/internal/json"
 )
 
 type Handler func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error
@@ -30,7 +31,7 @@ func (r *Registry) Handler(typ reflect.Type, tags reflect.StructTag, paramKeys [
 }
 
 func (r *Registry) defaultHandler(typ reflect.Type, handler Handler) (Handler, error) {
-	enc := r.json.EncoderOf(typ)
+	enc := json.EncoderOf(typ)
 
 	return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error {
 		if err := handler(c, in, out); err != nil {
@@ -39,8 +40,8 @@ func (r *Registry) defaultHandler(typ reflect.Type, handler Handler) (Handler, e
 
 		c.SetContentType("application/json")
 
-		s := r.json.AcquireStream(c.Response.BodyWriter())
-		defer r.json.ReleaseStream(s)
+		s := json.AcquireStream(c.Response.BodyWriter())
+		defer json.ReleaseStream(s)
 
 		enc.Encode(out, s)
 		return s.Flush()

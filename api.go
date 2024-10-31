@@ -3,35 +3,28 @@ package papi
 import (
 	"context"
 	"io"
-	"iter"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
 	"github.com/webmafia/papi/errors"
-	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/internal/json"
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/internal/types"
 	"github.com/webmafia/papi/openapi"
-	"github.com/webmafia/papi/policy"
 	"github.com/webmafia/papi/registry"
-	"github.com/webmafia/papi/token"
+	"github.com/webmafia/papi/security"
 )
 
 type API struct {
 	router route.Router
 	server fasthttp.Server
 	reg    *registry.Registry
-	json   *internal.JSONPool
 	opt    Options
 }
 
 // API options.
 type Options struct {
-
-	// Which jsoniter API should be used - default `jsoniter.ConfigFastest`.
-	JsonAPI jsoniter.API
 
 	// An optional (but recommended) OpenAPI document. Provided document must be unused, a.k.a. have no registered operations,
 	// and will be filled with documentation for all routes.
@@ -45,17 +38,13 @@ type Options struct {
 	CORS string
 
 	// An authentication handler
-	Gatekeeper *token.Gatekeeper
+	Gatekeeper *security.Gatekeeper
 
 	// Whether the permission tag is optional in routes. Does only apply when there is a gatekeeper set. Default false.
 	OptionalPermissionTag bool
 }
 
 func (opt *Options) setDefaults() {
-	if opt.JsonAPI == nil {
-		opt.JsonAPI = jsoniter.ConfigFastest
-	}
-
 	if opt.TransformError == nil {
 		opt.TransformError = func(err error) errors.ErrorDocumentor {
 			if e, ok := err.(errors.ErrorDocumentor); ok {
@@ -86,9 +75,8 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	}
 
 	api.opt.setDefaults()
-	api.json = internal.NewJSONPool(api.opt.JsonAPI)
 
-	if api.reg, err = registry.NewRegistry(api.json, api.opt.Gatekeeper, !api.opt.OptionalPermissionTag); err != nil {
+	if api.reg, err = registry.NewRegistry(api.opt.Gatekeeper, !api.opt.OptionalPermissionTag); err != nil {
 		return
 	}
 
@@ -102,8 +90,8 @@ func NewAPI(opt ...Options) (api *API, err error) {
 }
 
 func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {
-	s := api.json.AcquireStream(c)
-	defer api.json.ReleaseStream(s)
+	s := json.AcquireStream(c)
+	defer json.ReleaseStream(s)
 
 	c.Response.Reset()
 	c.SetStatusCode(err.Status())
@@ -166,8 +154,8 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 		return ErrMissingOpenAPI
 	}
 
-	s := api.json.AcquireStream(w)
-	defer api.json.ReleaseStream(s)
+	s := json.AcquireStream(w)
+	defer json.ReleaseStream(s)
 
 	if err := api.opt.OpenAPI.JsonEncode(s); err != nil {
 		return err
@@ -178,14 +166,6 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 	}
 
 	return s.Flush()
-}
-
-func (api *API) IteratePolicies() iter.Seq2[policy.PolicyKey, policy.Policy] {
-	return api.reg.Policies().Iterate()
-}
-
-func (api *API) AddPolicy(role string, perm policy.Permission, prio int64, condJson []byte) error {
-	return api.reg.Policies().Add(role, perm, prio, condJson)
 }
 
 // Register a custom type, that will override any defaults.

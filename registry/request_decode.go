@@ -11,7 +11,7 @@ import (
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/papi/internal"
-	"github.com/webmafia/papi/policy"
+	"github.com/webmafia/papi/security"
 )
 
 type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
@@ -32,11 +32,11 @@ type fieldScanner struct {
 	scan   RequestDecoder
 }
 
-func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm policy.Permission, err error) {
+func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm security.Permission, err error) {
 	return r.createRequestDecoder(typ, paramKeys, caller)
 }
 
-func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm policy.Permission, err error) {
+func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm security.Permission, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -129,13 +129,13 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			}
 
 			if tags.Permission != "-" {
-				perm = policy.Permission(tags.Permission)
+				perm = security.Permission(tags.Permission)
 
 				if !perm.HasResource() {
 					perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
 				}
 
-				if err = r.policies.Register(perm, fld.Type); err != nil {
+				if err = r.gatekeeper.RegisterPermission(perm, fld.Type); err != nil {
 					return
 				}
 

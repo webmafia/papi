@@ -7,11 +7,10 @@ import (
 
 	"github.com/modern-go/reflect2"
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/papi/policy"
-	"github.com/webmafia/papi/token"
+	"github.com/webmafia/papi/security"
 )
 
-func (r *Registry) createPermissionDecoder(typ reflect.Type, perm policy.Permission) (scan RequestDecoder, err error) {
+func (r *Registry) createPermissionDecoder(typ reflect.Type, perm security.Permission) (scan RequestDecoder, err error) {
 	typ2 := reflect2.Type2(typ)
 	tokenPrefix := []byte("Bearer ")
 
@@ -20,10 +19,10 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm policy.Permiss
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
 		if !ok {
-			return token.ErrInvalidAuthToken
+			return security.ErrInvalidAuthToken
 		}
 
-		var tok token.Token
+		var tok security.Token
 
 		if err = tok.UnmarshalText(bearer); err != nil {
 			return err
@@ -35,7 +34,7 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm policy.Permiss
 			return err
 		}
 
-		cond, err := r.policies.Get(user.UserRoles(), perm)
+		cond, err := r.gatekeeper.GetPolicy(user.UserRoles(), perm)
 
 		if err != nil {
 			return err

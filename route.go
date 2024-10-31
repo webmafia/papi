@@ -10,8 +10,8 @@ import (
 	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/openapi"
-	"github.com/webmafia/papi/policy"
 	"github.com/webmafia/papi/registry"
+	"github.com/webmafia/papi/security"
 	"github.com/webmafia/papi/valid"
 )
 
@@ -101,7 +101,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		var (
 			decodeRequest registry.RequestDecoder
-			perm          policy.Permission
+			perm          security.Permission
 			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
@@ -140,7 +140,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	})
 }
 
-func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], perm policy.Permission, pc *runtime.Func) (err error) {
+func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], perm security.Permission, pc *runtime.Func) (err error) {
 	if api.opt.OpenAPI == nil {
 		return
 	}

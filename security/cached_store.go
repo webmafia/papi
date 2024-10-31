@@ -1,4 +1,4 @@
-package token
+package security
 
 import (
 	"context"
@@ -19,6 +19,8 @@ type cachedStore struct {
 	store TokenStore
 }
 
+// A cached store is used to reduce the preasure on the underlying store, and decrease
+// any latency.
 func NewCachedStore(store TokenStore, capacity int) CachedTokenStore {
 
 	// Abort if already cached
@@ -40,11 +42,17 @@ func (c *cachedStore) Lookup(ctx context.Context, tok Token) (user User, err err
 }
 
 // Store in cache and store.
-func (c *cachedStore) Store(ctx context.Context, tok Token) error {
+func (c *cachedStore) Insert(ctx context.Context, tok Token) error {
 	c.cache.Remove(tok.Id())
-	return c.store.Store(ctx, tok)
+	return c.store.Insert(ctx, tok)
 }
 
+func (c *cachedStore) Delete(ctx context.Context, tokId identifier.ID) error {
+	c.cache.Remove(tokId)
+	return c.store.Delete(ctx, tokId)
+}
+
+// Clear token cache (without affecting underlying store)
 func (c *cachedStore) ClearCache() {
 	c.cache.Reset()
 }

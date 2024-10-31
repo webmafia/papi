@@ -8,6 +8,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
+	"github.com/webmafia/papi/internal/json"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
 )
@@ -84,13 +85,13 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 			return sch, nil
 		},
 		Handler: func(_ reflect.StructTag, handler registry.Handler) (registry.Handler, error) {
-			enc := reg.JSON().EncoderOf(reflect.TypeFor[T]())
+			enc := json.EncoderOf(reflect.TypeFor[T]())
 
 			return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error {
 				c.SetContentType("application/json")
 
-				s := reg.JSON().AcquireStream(c.Response.BodyWriter())
-				defer reg.JSON().ReleaseStream(s)
+				s := json.AcquireStream(c.Response.BodyWriter())
+				defer json.ReleaseStream(s)
 
 				l := (*List[T])(out)
 				l.s = s

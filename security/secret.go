@@ -1,4 +1,4 @@
-package token
+package security
 
 import (
 	"crypto/rand"
