@@ -99,11 +99,11 @@ func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any)
 			}
 
 		default:
-			cVal := reflect.ValueOf(cond)
+			cVal := reflect.ValueOf(c)
 			cTyp := cVal.Type()
 
-			if cTyp.Kind() != reflect.Pointer {
-				return errors.New("policy must be eiher a byte slice or a pointer")
+			if kind := cTyp.Kind(); kind != reflect.Pointer {
+				return fmt.Errorf("policy must be eiher a byte slice or a pointer - %s provided", kind)
 			}
 
 			if cTyp != typ && cTyp.Elem() != typ {
