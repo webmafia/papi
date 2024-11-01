@@ -124,12 +124,12 @@ func (g *Gatekeeper) RegisterPermission(perm Permission, typ reflect.Type) (err 
 	return g.policies.Register(perm, typ)
 }
 
-// Adds a policy. Policies must be added AFTER registering all routes. A policy MIGHT contain a JSON
-// encoded condition, that will be loaded into a route's policy. Any non-matching fields will be ignored.
-// A policy's role + perm combination MUST be unique, or otherwise overwritten by the latter. An error
-// will be returned if the permission doesn't exist on any route.
-func (g *Gatekeeper) AddPolicy(role string, perm Permission, prio int64, condJson []byte) (err error) {
-	return g.policies.Add(role, perm, prio, condJson)
+// Adds a policy. Policies must be added AFTER registering all routes. A policy MIGHT contain either a
+// pointer to condition, or a JSON encoded condition as []byte, that will be loaded into a route's policy.
+// Any non-matching fields will be ignored. A policy's role + perm combination MUST be unique, or otherwise
+// overwritten by the latter. An error will be returned if the permission doesn't exist on any route.
+func (g *Gatekeeper) AddPolicy(role string, perm Permission, prio int64, cond ...any) (err error) {
+	return g.policies.Add(role, perm, prio, cond...)
 }
 
 // Add many policies in bulk. See AddPolicy.

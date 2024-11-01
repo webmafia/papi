@@ -40,7 +40,10 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm security.Permi
 			return err
 		}
 
-		typ2.UnsafeSet(p, cond)
+		if cond != nil {
+			typ2.UnsafeSet(p, cond)
+		}
+
 		c.SetUserValue("user", user)
 
 		return nil

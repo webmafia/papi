@@ -72,25 +72,46 @@ func (s *policyStore) freeze() {
 	}
 }
 
-func (s *policyStore) Add(role string, perm Permission, prio int64, condJson []byte) (err error) {
+func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any) (err error) {
 	typ, ok := s._GetType(perm)
 
 	if !ok {
 		return fmt.Errorf("no policy for %s found", perm)
 	}
 
-	var read bytes.Reader
-	read.Reset(condJson)
+	var ptr unsafe.Pointer
 
-	dec := json.DecoderOf(typ)
-	ptr := reflect.New(typ).UnsafePointer()
-	iter := json.AcquireIterator(&read)
-	defer json.ReleaseIterator(iter)
+	if len(cond) > 0 {
+		switch c := cond[0].(type) {
 
-	dec.Decode(ptr, iter)
+		case []byte:
+			var read bytes.Reader
+			read.Reset(c)
 
-	if iter.Error != nil {
-		return iter.Error
+			dec := json.DecoderOf(typ)
+			ptr = reflect.New(typ).UnsafePointer()
+			iter := json.AcquireIterator(&read)
+			defer json.ReleaseIterator(iter)
+			dec.Decode(ptr, iter)
+
+			if iter.Error != nil {
+				return iter.Error
+			}
+
+		default:
+			cVal := reflect.ValueOf(cond)
+			cTyp := cVal.Type()
+
+			if cTyp.Kind() != reflect.Pointer {
+				return errors.New("policy must be eiher a byte slice or a pointer")
+			}
+
+			if cTyp != typ && cTyp.Elem() != typ {
+				return fmt.Errorf("invalid policy type: expected %s, but got %s", typ, cTyp)
+			}
+
+			ptr = cVal.UnsafePointer()
+		}
 	}
 
 	s._Set(role, perm, prio, ptr)
