@@ -1,7 +1,6 @@
 package security
 
 import (
-	"context"
 	"fmt"
 	"testing"
 )
@@ -13,20 +12,20 @@ func ExampleGatekeeper() {
 		panic(err)
 	}
 
-	g, err := NewGatekeeper(s, dummyStore{})
+	g, err := NewGatekeeper(s)
 
 	if err != nil {
 		panic(err)
 	}
 
-	tok, err := g.CreateToken(context.Background(), nil)
+	tok, err := g.CreateToken()
 
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println(tok)
-	fmt.Println(g.ValidateToken(context.Background(), tok))
+	fmt.Println(g.ValidateToken(tok))
 	fmt.Println(tok.Payload())
 
 	// Output: TODO
@@ -39,7 +38,7 @@ func BenchmarkGatekeeper(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	g, err := NewGatekeeper(s, dummyStore{})
+	g, err := NewGatekeeper(s)
 
 	if err != nil {
 		b.Fatal(err)
@@ -49,16 +48,16 @@ func BenchmarkGatekeeper(b *testing.B) {
 
 	b.Run("CreateToken", func(b *testing.B) {
 		for range b.N {
-			_, _ = g.CreateToken(context.Background(), nil)
+			_, _ = g.CreateToken()
 		}
 	})
 
 	b.Run("ValidateToken", func(b *testing.B) {
-		tok, _ := g.CreateToken(context.Background(), nil)
+		tok, _ := g.CreateToken()
 		b.ResetTimer()
 
 		for range b.N {
-			_, _ = g.ValidateToken(context.Background(), tok)
+			_ = g.ValidateToken(tok)
 		}
 	})
 }

@@ -14,7 +14,7 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm security.Permi
 	typ2 := reflect2.Type2(typ)
 	tokenPrefix := []byte("Bearer ")
 
-	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
 		rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
@@ -25,13 +25,11 @@ func (r *Registry) createPermissionDecoder(typ reflect.Type, perm security.Permi
 		var tok security.Token
 
 		if err = tok.UnmarshalText(bearer); err != nil {
-			return err
+			return
 		}
 
-		user, err := r.gatekeeper.ValidateToken(c, tok)
-
-		if err != nil {
-			return err
+		if err = r.gatekeeper.ValidateToken(tok); err != nil {
+			return
 		}
 
 		cond, err := r.gatekeeper.GetPolicy(user.UserRoles(), perm)

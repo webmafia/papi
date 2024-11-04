@@ -1,7 +1,6 @@
 package security
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"errors"
@@ -18,26 +17,30 @@ import (
 type Gatekeeper struct {
 	secret   Secret
 	pool     sync.Pool
-	store    TokenStore
 	policies policyStore
 }
 
-func NewGatekeeper(secret Secret, store TokenStore) (g *Gatekeeper, err error) {
+func NewGatekeeper(secret Secret) (g *Gatekeeper, err error) {
 	if len(secret) != 32 {
 		return nil, errors.New("token secret must be exactly 32 bytes")
 	}
 
 	return &Gatekeeper{
 		secret: secret,
-		store:  store,
 	}, nil
 }
 
 // Create a token with an optional payload (e.g. a user ID) that will be stored in the token.
 // The payload cannot exceed 24 bytes, and will be padded with random bytes.
-func (g *Gatekeeper) CreateToken(ctx context.Context, payload ...[]byte) (t Token, err error) {
+func (g *Gatekeeper) CreateToken(payload ...[]byte) (t Token, err error) {
+	return g.CreateTokenWithId(identifier.Generate(), payload...)
+}
+
+// Create a token with a specific ID and an optional payload (e.g. a user ID) that will be stored
+// in the token. The payload cannot exceed 24 bytes, and will be padded with random bytes.
+func (g *Gatekeeper) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, err error) {
 	t = Token{
-		id: identifier.Generate(),
+		id: id,
 	}
 
 	var payloadSize int
@@ -61,19 +64,11 @@ func (g *Gatekeeper) CreateToken(ctx context.Context, payload ...[]byte) (t Toke
 		return
 	}
 
-	if err = g.store.Insert(ctx, t); err != nil {
-		return
-	}
-
 	return t, nil
 }
 
-func (g *Gatekeeper) ValidateToken(ctx context.Context, t Token) (user User, err error) {
-	if err = g.validateTokenBytes(fast.NoescapeBytes(t.bytes())); err != nil {
-		return
-	}
-
-	return g.store.Lookup(ctx, t)
+func (g *Gatekeeper) ValidateToken(t Token) (err error) {
+	return g.validateTokenBytes(fast.NoescapeBytes(t.bytes()))
 }
 
 func (g *Gatekeeper) validateTokenBytes(b []byte) (err error) {
