@@ -1,9 +1,7 @@
-package security
+package token
 
 import (
 	"context"
-
-	"github.com/webmafia/identifier"
 )
 
 var (
@@ -24,16 +22,8 @@ type dummyStore struct {
 	user dummyUser
 }
 
-func (d dummyStore) Lookup(ctx context.Context, tok Token) (user User, err error) {
+func (d dummyStore) Lookup(_ context.Context, _ Token) (user User, err error) {
 	return d.user, nil
-}
-
-func (dummyStore) Insert(ctx context.Context, tok Token) error {
-	return nil
-}
-
-func (d dummyStore) Delete(ctx context.Context, tokId identifier.ID) error {
-	return nil
 }
 
 type dummyUser struct {

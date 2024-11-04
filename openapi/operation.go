@@ -9,7 +9,7 @@ type Operation struct {
 	Method      string
 	Summary     string
 	Description string
-	Security    Security
+	Security    []SecurityRequirement
 	Parameters  []Parameter
 	RequestBody Schema
 	Response    Schema
@@ -32,14 +32,25 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectField("operationId")
 	s.WriteString(op.Id)
 
-	s.WriteMore()
-	s.WriteObjectField("security")
-	s.WriteArrayStart()
-	op.Security.JsonEncode(ctx, s)
-	s.WriteArrayEnd()
+	if len(op.Security) > 0 {
+		s.WriteMore()
+		s.WriteObjectField("security")
+		s.WriteArrayStart()
 
-	if !op.Security.IsZero() {
-		ctx.auth = true
+		for i := range op.Security {
+			if i != 0 {
+				s.WriteMore()
+			}
+
+			s.WriteObjectStart()
+
+			s.WriteObjectField(op.Security[i].Name)
+			op.Security[i].JsonEncode(s)
+
+			s.WriteObjectEnd()
+		}
+
+		s.WriteArrayEnd()
 	}
 
 	if len(op.Parameters) > 0 {

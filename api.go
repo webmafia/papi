@@ -37,8 +37,8 @@ type Options struct {
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
 
-	// An authentication handler
-	Gatekeeper *security.Gatekeeper
+	// A security scheme.
+	SecurityScheme security.Scheme
 
 	// Whether the permission tag is optional in routes. Does only apply when there is a gatekeeper set. Default false.
 	OptionalPermissionTag bool
@@ -69,14 +69,22 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	if len(opt) > 0 {
 		api.opt = opt[0]
 
-		if api.opt.OpenAPI.NumOperations() != 0 {
-			return nil, ErrInvalidOpenAPI
+		if api.opt.OpenAPI != nil {
+			if api.opt.OpenAPI.NumOperations() != 0 {
+				return nil, ErrInvalidOpenAPI
+			}
+
+			if api.opt.SecurityScheme != nil {
+				if err = api.opt.OpenAPI.AddSecurityScheme(api.opt.SecurityScheme.SecurityDocs()); err != nil {
+					return
+				}
+			}
 		}
 	}
 
 	api.opt.setDefaults()
 
-	if api.reg, err = registry.NewRegistry(api.opt.Gatekeeper, !api.opt.OptionalPermissionTag); err != nil {
+	if api.reg, err = registry.NewRegistry(api.opt.SecurityScheme, !api.opt.OptionalPermissionTag); err != nil {
 		return
 	}
 

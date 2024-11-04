@@ -1,8 +1,6 @@
-package security
+package token
 
-import (
-	"context"
-)
+import "context"
 
 type TokenStore interface {
 

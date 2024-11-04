@@ -6,12 +6,9 @@ import (
 	"reflect"
 	"runtime"
 	"slices"
-	"strings"
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/papi/internal"
-	"github.com/webmafia/papi/security"
 )
 
 type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
@@ -32,11 +29,11 @@ type fieldScanner struct {
 	scan   RequestDecoder
 }
 
-func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm security.Permission, err error) {
+func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm string, err error) {
 	return r.createRequestDecoder(typ, paramKeys, caller)
 }
 
-func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm security.Permission, err error) {
+func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm string, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -123,38 +120,22 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			})
 		}
 
-		if tags.Permission != "" {
-			if r.forcePermTag && r.gatekeeper == nil {
-				return nil, "", fmt.Errorf("%s.%s in %s has permission tag '%s', but no API gatekeeper is set", typ.Name(), fld.Name, caller.Name(), tags.Permission)
+		if tags.Permission != "" && r.securityScheme != nil {
+			if sc, perm, err = r.securityScheme.OperationSecurityHandler(fld.Type, tags.Permission, caller); err != nil {
+				return
 			}
 
-			if tags.Permission != "-" {
-				perm = security.Permission(tags.Permission)
-
-				if !perm.HasResource() {
-					perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
-				}
-
-				if err = r.gatekeeper.RegisterPermission(perm, fld.Type); err != nil {
-					return
-				}
-
-				if r.gatekeeper != nil {
-					if sc, err = r.createPermissionDecoder(fld.Type, perm); err != nil {
-						return
-					}
-
-					flds = append(flds, fieldScanner{
-						offset: fld.Offset,
-						scan:   sc,
-					})
-				}
+			if sc != nil {
+				flds = append(flds, fieldScanner{
+					offset: fld.Offset,
+					scan:   sc,
+				})
 			}
 		}
 	}
 
-	if r.forcePermTag && perm != "" && r.gatekeeper != nil {
-		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when an API gatekeeper is set", caller.Name())
+	if r.forcePermTag && perm == "" && r.securityScheme != nil {
+		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when a security scheme is set", caller.Name())
 	}
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {

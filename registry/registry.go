@@ -8,19 +8,19 @@ import (
 )
 
 type Registry struct {
-	scanCache    map[reflect.Type]Decoder
-	desc         map[reflect.Type]TypeDescription
-	scan         scanner.Creator
-	gatekeeper   *security.Gatekeeper
-	forcePermTag bool
+	scanCache      map[reflect.Type]Decoder
+	desc           map[reflect.Type]TypeDescription
+	scan           scanner.Creator
+	securityScheme security.Scheme
+	forcePermTag   bool
 }
 
-func NewRegistry(gatekeeper *security.Gatekeeper, forcePermTag bool) (r *Registry, err error) {
+func NewRegistry(securityScheme security.Scheme, forcePermTag bool) (r *Registry, err error) {
 	r = &Registry{
-		scanCache:    make(map[reflect.Type]Decoder),
-		desc:         make(map[reflect.Type]TypeDescription),
-		gatekeeper:   gatekeeper,
-		forcePermTag: forcePermTag,
+		scanCache:      make(map[reflect.Type]Decoder),
+		desc:           make(map[reflect.Type]TypeDescription),
+		securityScheme: securityScheme,
+		forcePermTag:   forcePermTag,
 	}
 
 	r.scan = scanner.NewCreator(r.scanner)

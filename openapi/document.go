@@ -1,13 +1,18 @@
 package openapi
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
+)
 
 const Version = "3.0.0"
 
 type Document struct {
-	info    Info
-	servers []Server
-	paths   Paths
+	info            Info
+	servers         []Server
+	paths           Paths
+	securitySchemes []SecurityScheme
 }
 
 // Create a new OpenAPI root document that is ready to be used in the API service.
@@ -66,6 +71,18 @@ func (doc *Document) JsonEncode(s *jsoniter.Stream) (err error) {
 	return s.Error
 }
 
+func (doc *Document) AddSecurityScheme(scheme SecurityScheme) (err error) {
+	for i := range doc.securitySchemes {
+		if doc.securitySchemes[i].SchemeName == scheme.SchemeName {
+			return fmt.Errorf("a security scheme with name '%s' does already exist", scheme.SchemeName)
+		}
+	}
+
+	doc.securitySchemes = append(doc.securitySchemes, scheme)
+
+	return
+}
+
 func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 	s.WriteMore()
 	s.WriteObjectField("components")
@@ -82,29 +99,38 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 		}
 	*/
 
-	if ctx.auth {
+	if len(doc.securitySchemes) > 0 {
 		s.WriteObjectField("securitySchemes")
 		s.WriteObjectStart()
 
-		s.WriteObjectField("token")
-		s.WriteObjectStart()
+		for i := range doc.securitySchemes {
+			if i != 0 {
+				s.WriteMore()
+			}
 
-		s.WriteObjectField("description")
-		s.WriteString("API token")
+			s.WriteObjectField(doc.securitySchemes[i].SchemeName)
+			doc.securitySchemes[i].JsonEncode(s)
+		}
 
-		s.WriteMore()
-		s.WriteObjectField("type")
-		s.WriteString("http")
+		// s.WriteObjectField("token")
+		// s.WriteObjectStart()
 
-		s.WriteMore()
-		s.WriteObjectField("scheme")
-		s.WriteString("bearer")
+		// s.WriteObjectField("description")
+		// s.WriteString("API token")
 
-		s.WriteMore()
-		s.WriteObjectField("bearerFormat")
-		s.WriteString("base32hex")
+		// s.WriteMore()
+		// s.WriteObjectField("type")
+		// s.WriteString("http")
 
-		s.WriteObjectEnd()
+		// s.WriteMore()
+		// s.WriteObjectField("scheme")
+		// s.WriteString("bearer")
+
+		// s.WriteMore()
+		// s.WriteObjectField("bearerFormat")
+		// s.WriteString("base32hex")
+
+		// s.WriteObjectEnd()
 
 		s.WriteObjectEnd()
 
