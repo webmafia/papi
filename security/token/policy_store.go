@@ -73,7 +73,36 @@ func (s *policyStore) freeze() {
 }
 
 func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any) (err error) {
-	typ, ok := s._GetType(perm)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.freeze()
+
+	return s.add(role, perm, prio, cond...)
+}
+
+func (s *policyStore) add(role string, perm Permission, prio int64, cond ...any) (err error) {
+	if role == "*" {
+		return errors.New("a role can't be a wildcard")
+	}
+
+	if !perm.HasAction() {
+		return errors.New("missing 'action' in permission")
+	}
+
+	if !perm.HasResource() {
+		return errors.New("missing 'resource' in permission")
+	}
+
+	if perm.HasWildcard() {
+		if len(cond) > 0 {
+			return errors.New("wildcard permissions can't have any condition")
+		}
+
+		return s.addWildcard(role, perm, prio)
+	}
+
+	typ, ok := s.getType(perm)
 
 	if !ok {
 		return fmt.Errorf("no policy for %s found", perm)
@@ -114,64 +143,36 @@ func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any)
 		}
 	}
 
-	s._Set(role, perm, prio, ptr)
+	s.set(role, perm, prio, ptr)
 	return
 }
 
-func (s *policyStore) BatchAdd(cb func(add func(role string, perm Permission, prio int64, condJson []byte) error) error) (err error) {
+func (s *policyStore) addWildcard(role string, perm Permission, prio int64) (err error) {
+	for p := range s.types {
+		v := p.Match(perm)
+
+		if v.HasWildcard() {
+			return errors.New("can't match wildcard with wildcard")
+		}
+
+		s.set(role, v, prio, nil)
+	}
+
+	return
+}
+
+func (s *policyStore) BatchAdd(cb func(add func(role string, perm Permission, prio int64, cond ...any) error) error) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.freeze()
 
-	var read bytes.Reader
-	iter := json.AcquireIterator(nil)
-	defer json.ReleaseIterator(iter)
-
-	add := func(role string, perm Permission, prio int64, condJson []byte) error {
-		read.Reset(condJson)
-		iter.Reset(&read)
-
-		typ, ok := s.getType(perm)
-
-		if !ok {
-			return fmt.Errorf("no policy for %s found", perm)
-		}
-
-		dec := json.DecoderOf(typ)
-		ptr := reflect.New(typ).UnsafePointer()
-
-		dec.Decode(ptr, iter)
-
-		if iter.Error != nil {
-			return iter.Error
-		}
-
-		s.set(role, perm, prio, ptr)
-		return nil
-	}
-
-	return cb(add)
-}
-
-func (s *policyStore) _GetType(perm Permission) (typ reflect.Type, ok bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return s.getType(perm)
+	return cb(s.add)
 }
 
 func (s *policyStore) getType(perm Permission) (typ reflect.Type, ok bool) {
 	typ, ok = s.types[perm]
 	return
-}
-
-func (s *policyStore) _Set(role string, perm Permission, prio int64, cond unsafe.Pointer) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.freeze()
-	s.set(role, perm, prio, cond)
 }
 
 func (s *policyStore) set(role string, perm Permission, prio int64, cond unsafe.Pointer) {

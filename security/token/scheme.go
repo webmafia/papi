@@ -139,7 +139,7 @@ func (s *Scheme) AddPolicy(role string, perm Permission, prio int64, cond ...any
 }
 
 // Add many policies in bulk. See AddPolicy.
-func (s *Scheme) AddPolicies(cb func(add func(role string, perm Permission, prio int64, condJson []byte) error) error) (err error) {
+func (s *Scheme) AddPolicies(cb func(add func(role string, perm Permission, prio int64, cond ...any) error) error) (err error) {
 	return s.policies.BatchAdd(cb)
 }
 
