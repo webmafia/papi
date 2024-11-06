@@ -79,7 +79,11 @@ func (s *Scheme) OperationSecurityHandler(typ reflect.Type, permTag string, call
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
 		if !ok {
-			return ErrInvalidAuthToken
+			if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
+				bearer = cookie
+			} else {
+				return ErrInvalidAuthToken
+			}
 		}
 
 		var tok Token
