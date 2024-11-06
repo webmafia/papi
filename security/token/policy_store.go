@@ -110,7 +110,7 @@ func (s *policyStore) add(role string, perm Permission, prio int64, cond ...any)
 
 	var ptr unsafe.Pointer
 
-	if len(cond) > 0 {
+	if len(cond) > 0 && cond[0] != nil {
 		switch c := cond[0].(type) {
 
 		case []byte:
