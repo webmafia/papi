@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"reflect"
 	"runtime"
 	"strings"
 
@@ -131,4 +132,9 @@ func isAlphaNumeric(c byte) bool {
 
 func toLower(c byte) byte {
 	return c - 'A' + 'a'
+}
+
+func IsPublicType(typ reflect.Type) bool {
+	name := typ.Name()
+	return name != "" && isUpper(name[0])
 }

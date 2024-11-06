@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/internal/iterate"
 	"github.com/webmafia/papi/openapi"
 )
@@ -184,10 +185,9 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 			}
 
 		}
-
-		if name := typ.Name(); name != "" {
+		if internal.IsPublicType(typ) {
 			return &openapi.Ref{
-				Name:   name,
+				Name:   typ.Name(),
 				Schema: obj,
 			}, nil
 		}
