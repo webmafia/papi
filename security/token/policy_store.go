@@ -95,7 +95,7 @@ func (s *policyStore) add(role string, perm Permission, prio int64, cond ...any)
 	}
 
 	if perm.HasWildcard() {
-		if len(cond) > 0 {
+		if len(cond) > 0 && cond[0] != nil {
 			return errors.New("wildcard permissions can't have any condition")
 		}
 
