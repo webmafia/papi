@@ -37,6 +37,16 @@ func (r *Registry) describeOperation(op *openapi.Operation, typ reflect.Type) (e
 			return
 		}
 
+		if tags.IsZero() {
+			if fld.Type.Kind() == reflect.Struct {
+				if err = r.describeOperation(op, fld.Type); err != nil {
+					return
+				}
+			}
+
+			continue
+		}
+
 		if tags.Body == "json" {
 			schema, err := r.Schema(fld.Type, fld.Tag)
 
