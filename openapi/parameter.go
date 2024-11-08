@@ -28,6 +28,12 @@ func (p *Parameter) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectField("required")
 	s.WriteBool(p.Required)
 
+	if _, ok := p.Schema.(*Array); ok {
+		s.WriteMore()
+		s.WriteObjectField("explode")
+		s.WriteBool(false)
+	}
+
 	s.WriteMore()
 	s.WriteObjectField("schema")
 	p.Schema.encodeSchema(ctx, s)
