@@ -3,6 +3,7 @@ package valid
 import (
 	"errors"
 	"reflect"
+	"strings"
 	"unsafe"
 
 	"github.com/webmafia/papi/internal/iterate"
@@ -43,7 +44,13 @@ func appendStructValidators(valids *validators, typ reflect.Type, offset uintptr
 			continue
 		}
 
-		if err = appendFieldValidators(valids, fld.Type, offset+fld.Offset, fld.Name, fld.Tag); err != nil {
+		name := fld.Name
+
+		if tag := fld.Tag.Get("json"); tag != "" {
+			name, _, _ = strings.Cut(tag, ",")
+		}
+
+		if err = appendFieldValidators(valids, fld.Type, offset+fld.Offset, name, fld.Tag); err != nil {
 			return
 		}
 
