@@ -1,6 +1,7 @@
 package papi
 
 import (
+	"iter"
 	"math"
 	"reflect"
 	"unsafe"
@@ -26,7 +27,7 @@ type List[T any] struct {
 }
 
 // Write item to stream.
-func (l *List[T]) Write(v *T) {
+func (l *List[T]) Write(v *T) error {
 	if l.written {
 		l.s.WriteMore()
 	} else {
@@ -34,6 +35,24 @@ func (l *List[T]) Write(v *T) {
 	}
 
 	l.enc.Encode(fast.Noescape(unsafe.Pointer(v)), l.s)
+	return l.s.Error
+}
+
+// Write item iterator to stream.
+func (l *List[T]) WriteAll(it iter.Seq2[*T, error]) (err error) {
+	var v *T
+
+	for v, err = range it {
+		if err != nil {
+			return
+		}
+
+		if err = l.Write(v); err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // Set the total number of items that exists (used for e.g. pagination).
