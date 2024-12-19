@@ -3,11 +3,13 @@ package papi
 import (
 	"context"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
 	"github.com/webmafia/papi/errors"
+	"github.com/webmafia/papi/internal/iterate"
 	"github.com/webmafia/papi/internal/json"
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/internal/types"
@@ -192,6 +194,14 @@ func (api *API) cors(c *fasthttp.RequestCtx) (abort bool) {
 	if api.opt.CORS == "*" {
 		if origin := c.Request.Header.Peek("Origin"); len(origin) > 0 {
 			cors = fast.BytesToString(origin)
+		}
+	} else if strings.IndexByte(api.opt.CORS, ',') >= 0 {
+		if origin := fast.BytesToString(c.Request.Header.Peek("Origin")); len(origin) > 0 {
+			for _, chunk := range iterate.IterateChunks(api.opt.CORS, ',') {
+				if chunk == origin {
+					cors = chunk
+				}
+			}
 		}
 	}
 
