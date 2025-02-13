@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -65,6 +66,29 @@ func (r Users) CreateUser(api *papi.API) (err error) {
 		},
 	})
 }
+
+func (r Users) DownloadFile(api *papi.API) (err error) {
+	type req struct{}
+
+	return papi.GET(api, papi.Route[req, papi.File[PDF]]{
+		Path: "/file",
+
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.File[PDF]) (err error) {
+			_, err = fmt.Fprintf(resp.Writer(), "hello %d", 123)
+			return
+		},
+	})
+}
+
+var _ papi.FileType = PDF{}
+
+type PDF struct{}
+
+// Binary implements papi.FileType.
+func (PDF) Binary() bool { return true }
+
+// ContentType implements papi.FileType.
+func (p PDF) ContentType() string { return "application/pdf" }
 
 func main() {
 	host := "localhost:3001"

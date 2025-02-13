@@ -128,7 +128,12 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteObjectField("content")
 		s.WriteObjectStart()
 
-		s.WriteObjectField("application/json")
+		if custom, ok := op.Response.(*Custom); ok {
+			s.WriteObjectField(custom.ContentType)
+		} else {
+			s.WriteObjectField("application/json")
+		}
+
 		s.WriteObjectStart()
 
 		s.WriteObjectField("schema")
