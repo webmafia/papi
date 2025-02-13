@@ -74,6 +74,7 @@ func (r Users) DownloadFile(api *papi.API) (err error) {
 		Path: "/file",
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.File[PDF]) (err error) {
+			resp.SetFilename("foobar.pdf")
 			_, err = fmt.Fprintf(resp.Writer(), "hello %d", 123)
 			return
 		},
