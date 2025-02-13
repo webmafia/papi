@@ -63,10 +63,5 @@ func (File[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				return handler(c, in, out)
 			}, nil
 		},
-		// Decoder: func(tags reflect.StructTag) (registry.Decoder, error) {
-		// 	return func(p unsafe.Pointer, s string) error {
-		// 		return nil
-		// 	}, nil
-		// },
 	}
 }
