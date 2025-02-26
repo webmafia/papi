@@ -19,13 +19,13 @@ type TypeRegistrar interface {
 
 type TypeDescription struct {
 
-	// Request & response
+	// Documentation of request and response
 	Schema func(tags reflect.StructTag) (openapi.Schema, error)
 
-	// Request
+	// Handler of request and response
 	Handler func(tags reflect.StructTag, handler Handler) (Handler, error)
 
-	// Response
+	// Decoding of request value (e.g. query param)
 	Decoder func(tags reflect.StructTag) (Decoder, error)
 }
 

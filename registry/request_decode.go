@@ -78,17 +78,25 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			continue
 		}
 
-		if tags.Body == "json" {
-			if sc, err = r.createJsonDecoder(fld.Type); err != nil {
+		if tags.Body != "" {
+			if sc, err = r.getCustomDecoder(fld.Type, fld.Tag); err != nil {
 				return
+			}
+
+			if sc == nil {
+				if tags.Body != "json" {
+					return nil, "", fmt.Errorf("unknown body type: '%s'", tags.Body)
+				}
+
+				if sc, err = r.createJsonDecoder(fld.Type); err != nil {
+					return
+				}
 			}
 
 			flds = append(flds, fieldScanner{
 				offset: fld.Offset,
 				scan:   sc,
 			})
-		} else if tags.Body != "" {
-			return nil, "", errors.New("the only valid 'body' tag value is 'json'")
 		}
 
 		if tags.Param != "" {

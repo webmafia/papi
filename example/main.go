@@ -75,7 +75,27 @@ func (r Users) DownloadFile(api *papi.API) (err error) {
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.File[PDF]) (err error) {
 			resp.SetFilename("foobar.pdf")
+
+			// This is obviously invalid JSON, but proves the point.
 			_, err = fmt.Fprintf(resp.Writer(), "hello %d", 123)
+			return
+		},
+	})
+}
+
+func (r Users) RawJson(api *papi.API) (err error) {
+	type req struct {
+		Body papi.RawJSON `body:"json"`
+	}
+
+	// In this case we're demonstrating that RawJSON can be used for both request and response.
+	return papi.POST(api, papi.Route[req, papi.RawJSON]{
+		Path: "/raw-json",
+
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.RawJSON) (err error) {
+
+			// Here we just send back the request's JSON body. Please don't do this.
+			*resp = req.Body
 			return
 		},
 	})
