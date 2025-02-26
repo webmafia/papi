@@ -2,6 +2,9 @@ package openapi
 
 import (
 	"fmt"
+	"maps"
+	"slices"
+	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -164,7 +167,12 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 
 		var written bool
 
-		for _, tag := range ctx.tags {
+		tags := slices.Collect(maps.Values(ctx.tags))
+		slices.SortFunc(tags, func(a, b Tag) int {
+			return strings.Compare(a.Name, b.Name)
+		})
+
+		for _, tag := range tags {
 			if written {
 				s.WriteMore()
 			} else {
