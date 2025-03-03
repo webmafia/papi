@@ -18,7 +18,7 @@ func (r *Registry) Decoder(typ reflect.Type, tags reflect.StructTag) (dec Decode
 	// 2. If the type can describe itself, let it
 	if typ.Implements(typeDescriber) {
 		if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
-			if desc := v.TypeDescription(r); desc.Schema != nil {
+			if desc := v.TypeDescription(r); desc.Decoder != nil {
 				return desc.Decoder(tags)
 			}
 		}

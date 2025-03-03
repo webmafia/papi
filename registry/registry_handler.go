@@ -20,7 +20,7 @@ func (r *Registry) Handler(typ reflect.Type, tags reflect.StructTag, paramKeys [
 	// 2. If the type can describe itself, let it
 	if typ.Implements(typeDescriber) {
 		if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
-			if desc := v.TypeDescription(r); desc.Schema != nil {
+			if desc := v.TypeDescription(r); desc.Handler != nil {
 				return desc.Handler(tags, handler)
 			}
 		}
