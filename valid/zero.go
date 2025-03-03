@@ -126,6 +126,10 @@ func createZeroChecker(t reflect.Type) (func(ptr unsafe.Pointer) bool, error) {
 			}
 			return true
 		}, nil
+	case reflect.Bool:
+		return func(ptr unsafe.Pointer) bool {
+			return false
+		}, nil
 	default:
 		return nil, notImplemented("zero-checker", kind)
 	}
