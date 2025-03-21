@@ -151,10 +151,10 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectEnd()
 }
 
-func encodeSchema(ctx *encoderContext, s *jsoniter.Stream, sch Schema) {
+func encodeSchema(ctx *encoderContext, s *jsoniter.Stream, sch Schema) error {
 	if sch != nil {
-		sch.encodeSchema(ctx, s)
-	} else {
-		s.WriteEmptyObject()
+		return sch.encodeSchema(ctx, s)
 	}
+
+	return nil
 }

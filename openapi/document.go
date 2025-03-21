@@ -152,7 +152,7 @@ func (doc *Document) encodeReferences(s *jsoniter.Stream, ctx *encoderContext) {
 			}
 
 			s.WriteObjectField(ref.Name)
-			ref.Schema.encodeSchema(ctx, s)
+			encodeSchema(ctx, s, ref.Schema)
 		}
 
 		s.WriteObjectEnd()

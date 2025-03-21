@@ -97,7 +97,7 @@ func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err er
 
 			s.WriteObjectField(sch.Properties[i].Name)
 
-			if err = sch.Properties[i].Schema.encodeSchema(ctx, s); err != nil {
+			if err = encodeSchema(ctx, s, sch.Properties[i].Schema); err != nil {
 				return
 			}
 		}

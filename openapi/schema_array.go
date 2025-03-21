@@ -82,7 +82,7 @@ func (sch *Array) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err err
 	if sch.Items != nil {
 		s.WriteMore()
 		s.WriteObjectField("items")
-		sch.Items.encodeSchema(ctx, s)
+		encodeSchema(ctx, s, sch.Items)
 	}
 
 	if sch.UniqueItems {

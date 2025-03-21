@@ -36,7 +36,7 @@ func (p *Parameter) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 	s.WriteMore()
 	s.WriteObjectField("schema")
-	p.Schema.encodeSchema(ctx, s)
+	encodeSchema(ctx, s, p.Schema)
 
 	s.WriteObjectEnd()
 }
