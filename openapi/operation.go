@@ -87,24 +87,24 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 		s.WriteArrayEnd()
 	}
 
-	s.WriteMore()
-	s.WriteObjectField("requestBody")
-	s.WriteObjectStart()
+	if op.Method != "get" && op.Method != "GET" {
+		s.WriteMore()
+		s.WriteObjectField("requestBody")
+		s.WriteObjectStart()
 
-	s.WriteObjectField("content")
-	s.WriteObjectStart()
+		s.WriteObjectField("content")
+		s.WriteObjectStart()
 
-	s.WriteObjectField("application/json")
-	s.WriteObjectStart()
+		s.WriteObjectField("application/json")
+		s.WriteObjectStart()
 
-	s.WriteObjectField("schema")
-	encodeSchema(ctx, s, op.RequestBody)
+		s.WriteObjectField("schema")
+		encodeSchema(ctx, s, op.RequestBody)
 
-	s.WriteObjectEnd()
-
-	s.WriteObjectEnd()
-
-	s.WriteObjectEnd()
+		s.WriteObjectEnd()
+		s.WriteObjectEnd()
+		s.WriteObjectEnd()
+	}
 
 	s.WriteMore()
 	s.WriteObjectField("responses")
