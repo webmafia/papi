@@ -165,6 +165,10 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 
 			if jsonTag, ok := fld.Tag.Lookup("json"); ok {
 				name, _, _ = strings.Cut(jsonTag, ",")
+
+				if name == "-" {
+					continue
+				}
 			}
 
 			propSchema, err := r.Schema(fld.Type, fld.Tag)
