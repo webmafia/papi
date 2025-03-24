@@ -156,5 +156,6 @@ func encodeSchema(ctx *encoderContext, s *jsoniter.Stream, sch Schema) error {
 		return sch.encodeSchema(ctx, s)
 	}
 
+	s.WriteEmptyObject()
 	return nil
 }
