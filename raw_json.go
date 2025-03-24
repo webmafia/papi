@@ -1,6 +1,7 @@
 package papi
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"unsafe"
@@ -12,7 +13,11 @@ import (
 	"github.com/webmafia/papi/registry"
 )
 
-var _ registry.TypeDescriber = (*RawJSON)(nil)
+var (
+	_ registry.TypeDescriber = (*RawJSON)(nil)
+	_ json.Marshaler         = (RawJSON)(nil)
+	_ json.Unmarshaler       = (*RawJSON)(nil)
+)
 
 type RawJSON []byte
 
@@ -53,4 +58,15 @@ func (RawJSON) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 			}, nil
 		},
 	}
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (r *RawJSON) UnmarshalJSON(b []byte) error {
+	*r = append((*r)[:0], b...)
+	return nil
+}
+
+// MarshalJSON implements json.Marshaler.
+func (r RawJSON) MarshalJSON() ([]byte, error) {
+	return r, nil
 }
