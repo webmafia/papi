@@ -4,32 +4,19 @@ import (
 	"context"
 )
 
-var (
-	_ TokenStore = dummyStore{}
-	_ User       = dummyUser{}
-)
+var _ TokenStore = dummyStore{}
 
 // Used for testing.
 func DummyStore(roles ...string) TokenStore {
 	return dummyStore{
-		user: dummyUser{
-			roles: roles,
-		},
+		roles: roles,
 	}
 }
 
 type dummyStore struct {
-	user dummyUser
-}
-
-func (d dummyStore) Lookup(_ context.Context, _ Token) (user User, err error) {
-	return d.user, nil
-}
-
-type dummyUser struct {
 	roles []string
 }
 
-func (d dummyUser) UserRoles() []string {
-	return d.roles
+func (d dummyStore) UserRoles(_ context.Context, _ Token) (roles []string, err error) {
+	return d.roles, nil
 }

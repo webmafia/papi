@@ -8,6 +8,7 @@ import (
 
 	"github.com/webmafia/fast"
 	"github.com/webmafia/identifier"
+	"github.com/webmafia/papi/security"
 	"github.com/zeebo/blake3"
 )
 
@@ -65,7 +66,7 @@ func (g *auth) validateTokenBytes(b []byte) (err error) {
 	}
 
 	if subtle.ConstantTimeCompare(b[:32], signature[:]) == 0 {
-		return ErrInvalidAuthToken
+		return security.ErrInvalidAuthToken
 	}
 
 	return

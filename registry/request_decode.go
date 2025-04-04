@@ -6,9 +6,13 @@ import (
 	"reflect"
 	"runtime"
 	"slices"
+	"strings"
 	"unsafe"
 
+	"github.com/modern-go/reflect2"
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/papi/internal"
+	"github.com/webmafia/papi/security"
 )
 
 type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
@@ -129,7 +133,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 
 		if tags.Permission != "" && r.securityScheme != nil {
-			if sc, perm, err = r.securityScheme.OperationSecurityHandler(fld.Type, tags.Permission, caller); err != nil {
+			if sc, perm, err = r.createOperationSecurityHandler(fld.Type, tags.Permission, caller); err != nil {
 				return
 			}
 
@@ -155,4 +159,42 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 
 		return
 	}, perm, nil
+}
+
+func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func) (handler func(p unsafe.Pointer, c *fasthttp.RequestCtx) error, modTag string, err error) {
+	if permTag == "-" {
+		return nil, permTag, nil
+	}
+
+	perm := security.Permission(permTag)
+
+	if !perm.HasResource() {
+		perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
+	}
+
+	if err = r.policies.Register(perm, typ); err != nil {
+		return
+	}
+
+	typ2 := reflect2.Type2(typ)
+
+	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
+		userRoles, err := r.securityScheme.UserRoles(c)
+
+		if err != nil {
+			return
+		}
+
+		cond, err := r.policies.Get(userRoles, perm)
+
+		if err != nil {
+			return err
+		}
+
+		if cond != nil {
+			typ2.UnsafeSet(p, cond)
+		}
+
+		return nil
+	}, perm.String(), nil
 }

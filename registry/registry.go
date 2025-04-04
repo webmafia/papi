@@ -12,6 +12,7 @@ type Registry struct {
 	desc           map[reflect.Type]TypeDescription
 	scan           scanner.Creator
 	securityScheme security.Scheme
+	policies       security.PolicyStore
 	forcePermTag   bool
 }
 

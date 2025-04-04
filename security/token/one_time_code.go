@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/webmafia/fast"
+	"github.com/webmafia/papi/security"
 )
 
 const codeTxtLen = 32
@@ -45,7 +46,7 @@ func (t OneTimeCode) MarshalText() (text []byte, err error) {
 
 func (t *OneTimeCode) UnmarshalText(text []byte) (err error) {
 	if len(text) != codeFmtLen {
-		return ErrInvalidAuthToken
+		return security.ErrInvalidAuthToken
 	}
 
 	b := make([]byte, 0, codeTxtLen)
