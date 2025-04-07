@@ -132,7 +132,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			})
 		}
 
-		if tags.Permission != "" && r.securityScheme != nil {
+		if tags.Permission != "" && r.gatekeeper != nil {
 			if sc, perm, err = r.createOperationSecurityHandler(fld.Type, tags.Permission, caller); err != nil {
 				return
 			}
@@ -146,8 +146,8 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		}
 	}
 
-	if r.forcePermTag && perm == "" && r.securityScheme != nil {
-		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required when a security scheme is set", caller.Name())
+	if !r.OptionalPermTag() && perm == "" {
+		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required by the Gatekeeper", caller.Name())
 	}
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
@@ -179,7 +179,7 @@ func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag stri
 	typ2 := reflect2.Type2(typ)
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
-		userRoles, err := r.securityScheme.UserRoles(c)
+		userRoles, err := r.gatekeeper.UserRoles(c)
 
 		if err != nil {
 			return

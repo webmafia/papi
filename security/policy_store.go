@@ -72,7 +72,7 @@ func (s *PolicyStore) freeze() {
 	}
 }
 
-func (s *PolicyStore) Add(role string, perm Permission, prio int64, cond ...any) (err error) {
+func (s *PolicyStore) AddPolicy(role string, perm Permission, prio int64, cond ...any) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -161,13 +161,19 @@ func (s *PolicyStore) addWildcard(role string, perm Permission, prio int64) (err
 	return
 }
 
-func (s *PolicyStore) BatchAdd(cb func(add func(role string, perm Permission, prio int64, cond ...any) error) error) (err error) {
+func (s *PolicyStore) AddPolicies(policies iter.Seq[PolicyData]) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.freeze()
 
-	return cb(s.add)
+	for pol := range policies {
+		if err = s.add(pol.Role, pol.Perm, pol.Prio, pol.Cond); err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 func (s *PolicyStore) getType(perm Permission) (typ reflect.Type, ok bool) {

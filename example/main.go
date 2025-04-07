@@ -8,6 +8,7 @@ import (
 
 	"github.com/webmafia/papi"
 	"github.com/webmafia/papi/openapi"
+	"github.com/webmafia/papi/registry"
 )
 
 type Users struct{}
@@ -113,7 +114,7 @@ func (p PDF) ContentType() string { return "application/pdf" }
 
 func main() {
 	host := "localhost:3001"
-	api, err := papi.NewAPI(papi.Options{
+	api, err := papi.NewAPI(registry.NewRegistry(), papi.Options{
 		OpenAPI: openapi.NewDocument(
 			openapi.Info{
 				Title: "Demo API",

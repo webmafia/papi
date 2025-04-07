@@ -3,25 +3,27 @@ package registry
 import (
 	"reflect"
 
+	"github.com/webmafia/fast"
 	"github.com/webmafia/papi/internal/scanner"
 	"github.com/webmafia/papi/security"
 )
 
 type Registry struct {
-	scanCache      map[reflect.Type]Decoder
-	desc           map[reflect.Type]TypeDescription
-	scan           scanner.Creator
-	securityScheme security.Scheme
-	policies       security.PolicyStore
-	forcePermTag   bool
+	scanCache  map[reflect.Type]Decoder
+	desc       map[reflect.Type]TypeDescription
+	scan       scanner.Creator
+	gatekeeper security.Gatekeeper
+	policies   security.PolicyStore
 }
 
-func NewRegistry(securityScheme security.Scheme, forcePermTag bool) (r *Registry, err error) {
+func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
 	r = &Registry{
-		scanCache:      make(map[reflect.Type]Decoder),
-		desc:           make(map[reflect.Type]TypeDescription),
-		securityScheme: securityScheme,
-		forcePermTag:   forcePermTag,
+		scanCache: make(map[reflect.Type]Decoder),
+		desc:      make(map[reflect.Type]TypeDescription),
+	}
+
+	if len(gatekeeper) > 0 {
+		r.gatekeeper = gatekeeper[0]
 	}
 
 	r.scan = scanner.NewCreator(r.scanner)
@@ -41,4 +43,17 @@ func (r *Registry) RegisterType(typs ...TypeRegistrar) (err error) {
 	}
 
 	return
+}
+
+// Could be nil.
+func (r *Registry) Gatekeeper() security.Gatekeeper {
+	return r.gatekeeper
+}
+
+func (r *Registry) Policies() *security.PolicyStore {
+	return fast.NoescapeVal(&r.policies)
+}
+
+func (r *Registry) OptionalPermTag() bool {
+	return r.gatekeeper == nil || r.gatekeeper.OptionalPermTag()
 }
