@@ -17,11 +17,7 @@ func Example_createTagScanner() {
 		G bool    `tag:"flags:g"`
 	}
 
-	reg, err := NewRegistry(nil, false)
-
-	if err != nil {
-		panic(err)
-	}
+	reg := NewRegistry()
 
 	scan, err := reg.createTagScanner(reflect.TypeFor[Foo]())
 

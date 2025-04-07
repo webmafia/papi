@@ -10,7 +10,7 @@ type SecurityScheme struct {
 	In               string
 	Scheme           string
 	BearerFormat     string
-	Flows            struct{} // TODO
+	Flows            SecuritySchemeFlows
 	OpenIdConnectUrl struct{} // TODO
 }
 
@@ -48,6 +48,11 @@ func (sec *SecurityScheme) JsonEncode(s *jsoniter.Stream) {
 		s.WriteString(sec.BearerFormat)
 	}
 
+	if !sec.Flows.IsZero() {
+		s.WriteMore()
+		s.WriteObjectField("flows")
+		sec.Flows.JsonEncode(s)
+	}
+
 	s.WriteObjectEnd()
-	return
 }
