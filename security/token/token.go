@@ -5,6 +5,7 @@ import (
 
 	"github.com/webmafia/fast"
 	"github.com/webmafia/identifier"
+	"github.com/webmafia/papi/security"
 )
 
 var (
@@ -53,7 +54,7 @@ func (t Token) MarshalText() (text []byte, err error) {
 
 func (t *Token) UnmarshalText(text []byte) (err error) {
 	if len(text) != txtLen {
-		return ErrInvalidAuthToken
+		return security.ErrInvalidAuthToken
 	}
 
 	_, err = encoder.Decode(t.bytes(), text)
@@ -66,7 +67,7 @@ func (t Token) MarshalBinary() (data []byte, err error) {
 
 func (t *Token) UnmarshalBinary(data []byte) error {
 	if len(data) != binLen {
-		return ErrInvalidAuthToken
+		return security.ErrInvalidAuthToken
 	}
 
 	copy(t.bytes(), data)

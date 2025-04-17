@@ -11,6 +11,7 @@ import (
 	"github.com/webmafia/papi/internal/route"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
+	"github.com/webmafia/papi/security"
 	"github.com/webmafia/papi/valid"
 )
 
@@ -155,8 +156,8 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], perm string, pc *runt
 		Tags:        r.Tags,
 	}
 
-	if api.opt.SecurityScheme != nil {
-		if sec := api.opt.SecurityScheme.OperationSecurityDocs(perm); !sec.IsZero() {
+	if g := api.reg.Gatekeeper(); g != nil {
+		if sec := g.SecurityRequirement(security.Permission(perm)); !sec.IsZero() {
 			op.Security = append(op.Security, sec)
 		}
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/webmafia/papi/internal/types"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
-	"github.com/webmafia/papi/security"
 )
 
 type API struct {
@@ -38,12 +37,6 @@ type Options struct {
 
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
-
-	// A security scheme.
-	SecurityScheme security.Scheme
-
-	// Whether the permission tag is optional in routes. Does only apply when there is a gatekeeper set. Default false.
-	OptionalPermissionTag bool
 }
 
 func (opt *Options) setDefaults() {
@@ -59,13 +52,14 @@ func (opt *Options) setDefaults() {
 }
 
 // Create a new API service.
-func NewAPI(opt ...Options) (api *API, err error) {
+func NewAPI(reg *registry.Registry, opt ...Options) (api *API, err error) {
 	api = &API{
 		server: fasthttp.Server{
 			StreamRequestBody:            true,
 			DisablePreParseMultipartForm: true,
 			Name:                         "papi",
 		},
+		reg: reg,
 	}
 
 	if len(opt) > 0 {
@@ -76,8 +70,8 @@ func NewAPI(opt ...Options) (api *API, err error) {
 				return nil, ErrInvalidOpenAPI
 			}
 
-			if api.opt.SecurityScheme != nil {
-				if err = api.opt.OpenAPI.AddSecurityScheme(api.opt.SecurityScheme.SecurityDocs()); err != nil {
+			if g := api.reg.Gatekeeper(); g != nil {
+				if err = api.opt.OpenAPI.AddSecurityScheme(g.SecurityScheme()); err != nil {
 					return
 				}
 			}
@@ -85,10 +79,6 @@ func NewAPI(opt ...Options) (api *API, err error) {
 	}
 
 	api.opt.setDefaults()
-
-	if api.reg, err = registry.NewRegistry(api.opt.SecurityScheme, !api.opt.OptionalPermissionTag); err != nil {
-		return
-	}
 
 	api.reg.RegisterType(
 		types.TimeType(),

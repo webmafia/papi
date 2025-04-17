@@ -1,4 +1,4 @@
-package token
+package security
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ type Policy struct {
 	Cond []byte
 }
 
-type policyStore struct {
+type PolicyStore struct {
 	store map[PolicyKey]policy
 	types map[Permission]reflect.Type
 	mu    sync.RWMutex
@@ -34,7 +34,7 @@ type policy struct {
 	cond unsafe.Pointer
 }
 
-func (s *policyStore) Register(perm Permission, typ reflect.Type) (err error) {
+func (s *PolicyStore) Register(perm Permission, typ reflect.Type) (err error) {
 	if !perm.HasAction() {
 		return errors.New("missing 'action' for policy")
 	}
@@ -66,13 +66,13 @@ func (s *policyStore) Register(perm Permission, typ reflect.Type) (err error) {
 	return
 }
 
-func (s *policyStore) freeze() {
+func (s *PolicyStore) freeze() {
 	if s.store == nil {
 		s.store = make(map[PolicyKey]policy)
 	}
 }
 
-func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any) (err error) {
+func (s *PolicyStore) AddPolicy(role string, perm Permission, prio int64, cond ...any) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -81,7 +81,7 @@ func (s *policyStore) Add(role string, perm Permission, prio int64, cond ...any)
 	return s.add(role, perm, prio, cond...)
 }
 
-func (s *policyStore) add(role string, perm Permission, prio int64, cond ...any) (err error) {
+func (s *PolicyStore) add(role string, perm Permission, prio int64, cond ...any) (err error) {
 	if role == "*" {
 		return errors.New("a role can't be a wildcard")
 	}
@@ -147,7 +147,7 @@ func (s *policyStore) add(role string, perm Permission, prio int64, cond ...any)
 	return
 }
 
-func (s *policyStore) addWildcard(role string, perm Permission, prio int64) (err error) {
+func (s *PolicyStore) addWildcard(role string, perm Permission, prio int64) (err error) {
 	for p := range s.types {
 		v := p.Match(perm)
 
@@ -161,28 +161,34 @@ func (s *policyStore) addWildcard(role string, perm Permission, prio int64) (err
 	return
 }
 
-func (s *policyStore) BatchAdd(cb func(add func(role string, perm Permission, prio int64, cond ...any) error) error) (err error) {
+func (s *PolicyStore) AddPolicies(policies iter.Seq[PolicyData]) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.freeze()
 
-	return cb(s.add)
+	for pol := range policies {
+		if err = s.add(pol.Role, pol.Perm, pol.Prio, pol.Cond); err != nil {
+			return
+		}
+	}
+
+	return
 }
 
-func (s *policyStore) getType(perm Permission) (typ reflect.Type, ok bool) {
+func (s *PolicyStore) getType(perm Permission) (typ reflect.Type, ok bool) {
 	typ, ok = s.types[perm]
 	return
 }
 
-func (s *policyStore) set(role string, perm Permission, prio int64, cond unsafe.Pointer) {
+func (s *PolicyStore) set(role string, perm Permission, prio int64, cond unsafe.Pointer) {
 	s.store[PolicyKey{Role: role, Perm: perm}] = policy{
 		prio: prio,
 		cond: cond,
 	}
 }
 
-func (s *policyStore) IteratePolicies() iter.Seq2[PolicyKey, Policy] {
+func (s *PolicyStore) IteratePolicies() iter.Seq2[PolicyKey, Policy] {
 	return func(yield func(PolicyKey, Policy) bool) {
 		s.mu.RLock()
 		defer s.mu.RUnlock()
@@ -213,7 +219,7 @@ func (s *policyStore) IteratePolicies() iter.Seq2[PolicyKey, Policy] {
 	}
 }
 
-func (s *policyStore) IteratePermissions(inPolicy ...bool) iter.Seq[Permission] {
+func (s *PolicyStore) IteratePermissions(inPolicy ...bool) iter.Seq[Permission] {
 	return func(yield func(Permission) bool) {
 		s.mu.RLock()
 		defer s.mu.RUnlock()
@@ -259,7 +265,7 @@ func (s *policyStore) IteratePermissions(inPolicy ...bool) iter.Seq[Permission] 
 	}
 }
 
-func (s *policyStore) Get(roles []string, perm Permission) (cond unsafe.Pointer, err error) {
+func (s *PolicyStore) Get(roles []string, perm Permission) (cond unsafe.Pointer, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -283,19 +289,19 @@ func (s *policyStore) Get(roles []string, perm Permission) (cond unsafe.Pointer,
 	return
 }
 
-func (s *policyStore) get(role string, perm Permission) (pol policy, found bool) {
+func (s *PolicyStore) get(role string, perm Permission) (pol policy, found bool) {
 	pol, found = s.store[PolicyKey{Role: role, Perm: perm}]
 	return
 }
 
-func (s *policyStore) Remove(role string, perm Permission) {
+func (s *PolicyStore) Remove(role string, perm Permission) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.remove(role, perm)
 }
 
-func (s *policyStore) remove(role string, perm Permission) {
+func (s *PolicyStore) remove(role string, perm Permission) {
 	if s.store != nil {
 		delete(s.store, PolicyKey{Role: role, Perm: perm})
 	}

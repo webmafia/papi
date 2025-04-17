@@ -1,4 +1,4 @@
-package token
+package security
 
 import "strings"
 
@@ -7,6 +7,10 @@ type Permission string
 func Perm(action, resource string) (p Permission) {
 	p.set(action, resource)
 	return
+}
+
+func (p Permission) IsZero() bool {
+	return p == "" || p == "-"
 }
 
 func (p Permission) String() string {
