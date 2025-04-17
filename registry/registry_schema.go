@@ -148,6 +148,12 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 		return scanSchemaTags(r, &openapi.String{}, tags)
 
 	case reflect.Struct:
+		fldName := tags.Get("body")
+
+		if fldName == "" {
+			fldName = "json"
+		}
+
 		numFlds := typ.NumField()
 
 		obj := &openapi.Object{
@@ -163,7 +169,7 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 
 			name := fld.Name
 
-			if jsonTag, ok := fld.Tag.Lookup("json"); ok {
+			if jsonTag, ok := fld.Tag.Lookup(fldName); ok {
 				name, _, _ = strings.Cut(jsonTag, ",")
 
 				if name == "-" {
@@ -189,6 +195,7 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 			}
 
 		}
+
 		if internal.IsPublicType(typ) {
 			return &openapi.Ref{
 				Name:   typ.Name(),

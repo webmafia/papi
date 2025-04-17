@@ -47,14 +47,21 @@ func (r *Registry) describeOperation(op *openapi.Operation, typ reflect.Type) (e
 			continue
 		}
 
-		if tags.Body == "json" {
+		if tags.Body != "" {
 			schema, err := r.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
 				return err
 			}
 
-			op.RequestBody = schema
+			if tags.Body == "form" {
+				op.RequestBody = &openapi.Custom{
+					ContentType: "application/x-www-form-urlencoded",
+					Schema:      schema,
+				}
+			} else {
+				op.RequestBody = schema
+			}
 		}
 
 		if tags.Param != "" {
