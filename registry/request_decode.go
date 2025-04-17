@@ -84,11 +84,16 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			}
 
 			if sc == nil {
-				if tags.Body != "json" {
-					return nil, "", fmt.Errorf("unknown body type: '%s'", tags.Body)
+				switch tags.Body {
+				case "json":
+					sc, err = r.createJsonDecoder(fld.Type)
+				case "form":
+					sc, err = r.createFormDecoder(fld.Type)
+				default:
+					err = fmt.Errorf("unknown body type: '%s'", tags.Body)
 				}
 
-				if sc, err = r.createJsonDecoder(fld.Type); err != nil {
+				if err != nil {
 					return
 				}
 			}
