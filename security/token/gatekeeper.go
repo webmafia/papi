@@ -119,3 +119,8 @@ func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code OneTimeCode,
 func (s *Gatekeeper[T]) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, err error) {
 	return s.auth.CreateTokenWithId(id, payload...)
 }
+
+// PreRequest implements security.Gatekeeper.
+func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) error {
+	return nil
+}

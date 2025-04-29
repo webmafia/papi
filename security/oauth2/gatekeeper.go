@@ -56,6 +56,11 @@ func (s *Gatekeeper) SecurityScheme() openapi.SecurityScheme {
 	}
 }
 
+// PreRequest implements security.Gatekeeper.
+func (g *Gatekeeper) PreRequest(c *fasthttp.RequestCtx) error {
+	return nil
+}
+
 // UserRoles implements security.Scheme.
 func (s *Gatekeeper) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
 	panic("unimplemented")

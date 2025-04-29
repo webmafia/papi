@@ -44,7 +44,15 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 	}
 
 	numFields := typ.NumField()
-	flds := make([]fieldScanner, 0, numFields)
+	flds := make([]fieldScanner, 0, numFields+1)
+
+	if r.gatekeeper != nil {
+		flds = append(flds, fieldScanner{
+			scan: func(_ unsafe.Pointer, c *fasthttp.RequestCtx) error {
+				return r.gatekeeper.PreRequest(c)
+			},
+		})
+	}
 
 	for i := 0; i < numFields; i++ {
 		var sc RequestDecoder
