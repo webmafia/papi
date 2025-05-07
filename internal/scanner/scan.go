@@ -35,7 +35,7 @@ func ScanString[T any](dst *T, src string) (err error) {
 		return
 	}
 
-	return scan(fast.Noescape(unsafe.Pointer(dst)), src)
+	return scan(fast.NoescapeUnsafe(unsafe.Pointer(dst)), src)
 }
 
 func ScanBytes[T any](dst *T, src []byte) (err error) {

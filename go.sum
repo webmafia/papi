@@ -27,6 +27,8 @@ github.com/valyala/fasthttp v1.52.0 h1:wqBQpxH71XW0e2g+Og4dzQM8pk34aFYlA1Ga8db7g
 github.com/valyala/fasthttp v1.52.0/go.mod h1:hf5C4QnVMkNXMspnsUlfM3WitlgYflyhHYoKol/szxQ=
 github.com/webmafia/fast v0.10.0 h1:eAnvwkLgOJijnBx39lTkY/qu5NxlMh2B1fA0Vdbwr4k=
 github.com/webmafia/fast v0.10.0/go.mod h1:huJN6MVve9MkiXpAzyuyd0UGhTXt3B/lukYR2/Zu0/Q=
+github.com/webmafia/fast v0.17.0 h1:nA5oJN01iMIWh9MtQZSzxHx5mYnPTVTawGlahapiHFM=
+github.com/webmafia/fast v0.17.0/go.mod h1:MjWuDwKdCP1APS96wqOlQ9ZU5gqPmHfstQgDYGpG0pQ=
 github.com/webmafia/identifier v0.1.2 h1:h7Nm10BXl4gJdrpCpFEGaiJ88MFhI35NQM1bvsUczoE=
 github.com/webmafia/identifier v0.1.2/go.mod h1:WjuG3dg3q2AEFmAmiJR7qyAXjqbNnyuVc5aO7uBjFsg=
 github.com/zeebo/assert v1.1.0 h1:hU1L1vLTHsnO8x8c9KAR5GmM5QscxHg5RNU5z5qbUWY=

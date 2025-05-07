@@ -43,7 +43,7 @@ func Benchmark_createArrayScanner(b *testing.B) {
 	for range b.N {
 		var ints []int
 
-		if err = scan(fast.Noescape(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
+		if err = scan(fast.NoescapeUnsafe(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
 			b.Fatal(err)
 		}
 	}

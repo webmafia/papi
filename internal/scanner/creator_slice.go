@@ -45,7 +45,7 @@ func (c Creator) createSliceScanner(typ reflect.Type) (scan Scanner, err error) 
 		for i, sub := range iterate.IterateChunks(s, sep) {
 			elemPtr := unsafe.Add(head.data, uintptr(i)*itemSize)
 
-			if err = elemScan(fast.Noescape(elemPtr), sub); err != nil {
+			if err = elemScan(fast.NoescapeUnsafe(elemPtr), sub); err != nil {
 				return err
 			}
 		}

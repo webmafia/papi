@@ -51,7 +51,7 @@ func (r *Registry) Gatekeeper() security.Gatekeeper {
 }
 
 func (r *Registry) Policies() *security.PolicyStore {
-	return fast.NoescapeVal(&r.policies)
+	return fast.Noescape(&r.policies)
 }
 
 func (r *Registry) OptionalPermTag() bool {

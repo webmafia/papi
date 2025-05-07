@@ -49,7 +49,7 @@ func Benchmark_createSliceScanner(b *testing.B) {
 	for range b.N {
 		var ints []int
 
-		if err = scan(fast.Noescape(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
+		if err = scan(fast.NoescapeUnsafe(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -68,7 +68,7 @@ func Benchmark_createSliceScanner_reuse(b *testing.B) {
 	b.ResetTimer()
 
 	for range b.N {
-		if err = scan(fast.Noescape(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
+		if err = scan(fast.NoescapeUnsafe(unsafe.Pointer(&ints)), "123,456,789"); err != nil {
 			b.Fatal(err)
 		}
 	}

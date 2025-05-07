@@ -173,6 +173,6 @@ func (h *Hasher) writeReflect(v any) (int, error) {
 func Hash(v any) uint64 {
 	var h Hasher
 	h.Reset()
-	h.WriteAny(*fast.NoescapeVal(&v))
+	h.WriteAny(fast.Noescape(v))
 	return h.Hash()
 }

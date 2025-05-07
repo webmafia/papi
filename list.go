@@ -34,7 +34,7 @@ func (l *List[T]) Write(v *T) error {
 		l.written = true
 	}
 
-	l.enc.Encode(fast.Noescape(unsafe.Pointer(v)), l.s)
+	l.enc.Encode(fast.NoescapeUnsafe(unsafe.Pointer(v)), l.s)
 	return l.s.Error
 }
 

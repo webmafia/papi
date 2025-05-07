@@ -28,7 +28,7 @@ func (c Creator) createArrayScanner(typ reflect.Type) (scan Scanner, err error) 
 
 			elemPtr := unsafe.Add(p, uintptr(i)*itemSize)
 
-			if err = elemScan(fast.Noescape(elemPtr), sub); err != nil {
+			if err = elemScan(fast.NoescapeUnsafe(elemPtr), sub); err != nil {
 				return err
 			}
 		}
