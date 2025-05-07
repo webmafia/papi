@@ -41,7 +41,7 @@ func (g *auth) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, 
 		payloadSize = copy(t.payload[:], payload[0])
 	}
 
-	if _, err = rand.Read(fast.NoescapeBytes(t.payload[payloadSize:])); err != nil {
+	if _, err = rand.Read(fast.Noescape(t.payload[payloadSize:])); err != nil {
 		return
 	}
 
@@ -55,7 +55,7 @@ func (g *auth) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, 
 }
 
 func (g *auth) ValidateToken(t Token) (err error) {
-	return g.validateTokenBytes(fast.NoescapeBytes(t.bytes()))
+	return g.validateTokenBytes(fast.Noescape(t.bytes()))
 }
 
 func (g *auth) validateTokenBytes(b []byte) (err error) {
