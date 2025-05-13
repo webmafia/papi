@@ -114,6 +114,12 @@ func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code OneTimeCode,
 	return
 }
 
+// Consumes an auth code and returns the user ID associated with the auth code
+func (s *Gatekeeper[T]) ConsumeAuthCode(ctx context.Context, code OneTimeCode) (userId T, err error) {
+	userId, _, err = s.store.ConsumeAuthCode(ctx, code)
+	return
+}
+
 // Create a token with a specific ID and an optional payload (e.g. a user ID) that will be stored
 // in the token. The payload cannot exceed 24 bytes, and will be padded with random bytes.
 func (s *Gatekeeper[T]) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, err error) {
