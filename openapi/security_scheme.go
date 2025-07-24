@@ -11,7 +11,7 @@ type SecurityScheme struct {
 	Scheme           string
 	BearerFormat     string
 	Flows            SecuritySchemeFlows
-	OpenIdConnectUrl struct{} // TODO
+	OpenIdConnectUrl string
 }
 
 func (sec *SecurityScheme) IsZero() bool {
@@ -52,6 +52,12 @@ func (sec *SecurityScheme) JsonEncode(s *jsoniter.Stream) {
 		s.WriteMore()
 		s.WriteObjectField("flows")
 		sec.Flows.JsonEncode(s)
+	}
+
+	if sec.OpenIdConnectUrl != "" {
+		s.WriteMore()
+		s.WriteObjectField("openIdConnectUrl")
+		s.WriteString(sec.OpenIdConnectUrl)
 	}
 
 	s.WriteObjectEnd()
