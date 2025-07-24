@@ -145,9 +145,23 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			})
 		}
 
-		if tags.Permission != "" && r.gatekeeper != nil {
-			if sc, perm, err = r.createOperationSecurityHandler(fld.Type, tags.Permission, caller); err != nil {
+		if tags.Permission != "" && tags.Permission != "-" && r.gatekeeper != nil {
+			switch gk := r.gatekeeper.(type) {
+
+			case security.RolesGatekeeper:
+				if sc, perm, err = r.createOperationSecurityHandler(fld.Type, tags.Permission, caller, gk); err != nil {
+					return
+				}
+
+			case security.CustomGatekeeper:
+				sc = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+					return gk.HandleSecurity(c, security.Permission(tags.Permission), reflect.NewAt(fld.Type, p).Interface())
+				}
+
+			default:
+				err = fmt.Errorf("unknown gatekeeper type: %T", gk)
 				return
+
 			}
 
 			if sc != nil {
@@ -174,11 +188,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 	}, perm, nil
 }
 
-func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func) (handler func(p unsafe.Pointer, c *fasthttp.RequestCtx) error, modTag string, err error) {
-	if permTag == "-" {
-		return nil, permTag, nil
-	}
-
+func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler func(p unsafe.Pointer, c *fasthttp.RequestCtx) error, modTag string, err error) {
 	perm := security.Permission(permTag)
 
 	if !perm.HasResource() {
@@ -192,7 +202,7 @@ func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag stri
 	typ2 := reflect2.Type2(typ)
 
 	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
-		userRoles, err := r.gatekeeper.UserRoles(c)
+		userRoles, err := gk.UserRoles(c)
 
 		if err != nil {
 			return

@@ -22,7 +22,7 @@ func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
 		desc:      make(map[reflect.Type]TypeDescription),
 	}
 
-	if len(gatekeeper) > 0 {
+	if len(gatekeeper) > 0 && gatekeeper[0] != nil {
 		r.gatekeeper = gatekeeper[0]
 	}
 
