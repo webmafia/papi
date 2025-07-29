@@ -176,6 +176,21 @@ func (s *PolicyStore) AddPolicies(policies iter.Seq[PolicyData]) (err error) {
 	return
 }
 
+func (s *PolicyStore) AddPoliciesSlice(policies []PolicyData) (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.freeze()
+
+	for _, pol := range policies {
+		if err = s.add(pol.Role, pol.Perm, pol.Prio, pol.Cond); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 func (s *PolicyStore) getType(perm Permission) (typ reflect.Type, ok bool) {
 	typ, ok = s.types[perm]
 	return
