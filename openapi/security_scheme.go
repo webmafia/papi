@@ -30,17 +30,23 @@ func (sec *SecurityScheme) JsonEncode(s *jsoniter.Stream) {
 		s.WriteString(sec.Description)
 	}
 
-	s.WriteMore()
-	s.WriteObjectField("name")
-	s.WriteString(sec.Name)
+	if sec.Name != "" {
+		s.WriteMore()
+		s.WriteObjectField("name")
+		s.WriteString(sec.Name)
+	}
 
-	s.WriteMore()
-	s.WriteObjectField("in")
-	s.WriteString(sec.In)
+	if sec.In != "" {
+		s.WriteMore()
+		s.WriteObjectField("in")
+		s.WriteString(sec.In)
+	}
 
-	s.WriteMore()
-	s.WriteObjectField("scheme")
-	s.WriteString(sec.Scheme)
+	if sec.Scheme != "" {
+		s.WriteMore()
+		s.WriteObjectField("scheme")
+		s.WriteString(sec.Scheme)
+	}
 
 	if sec.BearerFormat != "" {
 		s.WriteMore()
