@@ -3,6 +3,8 @@ package openapi
 import (
 	"fmt"
 	"iter"
+
+	"github.com/webmafia/papi/internal/iterate"
 )
 
 type encoderContext struct {
@@ -42,7 +44,7 @@ func (ctx *encoderContext) allRefs() iter.Seq2[int, *Ref] {
 		for {
 			var changed bool
 
-			for _, ref := range ctx.refs {
+			for _, ref := range iterate.SortedMap(ctx.refs) {
 				if _, ok := done[ref.Name]; ok {
 					continue
 				}

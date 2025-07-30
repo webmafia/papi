@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/webmafia/papi/internal/iterate"
 )
 
 type Paths map[string][]*Operation
@@ -34,7 +35,7 @@ func (p Paths) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 
 	var written bool
 
-	for path, ops := range p {
+	for path, ops := range iterate.SortedMap(p) {
 		if written {
 			s.WriteMore()
 		} else {

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/fast"
 	"github.com/webmafia/papi/errors"
@@ -154,8 +155,11 @@ func (api *API) WriteOpenAPI(w io.Writer) error {
 		return ErrMissingOpenAPI
 	}
 
-	s := json.AcquireStream(w)
-	defer json.ReleaseStream(s)
+	s := jsoniter.Config{
+		IndentionStep:                 4,
+		MarshalFloatWith6Digits:       true,
+		ObjectFieldMustBeSimpleString: true,
+	}.Froze().BorrowStream(w)
 
 	if err := api.opt.OpenAPI.JsonEncode(s); err != nil {
 		return err
