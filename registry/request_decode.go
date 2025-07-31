@@ -145,7 +145,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			})
 		}
 
-		if tags.Permission != "" && tags.Permission != "-" && r.gatekeeper != nil {
+		if tags.Permission != "" && r.gatekeeper != nil {
 			switch gk := r.gatekeeper.(type) {
 
 			case security.RolesGatekeeper:
@@ -189,6 +189,10 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 }
 
 func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler func(p unsafe.Pointer, c *fasthttp.RequestCtx) error, modTag string, err error) {
+	if permTag == "-" {
+		return nil, permTag, nil
+	}
+
 	perm := security.Permission(permTag)
 
 	if !perm.HasResource() {
