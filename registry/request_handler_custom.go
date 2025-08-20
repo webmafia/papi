@@ -9,20 +9,12 @@ import (
 )
 
 // Returns a nil handler if there is no custom handler.
-func (r *Registry) getCustomHandler(typ reflect.Type, tags reflect.StructTag) (scan Handler, err error) {
-	var dec Decoder
+func (r *Registry) getCustomBinder(typ reflect.Type, tags reflect.StructTag) (scan Binder, err error) {
+	var dec Parser
 
-	// 1. If there is an explicit registered decoder, use it
-	if desc, ok := r.desc[typ]; ok && desc.Decoder != nil {
-		dec, err = desc.Decoder(tags)
-	} else if typ.Implements(typeDescriber) {
-
-		// 2. If the type can describe itself, let it
-		if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
-			if desc := v.TypeDescription(r); desc.Schema != nil {
-				dec, err = desc.Decoder(tags)
-			}
-		}
+	// Use any existing binder
+	if desc, ok := r.describe(typ); ok && desc.Binder != nil {
+		return desc.Binder(tags)
 	}
 
 	if err == nil && dec != nil {

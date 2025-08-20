@@ -33,7 +33,7 @@ func scanSchemaTags[T any](reg *Registry, dst *T, tags reflect.StructTag) (*T, e
 	return dst, nil
 }
 
-func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) {
+func (r *Registry) createTagScanner(typ reflect.Type) (scan Parser, err error) {
 	if typ.Kind() != reflect.Struct {
 		return nil, errors.New("invalid struct")
 	}
@@ -41,11 +41,11 @@ func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) 
 	numFields := typ.NumField()
 
 	type field struct {
-		scan   Decoder
+		scan   Parser
 		offset uintptr
 	}
 
-	var fldScan Decoder
+	var fldScan Parser
 
 	tagScanners := make(map[string]field, numFields)
 
@@ -70,7 +70,7 @@ func (r *Registry) createTagScanner(typ reflect.Type) (scan Decoder, err error) 
 				}
 			}
 
-			if fldScan, err = r.Decoder(fld.Type, fld.Tag); err != nil {
+			if fldScan, err = r.Parser(fld.Type, fld.Tag); err != nil {
 				return
 			}
 

@@ -8,8 +8,8 @@ import (
 	"github.com/webmafia/papi/internal/route"
 )
 
-func (r *Registry) createParamHandler(typ reflect.Type, key string, idx int, tags reflect.StructTag) (scan Handler, err error) {
-	sc, err := r.Decoder(typ, tags)
+func (r *Registry) createParamBinder(typ reflect.Type, key string, idx int, tags reflect.StructTag) (scan Binder, err error) {
+	sc, err := r.Parser(typ, tags)
 
 	if err != nil {
 		return

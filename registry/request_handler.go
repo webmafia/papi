@@ -28,14 +28,14 @@ func (t inputTags) IsZero() bool {
 
 type fieldHandler struct {
 	offset  uintptr
-	handler Handler
+	handler Binder
 }
 
-func (r *Registry) CreateHandler(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Handler, perm string, err error) {
-	return r.createHandler(typ, paramKeys, caller)
+func (r *Registry) CreateBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Binder, perm string, err error) {
+	return r.createBinder(typ, paramKeys, caller)
 }
 
-func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Handler, perm string, err error) {
+func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Binder, perm string, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -53,7 +53,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 	}
 
 	for i := 0; i < numFields; i++ {
-		var sc Handler
+		var sc Binder
 		var tags inputTags
 
 		fld := typ.Field(i)
@@ -65,7 +65,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 		// If there are no tags, and the field type is a struct, dive into it
 		if tags.IsZero() {
 			if fld.Type.Kind() == reflect.Struct {
-				fldScan, subPerm, err := r.createHandler(fld.Type, paramKeys, caller)
+				fldScan, subPerm, err := r.createBinder(fld.Type, paramKeys, caller)
 
 				if err != nil {
 					return nil, "", err
@@ -89,18 +89,18 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 		}
 
 		if tags.Body != "" {
-			if sc, err = r.getCustomHandler(fld.Type, fld.Tag); err != nil {
+			if sc, err = r.getCustomBinder(fld.Type, fld.Tag); err != nil {
 				return
 			}
 
 			if sc == nil {
 				switch tags.Body {
 				case "json":
-					sc, err = r.createJsonHandler(fld.Type)
+					sc, err = r.createJsonBinder(fld.Type)
 				case "form":
-					sc, err = r.createFormHandler(fld.Type)
+					sc, err = r.createFormBinder(fld.Type)
 				case "multipart":
-					sc, err = r.createMultipartHandler(fld.Type)
+					sc, err = r.createMultipartBinder(fld.Type)
 				default:
 					err = fmt.Errorf("unknown body type: '%s'", tags.Body)
 				}
@@ -124,7 +124,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 				return
 			}
 
-			if sc, err = r.createParamHandler(fld.Type, tags.Param, idx, fld.Tag); err != nil {
+			if sc, err = r.createParamBinder(fld.Type, tags.Param, idx, fld.Tag); err != nil {
 				return
 			}
 
@@ -135,7 +135,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 		}
 
 		if tags.Query != "" {
-			if sc, err = r.createQueryHandler(fld.Type, tags.Query, fld.Tag); err != nil {
+			if sc, err = r.createQueryBinder(fld.Type, tags.Query, fld.Tag); err != nil {
 				return
 			}
 
@@ -149,7 +149,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 			switch gk := r.gatekeeper.(type) {
 
 			case security.RolesGatekeeper:
-				if sc, perm, err = r.createOperationSecurityHandler(fld.Type, tags.Permission, caller, gk); err != nil {
+				if sc, perm, err = r.createOperationSecurityBinder(fld.Type, tags.Permission, caller, gk); err != nil {
 					return
 				}
 
@@ -188,7 +188,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 	}, perm, nil
 }
 
-func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler Handler, modTag string, err error) {
+func (r *Registry) createOperationSecurityBinder(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler Binder, modTag string, err error) {
 	if permTag == "-" {
 		return nil, permTag, nil
 	}

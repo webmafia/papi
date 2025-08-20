@@ -103,10 +103,10 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 
 			return sch, nil
 		},
-		Handler: func(handler registry.Handler) (registry.Handler, error) {
+		Responder: func() (registry.Responder, error) {
 			enc := json.EncoderOf(reflect.TypeFor[T]())
 
-			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) error {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer, next func() error) error {
 				c.SetContentType("application/json")
 
 				s := json.AcquireStream(c.Response.BodyWriter())
@@ -120,7 +120,7 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				s.WriteObjectField("items")
 				s.WriteArrayStart()
 
-				if err := handler(c, ptr); err != nil {
+				if err := next(); err != nil {
 					return err
 				}
 

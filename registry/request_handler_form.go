@@ -11,11 +11,11 @@ import (
 
 type formDecoder struct {
 	offset uintptr
-	scan   Decoder
+	scan   Parser
 	name   string
 }
 
-func (r *Registry) createFormHandler(typ reflect.Type) (scan Handler, err error) {
+func (r *Registry) createFormBinder(typ reflect.Type) (scan Binder, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -36,7 +36,7 @@ func (r *Registry) createFormHandler(typ reflect.Type) (scan Handler, err error)
 			continue
 		}
 
-		sc, err := r.Decoder(fld.Type, fld.Tag)
+		sc, err := r.Parser(fld.Type, fld.Tag)
 
 		if err != nil {
 			return nil, err

@@ -78,6 +78,8 @@ func DELETE[I, O any](api *API, r Route[I, O]) (err error) {
 	return addRoute(api, route)
 }
 
+type routeHandler func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error
+
 func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	if r.Path == "" {
 		return ErrMissingRoutePath
@@ -100,22 +102,33 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		var (
-			decodeRequest registry.Handler
-			perm          string
-			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
+			bind    registry.Binder
+			perm    string
+			handler = *(*routeHandler)(unsafe.Pointer(&r.Handler)) // The handler from the route
 		)
 
-		if decodeRequest, perm, err = api.reg.CreateHandler(reflect.TypeFor[I](), route.Params, pc); err != nil {
+		// Create a handler for input (request)
+		if bind, perm, err = api.reg.CreateBinder(reflect.TypeFor[I](), route.Params, pc); err != nil {
 			return
 		}
 
+		// Add route to OpenAPI docs
 		if err = addToDocs(api, &r, perm, pc); err != nil {
 			return
 		}
 
-		if handler, err = api.reg.Handler(reflect.TypeFor[O](), handler); err != nil {
+		// Create a handler for output (response)
+		respond, err := api.reg.Responder(reflect.TypeFor[O]())
+
+		if err != nil {
 			return
 		}
+
+		// handler = func(c *fasthttp.RequestCtx, _, out unsafe.Pointer) error {
+		// 	return h(c, out)
+		// }
+
+		// do :=
 
 		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
 			var (
@@ -123,7 +136,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				out O
 			)
 
-			if err = decodeRequest(c, unsafe.Pointer(&in)); err != nil {
+			if err = bind(c, unsafe.Pointer(&in)); err != nil {
 				return
 			}
 
@@ -133,7 +146,9 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				return errs
 			}
 
-			return handler(c, unsafe.Pointer(&out))
+			return respond(c, unsafe.Pointer(&out), func() error {
+				return handler(c, unsafe.Pointer(&in), unsafe.Pointer(&out))
+			})
 		}
 
 		return

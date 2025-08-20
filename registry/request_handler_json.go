@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/papi/internal/json"
 )
 
-func (r *Registry) createJsonHandler(typ reflect.Type) (scan Handler, err error) {
+func (r *Registry) createJsonBinder(typ reflect.Type) (scan Binder, err error) {
 	dec := json.DecoderOf(typ)
 	scan = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
 		iter := json.AcquireIterator(c.Request.BodyStream())

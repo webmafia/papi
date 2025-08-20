@@ -10,7 +10,7 @@ import (
 
 type multipartValueDecoder struct {
 	offset uintptr
-	scan   Decoder
+	scan   Parser
 	name   string
 }
 
@@ -19,7 +19,7 @@ type multipartValueDecoder struct {
 // 	name   string
 // }
 
-func (r *Registry) createMultipartHandler(typ reflect.Type) (scan Handler, err error) {
+func (r *Registry) createMultipartBinder(typ reflect.Type) (scan Binder, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -42,7 +42,7 @@ func (r *Registry) createMultipartHandler(typ reflect.Type) (scan Handler, err e
 			continue
 		}
 
-		sc, err := r.Decoder(fld.Type, fld.Tag)
+		sc, err := r.Parser(fld.Type, fld.Tag)
 
 		if err != nil {
 			return nil, err

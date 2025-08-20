@@ -8,8 +8,8 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *Registry) createQueryHandler(typ reflect.Type, key string, tags reflect.StructTag) (scan Handler, err error) {
-	sc, err := r.Decoder(typ, tags)
+func (r *Registry) createQueryBinder(typ reflect.Type, key string, tags reflect.StructTag) (scan Binder, err error) {
+	sc, err := r.Parser(typ, tags)
 
 	if err != nil {
 		return

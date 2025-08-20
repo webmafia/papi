@@ -27,9 +27,9 @@ func (RawJSON) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 		Schema: func(tags reflect.StructTag) (schema openapi.Schema, err error) {
 			return nil, nil
 		},
-		Handler: func(handler registry.Handler) (registry.Handler, error) {
-			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
-				if err = handler(c, ptr); err != nil {
+		Responder: func() (registry.Responder, error) {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer, next func() error) (err error) {
+				if err = next(); err != nil {
 					return
 				}
 
@@ -44,7 +44,7 @@ func (RawJSON) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				return
 			}, nil
 		},
-		Decoder: func(tags reflect.StructTag) (registry.Decoder, error) {
+		Parser: func(tags reflect.StructTag) (registry.Parser, error) {
 			return func(p unsafe.Pointer, s string) error {
 				b := fast.StringToBytes(s)
 

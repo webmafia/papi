@@ -9,7 +9,7 @@ import (
 )
 
 type Registry struct {
-	scanCache  map[reflect.Type]Decoder
+	scanCache  map[reflect.Type]Parser
 	desc       map[reflect.Type]TypeDescription
 	scan       scanner.Creator
 	gatekeeper security.Gatekeeper
@@ -18,7 +18,7 @@ type Registry struct {
 
 func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
 	r = &Registry{
-		scanCache: make(map[reflect.Type]Decoder),
+		scanCache: make(map[reflect.Type]Parser),
 		desc:      make(map[reflect.Type]TypeDescription),
 	}
 
@@ -26,7 +26,13 @@ func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
 		r.gatekeeper = gatekeeper[0]
 	}
 
-	r.scan = scanner.NewCreator(r.scanner)
+	r.scan = scanner.NewCreator(func(typ reflect.Type) (scan scanner.Scanner, err error) {
+		if desc, ok := r.desc[typ]; ok && desc.Parser != nil {
+			return desc.Parser("")
+		}
+
+		return
+	})
 
 	return
 }
@@ -56,4 +62,21 @@ func (r *Registry) Policies() *security.PolicyStore {
 
 func (r *Registry) OptionalPermTag() bool {
 	return r.gatekeeper == nil || r.gatekeeper.OptionalPermTag()
+}
+
+func (r *Registry) describe(typ reflect.Type) (desc TypeDescription, ok bool) {
+
+	// 1. If there is an explicit registered decoder, use it
+	if desc, ok = r.desc[typ]; ok {
+		return
+	}
+
+	// 2. If the type can describe itself, let it
+	if typ.Implements(typeDescriber) {
+		if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
+			return v.TypeDescription(r), true
+		}
+	}
+
+	return
 }
