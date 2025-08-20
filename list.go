@@ -103,16 +103,16 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 
 			return sch, nil
 		},
-		Handler: func(_ reflect.StructTag, handler registry.Handler) (registry.Handler, error) {
+		Handler: func(handler registry.Handler) (registry.Handler, error) {
 			enc := json.EncoderOf(reflect.TypeFor[T]())
 
-			return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) error {
 				c.SetContentType("application/json")
 
 				s := json.AcquireStream(c.Response.BodyWriter())
 				defer json.ReleaseStream(s)
 
-				l := (*List[T])(out)
+				l := (*List[T])(ptr)
 				l.s = s
 				l.enc = enc
 
@@ -120,7 +120,7 @@ func (List[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				s.WriteObjectField("items")
 				s.WriteArrayStart()
 
-				if err := handler(c, in, out); err != nil {
+				if err := handler(c, ptr); err != nil {
 					return err
 				}
 

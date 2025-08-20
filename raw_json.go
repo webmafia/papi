@@ -27,13 +27,13 @@ func (RawJSON) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 		Schema: func(tags reflect.StructTag) (schema openapi.Schema, err error) {
 			return nil, nil
 		},
-		Handler: func(tags reflect.StructTag, handler registry.Handler) (registry.Handler, error) {
-			return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) (err error) {
-				if err = handler(c, in, out); err != nil {
+		Handler: func(handler registry.Handler) (registry.Handler, error) {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
+				if err = handler(c, ptr); err != nil {
 					return
 				}
 
-				o := (*RawJSON)(out)
+				o := (*RawJSON)(ptr)
 
 				if len(*o) > 0 {
 					c.Response.SetBody(*o)

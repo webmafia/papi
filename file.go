@@ -57,17 +57,17 @@ func (File[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				},
 			}, nil
 		},
-		Handler: func(tags reflect.StructTag, handler registry.Handler) (registry.Handler, error) {
-			return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) (err error) {
+		Handler: func(handler registry.Handler) (registry.Handler, error) {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
 				c.Response.Header.SetContentType(fileType.ContentType())
 				c.Response.Header.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 				c.Response.Header.Set("Pragma", "no-cache")
 				c.Response.Header.Set("Expires", "0")
 
-				f := (*File[T])(out)
+				f := (*File[T])(ptr)
 				f.w = c.Response.BodyWriter()
 
-				if err = handler(c, in, out); err != nil {
+				if err = handler(c, ptr); err != nil {
 					return
 				}
 

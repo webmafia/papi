@@ -45,8 +45,8 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 				Format: "binary",
 			}, nil
 		},
-		Handler: func(tags reflect.StructTag, handler registry.Handler) (registry.Handler, error) {
-			return func(c *fasthttp.RequestCtx, in, out unsafe.Pointer) error {
+		Handler: func(handler registry.Handler) (registry.Handler, error) {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) error {
 				return nil
 			}, nil
 		},

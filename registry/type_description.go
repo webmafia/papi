@@ -23,7 +23,7 @@ type TypeDescription struct {
 	Schema func(tags reflect.StructTag) (openapi.Schema, error)
 
 	// Handler of request and response
-	Handler func(tags reflect.StructTag, handler Handler) (Handler, error)
+	Handler func(handler Handler) (Handler, error)
 
 	// Decoding of request value (e.g. query param)
 	Decoder func(tags reflect.StructTag) (Decoder, error)

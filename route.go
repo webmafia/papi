@@ -113,7 +113,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			return
 		}
 
-		if handler, err = api.reg.Handler(reflect.TypeFor[O](), "", route.Params, handler); err != nil {
+		if handler, err = api.reg.Handler(reflect.TypeFor[O](), handler); err != nil {
 			return
 		}
 
@@ -133,7 +133,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				return errs
 			}
 
-			return handler(c, unsafe.Pointer(&in), unsafe.Pointer(&out))
+			return handler(c, unsafe.Pointer(&out))
 		}
 
 		return
