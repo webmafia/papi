@@ -101,6 +101,8 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 					sc, err = r.createJsonDecoder(fld.Type)
 				case "form":
 					sc, err = r.createFormDecoder(fld.Type)
+				case "multipart":
+					sc, err = r.createMultipartDecoder(fld.Type)
 				default:
 					err = fmt.Errorf("unknown body type: '%s'", tags.Body)
 				}

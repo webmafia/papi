@@ -149,6 +149,7 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 
 	case reflect.Struct:
 		fldName := tags.Get("body")
+		body := fldName
 
 		if fldName == "" {
 			fldName = "json"
@@ -203,7 +204,20 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 			}, nil
 		}
 
-		return scanSchemaTags(r, obj, tags)
+		obj, err := scanSchemaTags(r, obj, tags)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if body == "multipart" {
+			return &openapi.Custom{
+				ContentType: "multipart/form-data",
+				Schema:      obj,
+			}, nil
+		}
+
+		return obj, nil
 
 	default:
 		return nil, fmt.Errorf("cannot create schema for type: %s", kind.String())
