@@ -15,8 +15,6 @@ import (
 	"github.com/webmafia/papi/security"
 )
 
-type RequestDecoder func(p unsafe.Pointer, c *fasthttp.RequestCtx) error
-
 type inputTags struct {
 	Body       string `tag:"body" enum:"json"`
 	Param      string `tag:"param"`
@@ -28,34 +26,34 @@ func (t inputTags) IsZero() bool {
 	return t.Body == "" && t.Param == "" && t.Query == "" && t.Permission == ""
 }
 
-type fieldScanner struct {
-	offset uintptr
-	scan   RequestDecoder
+type fieldHandler struct {
+	offset  uintptr
+	handler Handler
 }
 
-func (r *Registry) CreateRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm string, err error) {
-	return r.createRequestDecoder(typ, paramKeys, caller)
+func (r *Registry) CreateHandler(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Handler, perm string, err error) {
+	return r.createHandler(typ, paramKeys, caller)
 }
 
-func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan RequestDecoder, perm string, err error) {
+func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Handler, perm string, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
 	}
 
 	numFields := typ.NumField()
-	flds := make([]fieldScanner, 0, numFields+1)
+	flds := make([]fieldHandler, 0, numFields+1)
 
 	if r.gatekeeper != nil {
-		flds = append(flds, fieldScanner{
-			scan: func(_ unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		flds = append(flds, fieldHandler{
+			handler: func(c *fasthttp.RequestCtx, _ unsafe.Pointer) error {
 				return r.gatekeeper.PreRequest(c)
 			},
 		})
 	}
 
 	for i := 0; i < numFields; i++ {
-		var sc RequestDecoder
+		var sc Handler
 		var tags inputTags
 
 		fld := typ.Field(i)
@@ -67,7 +65,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		// If there are no tags, and the field type is a struct, dive into it
 		if tags.IsZero() {
 			if fld.Type.Kind() == reflect.Struct {
-				fldScan, subPerm, err := r.createRequestDecoder(fld.Type, paramKeys, caller)
+				fldScan, subPerm, err := r.createHandler(fld.Type, paramKeys, caller)
 
 				if err != nil {
 					return nil, "", err
@@ -81,9 +79,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 					perm = subPerm
 				}
 
-				flds = append(flds, fieldScanner{
-					offset: fld.Offset,
-					scan:   fldScan,
+				flds = append(flds, fieldHandler{
+					offset:  fld.Offset,
+					handler: fldScan,
 				})
 			}
 
@@ -112,9 +110,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				}
 			}
 
-			flds = append(flds, fieldScanner{
-				offset: fld.Offset,
-				scan:   sc,
+			flds = append(flds, fieldHandler{
+				offset:  fld.Offset,
+				handler: sc,
 			})
 		}
 
@@ -130,9 +128,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				return
 			}
 
-			flds = append(flds, fieldScanner{
-				offset: fld.Offset,
-				scan:   sc,
+			flds = append(flds, fieldHandler{
+				offset:  fld.Offset,
+				handler: sc,
 			})
 		}
 
@@ -141,9 +139,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				return
 			}
 
-			flds = append(flds, fieldScanner{
-				offset: fld.Offset,
-				scan:   sc,
+			flds = append(flds, fieldHandler{
+				offset:  fld.Offset,
+				handler: sc,
 			})
 		}
 
@@ -156,7 +154,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 				}
 
 			case security.CustomGatekeeper:
-				sc = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+				sc = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
 					return gk.HandleSecurity(c, security.Permission(tags.Permission), reflect.NewAt(fld.Type, p).Interface())
 				}
 
@@ -167,9 +165,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 			}
 
 			if sc != nil {
-				flds = append(flds, fieldScanner{
-					offset: fld.Offset,
-					scan:   sc,
+				flds = append(flds, fieldHandler{
+					offset:  fld.Offset,
+					handler: sc,
 				})
 			}
 		}
@@ -179,9 +177,9 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 		return nil, "", fmt.Errorf("route %s is missing a permission tag, which is required by the Gatekeeper", caller.Name())
 	}
 
-	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
+	return func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
 		for _, fld := range flds {
-			if err = fld.scan(unsafe.Add(p, fld.offset), c); err != nil {
+			if err = fld.handler(c, unsafe.Add(p, fld.offset)); err != nil {
 				return
 			}
 		}
@@ -190,7 +188,7 @@ func (r *Registry) createRequestDecoder(typ reflect.Type, paramKeys []string, ca
 	}, perm, nil
 }
 
-func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler func(p unsafe.Pointer, c *fasthttp.RequestCtx) error, modTag string, err error) {
+func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler Handler, modTag string, err error) {
 	if permTag == "-" {
 		return nil, permTag, nil
 	}
@@ -207,7 +205,7 @@ func (r *Registry) createOperationSecurityHandler(typ reflect.Type, permTag stri
 
 	typ2 := reflect2.Type2(typ)
 
-	return func(p unsafe.Pointer, c *fasthttp.RequestCtx) (err error) {
+	return func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
 		userRoles, err := gk.UserRoles(c)
 
 		if err != nil {

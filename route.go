@@ -100,12 +100,12 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 
 	return api.router.Add(r.Method, r.Path, func(route *route.Route) (err error) {
 		var (
-			decodeRequest registry.RequestDecoder
+			decodeRequest registry.Handler
 			perm          string
 			handler       = *(*registry.Handler)(unsafe.Pointer(&r.Handler))
 		)
 
-		if decodeRequest, perm, err = api.reg.CreateRequestDecoder(reflect.TypeFor[I](), route.Params, pc); err != nil {
+		if decodeRequest, perm, err = api.reg.CreateHandler(reflect.TypeFor[I](), route.Params, pc); err != nil {
 			return
 		}
 
@@ -123,7 +123,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 				out O
 			)
 
-			if err = decodeRequest(unsafe.Pointer(&in), c); err != nil {
+			if err = decodeRequest(c, unsafe.Pointer(&in)); err != nil {
 				return
 			}
 

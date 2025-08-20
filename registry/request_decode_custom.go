@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *Registry) getCustomDecoder(typ reflect.Type, tags reflect.StructTag) (scan RequestDecoder, err error) {
+func (r *Registry) getCustomDecoder(typ reflect.Type, tags reflect.StructTag) (scan Handler, err error) {
 	var dec Decoder
 
 	// 1. If there is an explicit registered decoder, use it
@@ -25,7 +25,7 @@ func (r *Registry) getCustomDecoder(typ reflect.Type, tags reflect.StructTag) (s
 	}
 
 	if err == nil && dec != nil {
-		scan = func(p unsafe.Pointer, c *fasthttp.RequestCtx) error {
+		scan = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
 			return dec(p, fast.BytesToString(c.Request.Body()))
 		}
 	}
