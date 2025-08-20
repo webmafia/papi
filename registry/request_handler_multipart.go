@@ -19,7 +19,7 @@ type multipartValueDecoder struct {
 // 	name   string
 // }
 
-func (r *Registry) createMultipartDecoder(typ reflect.Type) (scan Handler, err error) {
+func (r *Registry) createMultipartHandler(typ reflect.Type) (scan Handler, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return

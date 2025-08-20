@@ -8,7 +8,8 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *Registry) getCustomDecoder(typ reflect.Type, tags reflect.StructTag) (scan Handler, err error) {
+// Returns a nil handler if there is no custom handler.
+func (r *Registry) getCustomHandler(typ reflect.Type, tags reflect.StructTag) (scan Handler, err error) {
 	var dec Decoder
 
 	// 1. If there is an explicit registered decoder, use it

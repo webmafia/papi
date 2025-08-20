@@ -15,7 +15,7 @@ type formDecoder struct {
 	name   string
 }
 
-func (r *Registry) createFormDecoder(typ reflect.Type) (scan Handler, err error) {
+func (r *Registry) createFormHandler(typ reflect.Type) (scan Handler, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return

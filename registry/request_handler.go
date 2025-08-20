@@ -89,18 +89,18 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 		}
 
 		if tags.Body != "" {
-			if sc, err = r.getCustomDecoder(fld.Type, fld.Tag); err != nil {
+			if sc, err = r.getCustomHandler(fld.Type, fld.Tag); err != nil {
 				return
 			}
 
 			if sc == nil {
 				switch tags.Body {
 				case "json":
-					sc, err = r.createJsonDecoder(fld.Type)
+					sc, err = r.createJsonHandler(fld.Type)
 				case "form":
-					sc, err = r.createFormDecoder(fld.Type)
+					sc, err = r.createFormHandler(fld.Type)
 				case "multipart":
-					sc, err = r.createMultipartDecoder(fld.Type)
+					sc, err = r.createMultipartHandler(fld.Type)
 				default:
 					err = fmt.Errorf("unknown body type: '%s'", tags.Body)
 				}
@@ -124,7 +124,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 				return
 			}
 
-			if sc, err = r.createParamDecoder(fld.Type, tags.Param, idx, fld.Tag); err != nil {
+			if sc, err = r.createParamHandler(fld.Type, tags.Param, idx, fld.Tag); err != nil {
 				return
 			}
 
@@ -135,7 +135,7 @@ func (r *Registry) createHandler(typ reflect.Type, paramKeys []string, caller *r
 		}
 
 		if tags.Query != "" {
-			if sc, err = r.createQueryDecoder(fld.Type, tags.Query, fld.Tag); err != nil {
+			if sc, err = r.createQueryHandler(fld.Type, tags.Query, fld.Tag); err != nil {
 				return
 			}
 

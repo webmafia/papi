@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *Registry) createQueryDecoder(typ reflect.Type, key string, tags reflect.StructTag) (scan Handler, err error) {
+func (r *Registry) createQueryHandler(typ reflect.Type, key string, tags reflect.StructTag) (scan Handler, err error) {
 	sc, err := r.Decoder(typ, tags)
 
 	if err != nil {
