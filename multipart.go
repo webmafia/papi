@@ -1,8 +1,11 @@
 package papi
 
 import (
+	"log"
 	"reflect"
+	"unsafe"
 
+	"github.com/valyala/fasthttp"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
 )
@@ -20,6 +23,12 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 			}, nil
 		},
 		Parser: registry.NoParser,
+		Binder: func(tags reflect.StructTag) (registry.Binder, error) {
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) error {
+				log.Println("tadaaa")
+				return nil
+			}, nil
+		},
 		// Handler: func(handler registry.Handler) (registry.Handler, error) {
 		// 	return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) error {
 		// 		return nil

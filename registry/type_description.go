@@ -34,9 +34,7 @@ type Responder func(c *fasthttp.RequestCtx, ptr unsafe.Pointer, next func() erro
 
 var (
 	NoParser = func(reflect.StructTag) (Parser, error) {
-		return func(unsafe.Pointer, string) error {
-			return nil
-		}, nil
+		return nil, nil
 	}
 )
 

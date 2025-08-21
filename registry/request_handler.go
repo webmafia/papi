@@ -26,34 +26,34 @@ func (t inputTags) IsZero() bool {
 	return t.Body == "" && t.Param == "" && t.Query == "" && t.Permission == ""
 }
 
-type fieldHandler struct {
-	offset  uintptr
-	handler Binder
+type fieldBinder struct {
+	offset uintptr
+	bind   Binder
 }
 
-func (r *Registry) CreateBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Binder, perm string, err error) {
+func (r *Registry) CreateBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (bind Binder, perm string, err error) {
 	return r.createBinder(typ, paramKeys, caller)
 }
 
-func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (scan Binder, perm string, err error) {
+func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *runtime.Func) (_ Binder, perm string, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
 	}
 
 	numFields := typ.NumField()
-	flds := make([]fieldHandler, 0, numFields+1)
+	flds := make([]fieldBinder, 0, numFields+1)
 
 	if r.gatekeeper != nil {
-		flds = append(flds, fieldHandler{
-			handler: func(c *fasthttp.RequestCtx, _ unsafe.Pointer) error {
+		flds = append(flds, fieldBinder{
+			bind: func(c *fasthttp.RequestCtx, _ unsafe.Pointer) error {
 				return r.gatekeeper.PreRequest(c)
 			},
 		})
 	}
 
 	for i := 0; i < numFields; i++ {
-		var sc Binder
+		var bind Binder
 		var tags inputTags
 
 		fld := typ.Field(i)
@@ -79,9 +79,9 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 					perm = subPerm
 				}
 
-				flds = append(flds, fieldHandler{
-					offset:  fld.Offset,
-					handler: fldScan,
+				flds = append(flds, fieldBinder{
+					offset: fld.Offset,
+					bind:   fldScan,
 				})
 			}
 
@@ -89,18 +89,18 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 		}
 
 		if tags.Body != "" {
-			if sc, err = r.getCustomBinder(fld.Type, fld.Tag); err != nil {
+			if bind, err = r.getCustomBinder(fld.Type, fld.Tag); err != nil {
 				return
 			}
 
-			if sc == nil {
+			if bind == nil {
 				switch tags.Body {
 				case "json":
-					sc, err = r.createJsonBinder(fld.Type)
+					bind, err = r.createJsonBinder(fld.Type)
 				case "form":
-					sc, err = r.createFormBinder(fld.Type)
+					bind, err = r.createFormBinder(fld.Type)
 				case "multipart":
-					sc, err = r.createMultipartBinder(fld.Type)
+					bind, err = r.createMultipartBinder(fld.Type)
 				default:
 					err = fmt.Errorf("unknown body type: '%s'", tags.Body)
 				}
@@ -110,9 +110,9 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 				}
 			}
 
-			flds = append(flds, fieldHandler{
-				offset:  fld.Offset,
-				handler: sc,
+			flds = append(flds, fieldBinder{
+				offset: fld.Offset,
+				bind:   bind,
 			})
 		}
 
@@ -124,24 +124,24 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 				return
 			}
 
-			if sc, err = r.createParamBinder(fld.Type, tags.Param, idx, fld.Tag); err != nil {
+			if bind, err = r.createParamBinder(fld.Type, tags.Param, idx, fld.Tag); err != nil {
 				return
 			}
 
-			flds = append(flds, fieldHandler{
-				offset:  fld.Offset,
-				handler: sc,
+			flds = append(flds, fieldBinder{
+				offset: fld.Offset,
+				bind:   bind,
 			})
 		}
 
 		if tags.Query != "" {
-			if sc, err = r.createQueryBinder(fld.Type, tags.Query, fld.Tag); err != nil {
+			if bind, err = r.createQueryBinder(fld.Type, tags.Query, fld.Tag); err != nil {
 				return
 			}
 
-			flds = append(flds, fieldHandler{
-				offset:  fld.Offset,
-				handler: sc,
+			flds = append(flds, fieldBinder{
+				offset: fld.Offset,
+				bind:   bind,
 			})
 		}
 
@@ -149,12 +149,12 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 			switch gk := r.gatekeeper.(type) {
 
 			case security.RolesGatekeeper:
-				if sc, perm, err = r.createOperationSecurityBinder(fld.Type, tags.Permission, caller, gk); err != nil {
+				if bind, perm, err = r.createOperationSecurityBinder(fld.Type, tags.Permission, caller, gk); err != nil {
 					return
 				}
 
 			case security.CustomGatekeeper:
-				sc = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
+				bind = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
 					return gk.HandleSecurity(c, security.Permission(tags.Permission), reflect.NewAt(fld.Type, p).Interface())
 				}
 
@@ -164,10 +164,10 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 
 			}
 
-			if sc != nil {
-				flds = append(flds, fieldHandler{
-					offset:  fld.Offset,
-					handler: sc,
+			if bind != nil {
+				flds = append(flds, fieldBinder{
+					offset: fld.Offset,
+					bind:   bind,
 				})
 			}
 		}
@@ -179,7 +179,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 
 	return func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
 		for _, fld := range flds {
-			if err = fld.handler(c, unsafe.Add(p, fld.offset)); err != nil {
+			if err = fld.bind(c, unsafe.Add(p, fld.offset)); err != nil {
 				return
 			}
 		}

@@ -15,7 +15,7 @@ type formDecoder struct {
 	name   string
 }
 
-func (r *Registry) createFormBinder(typ reflect.Type) (scan Binder, err error) {
+func (r *Registry) createFormBinder(typ reflect.Type) (bind Binder, err error) {
 	if typ.Kind() != reflect.Struct {
 		err = errors.New("invalid struct")
 		return
@@ -49,7 +49,7 @@ func (r *Registry) createFormBinder(typ reflect.Type) (scan Binder, err error) {
 		})
 	}
 
-	scan = func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
+	bind = func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
 		args := c.PostArgs()
 
 		for i := range dec {

@@ -9,7 +9,7 @@ import (
 )
 
 // Returns a nil handler if there is no custom handler.
-func (r *Registry) getCustomBinder(typ reflect.Type, tags reflect.StructTag) (scan Binder, err error) {
+func (r *Registry) getCustomBinder(typ reflect.Type, tags reflect.StructTag) (bind Binder, err error) {
 	var dec Parser
 
 	// Use any existing binder
@@ -18,7 +18,7 @@ func (r *Registry) getCustomBinder(typ reflect.Type, tags reflect.StructTag) (sc
 	}
 
 	if err == nil && dec != nil {
-		scan = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
+		bind = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
 			return dec(p, fast.BytesToString(c.Request.Body()))
 		}
 	}

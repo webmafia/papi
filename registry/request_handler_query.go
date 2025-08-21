@@ -8,7 +8,7 @@ import (
 	"github.com/webmafia/fast"
 )
 
-func (r *Registry) createQueryBinder(typ reflect.Type, key string, tags reflect.StructTag) (scan Binder, err error) {
+func (r *Registry) createQueryBinder(typ reflect.Type, key string, tags reflect.StructTag) (_ Binder, err error) {
 	sc, err := r.Parser(typ, tags)
 
 	if err != nil {
