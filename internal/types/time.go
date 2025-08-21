@@ -29,7 +29,7 @@ func (t timeType) TypeDescription(reg *registry.Registry) registry.TypeDescripti
 				},
 			}, nil
 		},
-		Decoder: func(_ reflect.StructTag) (registry.Decoder, error) {
+		Parser: func(_ reflect.StructTag) (registry.Parser, error) {
 			return func(p unsafe.Pointer, s string) (err error) {
 				ptr := (*time.Time)(p)
 				parsed, err := time.Parse(time.RFC3339, s)

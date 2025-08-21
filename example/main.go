@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/webmafia/papi"
@@ -38,13 +38,19 @@ func (r Users) ListUsers(api *papi.API) (err error) {
 		Decimal float64   `query:"decimal"`
 	}
 
+	var n atomic.Int64
+
 	return papi.GET(api, papi.Route[req, papi.List[User]]{
 		Path: "/users",
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.List[User]) (err error) {
+			i := n.Add(1)
+
 			resp.Write(&User{ID: 999, Name: req.Status, TimeCreated: req.Before})
 			resp.Write(&User{ID: 998, Name: "Foobaz", TimeCreated: req.Before})
 			resp.SetTotal(123)
+
+			log.Println("received request", i)
 
 			return
 		},
@@ -68,39 +74,74 @@ func (r Users) CreateUser(api *papi.API) (err error) {
 	})
 }
 
-func (r Users) DownloadFile(api *papi.API) (err error) {
-	type req struct{}
+// func (r Users) DownloadFile(api *papi.API) (err error) {
+// 	type req struct{}
 
-	return papi.GET(api, papi.Route[req, papi.File[PDF]]{
-		Path: "/file",
+// 	return papi.GET(api, papi.Route[req, papi.File[PDF]]{
+// 		Path: "/file",
 
-		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.File[PDF]) (err error) {
-			resp.SetFilename("foobar.pdf")
+// 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.File[PDF]) (err error) {
+// 			resp.SetFilename("foobar.pdf")
 
-			// This is obviously invalid JSON, but proves the point.
-			_, err = fmt.Fprintf(resp.Writer(), "hello %d", 123)
-			return
-		},
-	})
-}
+// 			// This is obviously invalid JSON, but proves the point.
+// 			_, err = fmt.Fprintf(resp.Writer(), "hello %d", 123)
+// 			return
+// 		},
+// 	})
+// }
 
-func (r Users) RawJson(api *papi.API) (err error) {
+func (r Users) UploadFile(api *papi.API) (err error) {
 	type req struct {
-		Body papi.RawJSON `body:"json"`
+		Body struct {
+			File papi.MultipartFile `form:"file" allow:"jpg,png" size:"1MB"`
+		} `body:"multipart"`
 	}
 
-	// In this case we're demonstrating that RawJSON can be used for both request and response.
-	return papi.POST(api, papi.Route[req, papi.RawJSON]{
-		Path: "/raw-json",
+	return papi.POST(api, papi.Route[req, struct{}]{
+		Path: "/file",
 
-		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.RawJSON) (err error) {
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *struct{}) (err error) {
 
-			// Here we just send back the request's JSON body. Please don't do this.
-			*resp = req.Body
+			// form, err := ctx.MultipartForm()
+
+			// if err != nil {
+			// 	return
+			// }
+
+			// for key, files := range form.File {
+			// 	for _, file := range files {
+			// 		f, err := file.Open()
+
+			// 		if err != nil {
+			// 			return err
+			// 		}
+
+			// 		f.Close()
+			// 	}
+			// }
+
 			return
 		},
 	})
 }
+
+// func (r Users) RawJson(api *papi.API) (err error) {
+// 	type req struct {
+// 		Body papi.RawJSON `body:"json"`
+// 	}
+
+// 	// In this case we're demonstrating that RawJSON can be used for both request and response.
+// 	return papi.POST(api, papi.Route[req, papi.RawJSON]{
+// 		Path: "/raw-json",
+
+// 		Handler: func(ctx *papi.RequestCtx, req *req, resp *papi.RawJSON) (err error) {
+
+// 			// Here we just send back the request's JSON body. Please don't do this.
+// 			*resp = req.Body
+// 			return
+// 		},
+// 	})
+// }
 
 var _ papi.FileType = PDF{}
 
