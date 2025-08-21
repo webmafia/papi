@@ -124,12 +124,6 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 			return
 		}
 
-		// handler = func(c *fasthttp.RequestCtx, _, out unsafe.Pointer) error {
-		// 	return h(c, out)
-		// }
-
-		// do :=
-
 		route.Handler = func(c *fasthttp.RequestCtx) (err error) {
 			var (
 				in  I
