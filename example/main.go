@@ -93,7 +93,7 @@ func (r Users) CreateUser(api *papi.API) (err error) {
 func (r Users) UploadFile(api *papi.API) (err error) {
 	type req struct {
 		Body struct {
-			File papi.MultipartFile
+			File papi.MultipartFile `form:"file" allow:"jpg,png" size:"1MB"`
 		} `body:"multipart"`
 	}
 
@@ -101,6 +101,7 @@ func (r Users) UploadFile(api *papi.API) (err error) {
 		Path: "/file",
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *struct{}) (err error) {
+
 			// form, err := ctx.MultipartForm()
 
 			// if err != nil {

@@ -89,7 +89,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 		}
 
 		if tags.Body != "" {
-			if bind, err = r.getCustomBinder(fld.Type, fld.Tag); err != nil {
+			if bind, err = r.getCustomBinder(fld.Type, fld.Name, fld.Tag); err != nil {
 				return
 			}
 

@@ -44,7 +44,7 @@ func (r *Registry) createMultipartBinder(typ reflect.Type) (_ Binder, err error)
 			continue
 		}
 
-		bind, err := r.Binder(fld.Type, fld.Tag)
+		bind, err := r.Binder(fld.Type, name, fld.Tag)
 
 		if err != nil {
 			return nil, err

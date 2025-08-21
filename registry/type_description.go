@@ -50,7 +50,7 @@ type TypeDescription struct {
 
 	// Binder provides a ctx-aware binder for this type (body, multipart, etc.).
 	// Preferred over Parser if both are defined.
-	Binder func(tags reflect.StructTag) (Binder, error)
+	Binder func(fieldName string, tags reflect.StructTag) (Binder, error)
 
 	// Responder provides an output wrapper/encoder for this type.
 	// Runs after user handler to write/stream the response.

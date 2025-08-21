@@ -89,6 +89,6 @@ func (c Creator) CreateScanner(typ reflect.Type) (scan Scanner, err error) {
 	// 	return createStructScanner(typ)
 
 	default:
-		return nil, fmt.Errorf("cannot scan to '%s' of type %s", typ.Name(), kind.String())
+		return nil, fmt.Errorf("cannot create a scanner for '%s' of type %s", typ.Name(), kind.String())
 	}
 }
