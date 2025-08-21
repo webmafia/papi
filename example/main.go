@@ -74,6 +74,25 @@ func (r Users) CreateUser(api *papi.API) (err error) {
 	})
 }
 
+func (r Users) Form(api *papi.API) (err error) {
+	type req struct {
+		Body struct {
+			Scope          string `form:"scope" flags:"required" enum:"openid"`
+			BindingMessage string `form:"binding_message"`
+			ReturnUrl      string `form:"return_url"`
+			TestMode       bool   `form:"test_mode"`
+		} `body:"form"`
+	}
+
+	return papi.POST(api, papi.Route[req, struct{}]{
+		Path: "/form",
+
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *struct{}) (err error) {
+			return
+		},
+	})
+}
+
 // func (r Users) DownloadFile(api *papi.API) (err error) {
 // 	type req struct{}
 

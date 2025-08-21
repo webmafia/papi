@@ -53,10 +53,14 @@ func (r *Registry) createFormBinder(typ reflect.Type) (bind Binder, err error) {
 		args := c.PostArgs()
 
 		for i := range dec {
-			v := fast.BytesToString(args.Peek(dec[i].name))
+			bytes := args.Peek(dec[i].name)
 
-			if err = dec[i].scan(unsafe.Add(p, dec[i].offset), v); err != nil {
-				return
+			if bytes != nil {
+				v := fast.BytesToString(bytes)
+
+				if err = dec[i].scan(unsafe.Add(p, dec[i].offset), v); err != nil {
+					return
+				}
 			}
 		}
 
