@@ -10,12 +10,14 @@ type AdvancedRoute[I any, O any] struct {
 	Description string
 	Tags        []openapi.Tag
 	Handler     func(c *RequestCtx, in *I, out *O) error
+	Deprecated  bool
 }
 
 func (adv *AdvancedRoute[I, O]) fromRoute(r *Route[I, O]) {
 	adv.Path = r.Path
 	adv.Description = r.Description
 	adv.Handler = r.Handler
+	adv.Deprecated = r.Deprecated
 }
 
 type advancedApi struct {

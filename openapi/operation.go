@@ -14,6 +14,7 @@ type Operation struct {
 	RequestBody Schema
 	Response    Schema
 	Tags        []Tag
+	Deprecated  bool
 }
 
 func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
@@ -31,6 +32,12 @@ func (op *Operation) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteMore()
 	s.WriteObjectField("operationId")
 	s.WriteString(op.Id)
+
+	if op.Deprecated {
+		s.WriteMore()
+		s.WriteObjectField("deprecated")
+		s.WriteTrue()
+	}
 
 	if len(op.Security) > 0 {
 		s.WriteMore()

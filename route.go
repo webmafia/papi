@@ -163,6 +163,7 @@ func addToDocs[I, O any](api *API, r *AdvancedRoute[I, O], perm string, pc *runt
 		Summary:     r.Summary,
 		Description: r.Description,
 		Tags:        r.Tags,
+		Deprecated:  r.Deprecated,
 	}
 
 	if g := api.reg.Gatekeeper(); g != nil {
