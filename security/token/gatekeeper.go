@@ -12,6 +12,7 @@ import (
 )
 
 var _ security.Gatekeeper = (*Gatekeeper[struct{}])(nil)
+var tokenPrefix = []byte("Bearer ")
 
 type Gatekeeper[T any] struct {
 	auth            auth     // Token signing/validation
@@ -37,7 +38,7 @@ func (g *Gatekeeper[T]) OptionalPermTag() bool {
 	return g.optionalPermTag
 }
 
-// OperationSecurityDocs implements security2.Scheme.
+// OperationSecurityDocs implements security.Gatekeeper.
 func (s *Gatekeeper[T]) SecurityRequirement(perm security.Permission) openapi.SecurityRequirement {
 	sec := openapi.SecurityRequirement{
 		Name: "token",
@@ -50,7 +51,7 @@ func (s *Gatekeeper[T]) SecurityRequirement(perm security.Permission) openapi.Se
 	return sec
 }
 
-// SecurityDocs implements security2.Scheme.
+// SecurityDocs implements security.Gatekeeper.
 func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 	return openapi.SecurityScheme{
 		SchemeName:   "token",
@@ -61,7 +62,10 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 	}
 }
 
-var tokenPrefix = []byte("Bearer ")
+// PreRequest implements security.Gatekeeper.
+func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) error {
+	return nil
+}
 
 func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
 	rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
@@ -85,48 +89,55 @@ func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err e
 		return
 	}
 
-	return s.store.UserRoles(c, tok)
+	return s.store.UserRoles(c, tok.String())
 }
 
-func (s *Gatekeeper[T]) CreateAuthCode(ctx context.Context, userId T, expiry time.Duration, cookie bool) (code OneTimeCode, err error) {
-	if code, err = CreateOneTimeCode(); err != nil {
+func (s *Gatekeeper[T]) CreateAuthCode(ctx context.Context, userId T, expiry time.Duration, cookie bool) (code string, err error) {
+	var c OneTimeCode
+
+	if c, err = CreateOneTimeCode(); err != nil {
 		return
 	}
 
+	code = c.String()
 	err = s.store.SaveAuthCode(ctx, userId, code, time.Now().Add(expiry), cookie)
 	return
 }
 
 // Create a token with an optional payload that will be stored in the token.
 // The payload cannot exceed 24 bytes, and will be padded with random bytes.
-func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code OneTimeCode, payload ...[]byte) (tok Token, cookie bool, err error) {
+func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code string, payload ...[]byte) (tok string, cookie bool, err error) {
 	userId, cookie, err := s.store.ConsumeAuthCode(ctx, code)
 
 	if err != nil {
 		return
 	}
 
-	if tok, err = s.auth.CreateToken(payload...); err != nil {
+	var t Token
+
+	if t, err = s.auth.CreateToken(payload...); err != nil {
 		return
 	}
 
+	tok = t.String()
 	err = s.store.SaveAccessToken(ctx, userId, tok, cookie)
 	return
 }
 
 // Consumes an auth code and returns the user ID associated with the auth code
-func (s *Gatekeeper[T]) ConsumeAuthCode(ctx context.Context, code OneTimeCode) (userId T, err error) {
+func (s *Gatekeeper[T]) ConsumeAuthCode(ctx context.Context, code string) (userId T, err error) {
 	userId, _, err = s.store.ConsumeAuthCode(ctx, code)
 	return
 }
 
 // Create a token with a specific ID and an optional payload (e.g. a user ID) that will be stored
 // in the token. The payload cannot exceed 24 bytes, and will be padded with random bytes.
-func (s *Gatekeeper[T]) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, err error) {
-	return s.auth.CreateTokenWithId(id, payload...)
-}
+func (s *Gatekeeper[T]) CreateTokenWithId(id identifier.ID, payload ...[]byte) (string, error) {
+	tok, err := s.auth.CreateTokenWithId(id, payload...)
 
-// PreRequest implements security.Gatekeeper.
-func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) error {
-	return nil
+	if err != nil {
+		return "", err
+	}
+
+	return tok.String(), nil
 }
