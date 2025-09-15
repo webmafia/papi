@@ -21,7 +21,7 @@ type Gatekeeper[T any] struct {
 }
 
 type GatekeeperOptions struct {
-	PreRequest      func(c *fasthttp.RequestCtx) error
+	PreRequest      func(c *fasthttp.RequestCtx, tok Token) error
 	OptionalPermTag bool
 }
 
@@ -68,12 +68,33 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 }
 
 // PreRequest implements security.Gatekeeper.
-func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) error {
+func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) (err error) {
 	if g.opt.PreRequest != nil {
-		return g.opt.PreRequest(c)
+		rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
+		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
+
+		if !ok {
+			if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
+				bearer = cookie
+			} else {
+				return security.ErrInvalidAuthToken
+			}
+		}
+
+		var tok Token
+
+		if err = tok.UnmarshalText(bearer); err != nil {
+			return
+		}
+
+		if err = g.auth.ValidateToken(tok); err != nil {
+			return
+		}
+
+		return g.opt.PreRequest(c, tok)
 	}
 
-	return nil
+	return
 }
 
 func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
