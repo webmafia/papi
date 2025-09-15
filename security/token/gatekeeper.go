@@ -73,15 +73,17 @@ func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) (err error) {
 		rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
+		var tok Token
+
 		if !ok {
 			if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
 				bearer = cookie
 			} else {
-				return security.ErrInvalidAuthToken
+
+				// Call with zero-valued token
+				return g.opt.PreRequest(c, tok)
 			}
 		}
-
-		var tok Token
 
 		if err = tok.UnmarshalText(bearer); err != nil {
 			return

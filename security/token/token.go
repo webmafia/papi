@@ -28,6 +28,10 @@ func (t Token) Id() identifier.ID {
 	return t.id
 }
 
+func (t Token) IsZero() bool {
+	return t.id.IsZero()
+}
+
 // The payload can be any additional data you have stored, e.g. a user ID.
 func (t Token) Payload() [24]byte {
 	return t.payload
