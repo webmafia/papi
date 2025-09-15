@@ -15,19 +15,24 @@ var _ security.Gatekeeper = (*Gatekeeper[struct{}])(nil)
 var tokenPrefix = []byte("Bearer ")
 
 type Gatekeeper[T any] struct {
-	auth            auth     // Token signing/validation
-	store           Store[T] // Token lookup
-	optionalPermTag bool
+	auth  auth     // Token signing/validation
+	store Store[T] // Token lookup
+	opt   GatekeeperOptions
 }
 
-func NewGatekeeper[T any](secret Secret, store Store[T], optionalPermTag ...bool) *Gatekeeper[T] {
+type GatekeeperOptions struct {
+	PreRequest      func(c *fasthttp.RequestCtx) error
+	OptionalPermTag bool
+}
+
+func NewGatekeeper[T any](secret Secret, store Store[T], opt ...GatekeeperOptions) *Gatekeeper[T] {
 	g := &Gatekeeper[T]{
 		auth:  auth{secret: secret},
 		store: store,
 	}
 
-	if len(optionalPermTag) > 0 {
-		g.optionalPermTag = optionalPermTag[0]
+	if len(opt) > 0 {
+		g.opt = opt[0]
 	}
 
 	return g
@@ -35,7 +40,7 @@ func NewGatekeeper[T any](secret Secret, store Store[T], optionalPermTag ...bool
 
 // OptionalPermTag implements security.Gatekeeper.
 func (g *Gatekeeper[T]) OptionalPermTag() bool {
-	return g.optionalPermTag
+	return g.opt.OptionalPermTag
 }
 
 // OperationSecurityDocs implements security.Gatekeeper.
@@ -64,6 +69,10 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 
 // PreRequest implements security.Gatekeeper.
 func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) error {
+	if g.opt.PreRequest != nil {
+		return g.opt.PreRequest(c)
+	}
+
 	return nil
 }
 
