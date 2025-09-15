@@ -119,6 +119,7 @@ func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code string, payl
 		return
 	}
 
+	tok = t.String()
 	err = s.store.SaveAccessToken(ctx, userId, t.Id().Int64(), cookie)
 	return
 }
