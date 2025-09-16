@@ -196,6 +196,14 @@ func (s *PolicyStore) getType(perm Permission) (typ reflect.Type, ok bool) {
 	return
 }
 
+func (s *PolicyStore) GetType(perm Permission) (typ reflect.Type, ok bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	typ, ok = s.types[perm]
+	return
+}
+
 func (s *PolicyStore) set(role string, perm Permission, prio int64, cond unsafe.Pointer) {
 	s.store[PolicyKey{Role: role, Perm: perm}] = policy{
 		prio: prio,
