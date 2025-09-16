@@ -16,6 +16,7 @@ import (
 	"github.com/webmafia/papi/internal/types"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
+	"github.com/webmafia/papi/security"
 )
 
 type API struct {
@@ -88,6 +89,10 @@ func NewAPI(reg *registry.Registry, opt ...Options) (api *API, err error) {
 	api.server.Handler = api.handler
 
 	return
+}
+
+func (api *API) HasPermission(roles []string, perm security.Permission) bool {
+	return api.reg.Policies().Has(roles, perm)
 }
 
 func (api *API) sendError(c *fasthttp.RequestCtx, err errors.ErrorDocumentor) {

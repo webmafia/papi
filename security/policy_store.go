@@ -280,6 +280,21 @@ func (s *PolicyStore) IteratePermissions(inPolicy ...bool) iter.Seq[Permission] 
 	}
 }
 
+func (s *PolicyStore) Has(roles []string, perm Permission) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, role := range roles {
+		_, found := s.get(role, perm)
+
+		if found {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *PolicyStore) Get(roles []string, perm Permission) (cond unsafe.Pointer, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
