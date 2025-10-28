@@ -121,7 +121,7 @@ func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err e
 		return
 	}
 
-	return s.store.UserRoles(c, tok.Id().Int64())
+	return s.store.UserRoles(c, tok.Id())
 }
 
 func (s *Gatekeeper[T]) CreateAuthCode(ctx context.Context, userId T, expiry time.Duration, cookie bool) (code string, err error) {
@@ -152,7 +152,7 @@ func (s *Gatekeeper[T]) CreateAccessToken(ctx context.Context, code string, payl
 	}
 
 	tok = t.String()
-	err = s.store.SaveAccessToken(ctx, userId, t.Id().Int64(), cookie)
+	err = s.store.SaveAccessToken(ctx, userId, t.Id(), cookie)
 	return
 }
 
