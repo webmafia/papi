@@ -4,7 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/webmafia/fast"
-	"github.com/webmafia/identifier"
+	"github.com/webmafia/hexid"
 	"github.com/webmafia/papi/security"
 )
 
@@ -20,11 +20,11 @@ func init() {
 
 type Token struct {
 	_       [32]byte // Hidden signature
-	id      identifier.ID
+	id      hexid.ID
 	payload [24]byte
 }
 
-func (t Token) Id() identifier.ID {
+func (t Token) Id() hexid.ID {
 	return t.id
 }
 

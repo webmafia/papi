@@ -1,6 +1,6 @@
 module github.com/webmafia/papi
 
-go 1.23
+go 1.24.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
@@ -9,7 +9,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/valyala/fasthttp v1.52.0
 	github.com/webmafia/fast v0.17.0
-	github.com/webmafia/identifier v0.1.2
+	github.com/webmafia/hexid v1.2.0
 	github.com/zeebo/blake3 v0.2.4
 )
 

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/valyala/fasthttp"
-	"github.com/webmafia/identifier"
+	"github.com/webmafia/hexid"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/security"
 )
@@ -164,7 +164,7 @@ func (s *Gatekeeper[T]) ConsumeAuthCode(ctx context.Context, code string) (userI
 
 // Create a token with a specific ID and an optional payload (e.g. a user ID) that will be stored
 // in the token. The payload cannot exceed 24 bytes, and will be padded with random bytes.
-func (s *Gatekeeper[T]) CreateTokenWithId(id identifier.ID, payload ...[]byte) (string, error) {
+func (s *Gatekeeper[T]) CreateTokenWithId(id hexid.ID, payload ...[]byte) (string, error) {
 	tok, err := s.auth.CreateTokenWithId(id, payload...)
 
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/webmafia/fast"
-	"github.com/webmafia/identifier"
+	"github.com/webmafia/hexid"
 	"github.com/webmafia/papi/security"
 	"github.com/zeebo/blake3"
 )
@@ -20,12 +20,12 @@ type auth struct {
 // Create a token with an optional payload (e.g. a user ID) that will be stored in the token.
 // The payload cannot exceed 24 bytes, and will be padded with random bytes.
 func (g *auth) CreateToken(payload ...[]byte) (t Token, err error) {
-	return g.CreateTokenWithId(identifier.Generate(), payload...)
+	return g.CreateTokenWithId(hexid.Generate(), payload...)
 }
 
 // Create a token with a specific ID and an optional payload (e.g. a user ID) that will be stored
 // in the token. The payload cannot exceed 24 bytes, and will be padded with random bytes.
-func (g *auth) CreateTokenWithId(id identifier.ID, payload ...[]byte) (t Token, err error) {
+func (g *auth) CreateTokenWithId(id hexid.ID, payload ...[]byte) (t Token, err error) {
 	t = Token{
 		id: id,
 	}
