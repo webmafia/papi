@@ -21,40 +21,68 @@ import (
 )
 
 var _ registry.TypeDescriber = (*MultipartFile)(nil)
+var _ io.Reader = (*MultipartFile)(nil)
 var _ io.WriterTo = (*MultipartFile)(nil)
 
 type MultipartFile struct {
 	file     *multipart.FileHeader
 	filetype types.Type
+	r        multipart.File
 }
 
-// WriteTo implements io.WriterTo.
-func (m *MultipartFile) WriteTo(w io.Writer) (n int64, err error) {
+func (m *MultipartFile) openAndValidate() (multipart.File, error) {
 	f, err := m.file.Open()
-
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	defer f.Close()
-
-	// For known file types, let's check the file header to ensure
-	// that it's nothing suspicious.
 	if m.filetype != filetype.Unknown {
-		var head [262]byte
+		var head [1024]byte
 
 		if _, err = io.ReadFull(f, head[:]); err != nil && err != io.ErrUnexpectedEOF {
-			return
+			f.Close()
+			return nil, err
 		}
 
 		if !filetype.IsType(head[:], m.filetype) {
-			return 0, errors.New("bad file header")
+			f.Close()
+			return nil, errors.New("bad file header")
 		}
 
 		if _, err = f.Seek(0, io.SeekStart); err != nil {
-			return
+			f.Close()
+			return nil, err
 		}
 	}
+	return f, nil
+}
+
+func (m *MultipartFile) reader() (multipart.File, error) {
+	if m.r != nil {
+		return m.r, nil
+	}
+	f, err := m.openAndValidate()
+	if err != nil {
+		return nil, err
+	}
+	m.r = f
+	return f, nil
+}
+
+func (m *MultipartFile) Read(p []byte) (int, error) {
+	r, err := m.reader()
+	if err != nil {
+		return 0, err
+	}
+	return r.Read(p)
+}
+
+func (m *MultipartFile) WriteTo(w io.Writer) (int64, error) {
+	f, err := m.openAndValidate()
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
 
 	return io.CopyN(w, f, m.file.Size)
 }
