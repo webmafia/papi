@@ -94,7 +94,7 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 	}
 
 	pc := internal.Caller(2)
-	validate, err := valid.CreateStructValidator[I]()
+	validate, err := valid.GetStructValidator[I]()
 
 	if err != nil {
 		return
