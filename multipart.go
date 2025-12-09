@@ -87,6 +87,14 @@ func (m *MultipartFile) WriteTo(w io.Writer) (int64, error) {
 	return io.CopyN(w, f, m.file.Size)
 }
 
+func (m *MultipartFile) Filename() string {
+	if m.file == nil {
+		return ""
+	}
+
+	return m.file.Filename
+}
+
 // TypeDescription implements registry.TypeDescriber.
 func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDescription {
 	return registry.TypeDescription{

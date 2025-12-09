@@ -120,24 +120,29 @@ func (r Users) UploadFile(api *papi.API) (err error) {
 		Path: "/file",
 
 		Handler: func(ctx *papi.RequestCtx, req *req, resp *struct{}) (err error) {
+			log.Println("uploaded", req.Body.File.Filename())
 
-			// form, err := ctx.MultipartForm()
+			return
+		},
+	})
+}
 
-			// if err != nil {
-			// 	return
-			// }
+func (r Users) UploadFiles(api *papi.API) (err error) {
+	type req struct {
+		Body struct {
+			File []papi.MultipartFile `form:"file" allow:"jpg,png" size:"1MB"`
+		} `body:"multipart"`
+	}
 
-			// for key, files := range form.File {
-			// 	for _, file := range files {
-			// 		f, err := file.Open()
+	return papi.POST(api, papi.Route[req, struct{}]{
+		Path: "/files",
 
-			// 		if err != nil {
-			// 			return err
-			// 		}
+		Handler: func(ctx *papi.RequestCtx, req *req, resp *struct{}) (err error) {
+			log.Println("uploaded", len(req.Body.File), "files")
 
-			// 		f.Close()
-			// 	}
-			// }
+			for _, f := range req.Body.File {
+				log.Println("-", f.Filename())
+			}
 
 			return
 		},
