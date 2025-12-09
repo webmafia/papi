@@ -161,3 +161,86 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 		},
 	}
 }
+
+type multipartFiles struct{}
+
+func (t multipartFiles) Type() reflect.Type {
+	return reflect.TypeOf((*[]MultipartFile)(nil)).Elem()
+}
+
+func (t multipartFiles) TypeDescription(reg *registry.Registry) registry.TypeDescription {
+	return registry.TypeDescription{
+		Schema: func(_ reflect.StructTag) (openapi.Schema, error) {
+			return &openapi.String{
+				Format: "binary",
+			}, nil
+		},
+		Binder: func(fieldName string, tags reflect.StructTag) (registry.Binder, error) {
+			var allow []string
+			var maxSize int64
+			var err error
+
+			if v, ok := tags.Lookup("allow"); ok {
+				allow = strings.Split(v, ",")
+			}
+
+			if v, ok := tags.Lookup("size"); ok {
+				maxSize, err = internal.ParseBytes(v)
+
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
+				form, err := c.MultipartForm()
+
+				if err != nil {
+					return
+				}
+
+				files, ok := form.File[fieldName]
+
+				// Fail silently, as the file might not be mandatory.
+				if !ok || len(files) == 0 {
+					return
+				}
+
+				v := (*[]MultipartFile)(ptr)
+
+				*v = make([]MultipartFile, len(files))
+
+				for i, file := range files {
+					ext := strings.ToLower(strings.TrimLeft(filepath.Ext(file.Filename), "."))
+
+					if !slices.Contains(allow, ext) {
+						return fmt.Errorf("filetype '%s' is not allowed", ext)
+					}
+
+					if file.Size > maxSize {
+						return fmt.Errorf("file too large; max %d bytes is allowed", maxSize)
+					}
+
+					if file.Size == 0 {
+						file.Size = maxSize
+					}
+
+					typ := filetype.GetType(ext)
+
+					// For known file types, let's check the provided mime type to ensure
+					// that it's nothing suspicious.
+					if typ != filetype.Unknown {
+						if contentType := file.Header.Get("Content-Type"); contentType != "" && contentType != typ.MIME.Value {
+							return fmt.Errorf("invalid mime type; expected '%s', got '%s'", typ.MIME.Value, contentType)
+						}
+					}
+
+					(*v)[i].file = fast.Noescape(file)
+					(*v)[i].filetype = typ
+				}
+
+				return
+			}, nil
+		},
+	}
+}

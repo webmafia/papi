@@ -84,6 +84,7 @@ func NewAPI(reg *registry.Registry, opt ...Options) (api *API, err error) {
 
 	api.reg.RegisterType(
 		types.TimeType(),
+		multipartFiles{},
 	)
 
 	api.server.Handler = api.handler
