@@ -95,6 +95,34 @@ func (m *MultipartFile) Filename() string {
 	return m.file.Filename
 }
 
+func (m *MultipartFile) Type() types.Type {
+	return m.filetype
+}
+
+func (m *MultipartFile) IsType(ext string) bool {
+	if m.file == nil {
+		return false
+	}
+
+	return filetype.GetType(ext) == m.filetype
+}
+
+func (m *MultipartFile) Size() int64 {
+	if m.file == nil {
+		return 0
+	}
+
+	return m.file.Size
+}
+
+func (m *MultipartFile) Header(key string) string {
+	if m.file == nil {
+		return ""
+	}
+
+	return m.file.Header.Get(key)
+}
+
 // TypeDescription implements registry.TypeDescriber.
 func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDescription {
 	return registry.TypeDescription{
