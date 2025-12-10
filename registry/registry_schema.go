@@ -151,8 +151,11 @@ func (r *Registry) describeSchema(typ reflect.Type, tags reflect.StructTag) (ope
 		fldName := tags.Get("body")
 		body := fldName
 
-		if fldName == "" {
+		switch fldName {
+		case "":
 			fldName = "json"
+		case "multipart":
+			fldName = "form"
 		}
 
 		numFlds := typ.NumField()

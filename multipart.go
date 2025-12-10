@@ -179,8 +179,10 @@ func (t multipartFiles) Type() reflect.Type {
 func (t multipartFiles) TypeDescription(reg *registry.Registry) registry.TypeDescription {
 	return registry.TypeDescription{
 		Schema: func(_ reflect.StructTag) (openapi.Schema, error) {
-			return &openapi.String{
-				Format: "binary",
+			return &openapi.Array{
+				Items: &openapi.String{
+					Format: "binary",
+				},
 			}, nil
 		},
 		Binder: func(fieldName string, tags reflect.StructTag) (registry.Binder, error) {
