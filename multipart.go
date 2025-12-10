@@ -133,20 +133,10 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 		},
 		Parser: registry.NoParser,
 		Binder: func(fieldName string, tags reflect.StructTag) (registry.Binder, error) {
-			var allow []string
-			var maxSize int64
-			var err error
+			allow, maxSize, err := parseTags(tags)
 
-			if v, ok := tags.Lookup("allow"); ok {
-				allow = strings.Split(v, ",")
-			}
-
-			if v, ok := tags.Lookup("size"); ok {
-				maxSize, err = internal.ParseBytes(v)
-
-				if err != nil {
-					return nil, err
-				}
+			if err != nil {
+				return nil, err
 			}
 
 			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
@@ -164,28 +154,10 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 				}
 
 				file := files[0]
-				ext := strings.ToLower(strings.TrimLeft(filepath.Ext(file.Filename), "."))
+				typ, err := validateFile(file, allow, maxSize)
 
-				if !slices.Contains(allow, ext) {
-					return fmt.Errorf("filetype '%s' is not allowed", ext)
-				}
-
-				if file.Size > maxSize {
-					return fmt.Errorf("file too large; max %d bytes is allowed", maxSize)
-				}
-
-				if file.Size == 0 {
-					file.Size = maxSize
-				}
-
-				typ := filetype.GetType(ext)
-
-				// For known file types, let's check the provided mime type to ensure
-				// that it's nothing suspicious.
-				if typ != filetype.Unknown {
-					if contentType := file.Header.Get("Content-Type"); contentType != "" && contentType != typ.MIME.Value {
-						return fmt.Errorf("invalid mime type; expected '%s', got '%s'", typ.MIME.Value, contentType)
-					}
+				if err != nil {
+					return
 				}
 
 				v := (*MultipartFile)(ptr)
@@ -196,6 +168,53 @@ func (m MultipartFile) TypeDescription(reg *registry.Registry) registry.TypeDesc
 			}, nil
 		},
 	}
+}
+
+func validateFile(file *multipart.FileHeader, allow []string, maxSize int64) (typ types.Type, err error) {
+	ext := strings.ToLower(strings.TrimLeft(filepath.Ext(file.Filename), "."))
+
+	if !slices.Contains(allow, ext) {
+		err = fmt.Errorf("filetype '%s' is not allowed", ext)
+		return
+	}
+
+	if file.Size > maxSize {
+		err = fmt.Errorf("file too large; max %d bytes is allowed", maxSize)
+		return
+	}
+
+	if file.Size == 0 {
+		file.Size = maxSize
+	}
+
+	typ = filetype.GetType(ext)
+
+	// For known file types, let's check the provided mime type to ensure
+	// that it's nothing suspicious.
+	if typ != filetype.Unknown {
+		if contentType := file.Header.Get("Content-Type"); contentType != "" && contentType != typ.MIME.Value {
+			err = fmt.Errorf("invalid mime type; expected '%s', got '%s'", typ.MIME.Value, contentType)
+			return
+		}
+	}
+
+	return
+}
+
+func parseTags(tags reflect.StructTag) (allow []string, maxSize int64, err error) {
+	if v, ok := tags.Lookup("allow"); ok {
+		allow = strings.Split(v, ",")
+	}
+
+	if v, ok := tags.Lookup("size"); ok {
+		maxSize, err = internal.ParseBytes(v)
+
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return
 }
 
 type multipartFiles struct{}
@@ -214,20 +233,10 @@ func (t multipartFiles) TypeDescription(reg *registry.Registry) registry.TypeDes
 			}, nil
 		},
 		Binder: func(fieldName string, tags reflect.StructTag) (registry.Binder, error) {
-			var allow []string
-			var maxSize int64
-			var err error
+			allow, maxSize, err := parseTags(tags)
 
-			if v, ok := tags.Lookup("allow"); ok {
-				allow = strings.Split(v, ",")
-			}
-
-			if v, ok := tags.Lookup("size"); ok {
-				maxSize, err = internal.ParseBytes(v)
-
-				if err != nil {
-					return nil, err
-				}
+			if err != nil {
+				return nil, err
 			}
 
 			return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer) (err error) {
@@ -249,28 +258,10 @@ func (t multipartFiles) TypeDescription(reg *registry.Registry) registry.TypeDes
 				*v = make([]MultipartFile, len(files))
 
 				for i, file := range files {
-					ext := strings.ToLower(strings.TrimLeft(filepath.Ext(file.Filename), "."))
+					typ, err := validateFile(file, allow, maxSize)
 
-					if !slices.Contains(allow, ext) {
-						return fmt.Errorf("filetype '%s' is not allowed", ext)
-					}
-
-					if file.Size > maxSize {
-						return fmt.Errorf("file too large; max %d bytes is allowed", maxSize)
-					}
-
-					if file.Size == 0 {
-						file.Size = maxSize
-					}
-
-					typ := filetype.GetType(ext)
-
-					// For known file types, let's check the provided mime type to ensure
-					// that it's nothing suspicious.
-					if typ != filetype.Unknown {
-						if contentType := file.Header.Get("Content-Type"); contentType != "" && contentType != typ.MIME.Value {
-							return fmt.Errorf("invalid mime type; expected '%s', got '%s'", typ.MIME.Value, contentType)
-						}
+					if err != nil {
+						return err
 					}
 
 					(*v)[i].file = fast.Noescape(file)
