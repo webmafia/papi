@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/webmafia/papi"
+	"github.com/webmafia/papi/example"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/registry"
 )
 
+type User = example.User
 type Users struct{}
 
 func (r Users) GetUserByID(api *papi.API) (err error) {

@@ -146,29 +146,46 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 		}
 
 		if tags.Permission != "" && r.gatekeeper != nil {
-			switch gk := r.gatekeeper.(type) {
+			perm = tags.Permission
 
-			case security.RolesGatekeeper:
-				if bind, perm, err = r.createOperationSecurityBinder(fld.Type, tags.Permission, caller, gk); err != nil {
+			if perm != "-" {
+				p := security.Permission(perm)
+
+				if !p.HasResource() {
+					p.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
+					perm = p.String()
+				}
+
+				switch gk := r.gatekeeper.(type) {
+
+				case security.RolesGatekeeper:
+					if bind, err = r.createOperationSecurityBinder(fld.Type, p, caller, gk); err != nil {
+						return
+					}
+
+				case security.CustomGatekeeper:
+					bind = func(c *fasthttp.RequestCtx, policy unsafe.Pointer) error {
+						return gk.HandleSecurity(c, p, reflect.NewAt(fld.Type, policy).Interface())
+					}
+
+				case security.RouteGatekeeper:
+					bind = func(c *fasthttp.RequestCtx, policy unsafe.Pointer) error {
+						setter := internal.NewSetter(fld.Type, policy)
+						return gk.CheckPermission(c, p, setter)
+					}
+
+				default:
+					err = fmt.Errorf("unknown gatekeeper type: %T", gk)
 					return
+
 				}
 
-			case security.CustomGatekeeper:
-				bind = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
-					return gk.HandleSecurity(c, security.Permission(tags.Permission), reflect.NewAt(fld.Type, p).Interface())
+				if bind != nil {
+					flds = append(flds, fieldBinder{
+						offset: fld.Offset,
+						bind:   bind,
+					})
 				}
-
-			default:
-				err = fmt.Errorf("unknown gatekeeper type: %T", gk)
-				return
-
-			}
-
-			if bind != nil {
-				flds = append(flds, fieldBinder{
-					offset: fld.Offset,
-					bind:   bind,
-				})
 			}
 		}
 	}
@@ -188,17 +205,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 	}, perm, nil
 }
 
-func (r *Registry) createOperationSecurityBinder(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler Binder, modTag string, err error) {
-	if permTag == "-" {
-		return nil, permTag, nil
-	}
-
-	perm := security.Permission(permTag)
-
-	if !perm.HasResource() {
-		perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
-	}
-
+func (r *Registry) createOperationSecurityBinder(typ reflect.Type, perm security.Permission, caller *runtime.Func, gk security.RolesGatekeeper) (handler Binder, err error) {
 	if err = r.policies.Register(perm, typ); err != nil {
 		return
 	}
@@ -223,5 +230,5 @@ func (r *Registry) createOperationSecurityBinder(typ reflect.Type, permTag strin
 		}
 
 		return nil
-	}, perm.String(), nil
+	}, nil
 }

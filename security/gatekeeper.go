@@ -2,6 +2,7 @@ package security
 
 import (
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/openapi"
 )
 
@@ -35,4 +36,11 @@ type CustomGatekeeper interface {
 
 	// Policy is always a pointer to the route's policy.
 	HandleSecurity(c *fasthttp.RequestCtx, perm Permission, policy any) error
+}
+
+type RouteGatekeeper interface {
+	Gatekeeper
+
+	// Checks the permission and sets any policy. Any error will result in "403 Forbidden".
+	CheckPermission(c *fasthttp.RequestCtx, perm Permission, policy internal.Setter) error
 }
