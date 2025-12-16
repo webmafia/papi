@@ -41,7 +41,7 @@ func (r Users) GetUserByID(api *papi.API) (err error) {
 	})
 }
 
-var _ security.RouteGatekeeper = (*gatekeeper)(nil)
+var _ security.Gatekeeper = (*gatekeeper)(nil)
 
 type gatekeeper struct{}
 
@@ -56,7 +56,7 @@ func (g *gatekeeper) OptionalPermTag() bool {
 }
 
 // PreRequest implements security.Gatekeeper.
-func (g *gatekeeper) PreRequest(c *fasthttp.RequestCtx) error {
+func (g *gatekeeper) BeforeRequest(c *fasthttp.RequestCtx) error {
 	return nil
 }
 
