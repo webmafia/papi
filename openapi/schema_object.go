@@ -11,13 +11,14 @@ import (
 var _ Schema = (*Object)(nil)
 
 type Object struct {
-	Title       string `tag:"title"`
-	Description string `tag:"description"`
-	Required    []string
-	Properties  []ObjectProperty
-	Nullable    bool `tag:"flags:nullable"`
-	ReadOnly    bool `tag:"flags:readonly"`
-	WriteOnly   bool `tag:"flags:writeonly"`
+	Title                string `tag:"title"`
+	Description          string `tag:"description"`
+	Required             []string
+	Properties           []ObjectProperty
+	AdditionalProperties Schema
+	Nullable             bool `tag:"flags:nullable"`
+	ReadOnly             bool `tag:"flags:readonly"`
+	WriteOnly            bool `tag:"flags:writeonly"`
 }
 
 type ObjectProperty struct {
@@ -103,6 +104,15 @@ func (sch *Object) encodeSchema(ctx *encoderContext, s *jsoniter.Stream) (err er
 		}
 
 		s.WriteObjectEnd()
+	}
+
+	if sch.AdditionalProperties != nil {
+		s.WriteMore()
+		s.WriteObjectField("additionalProperties")
+
+		if err = sch.AdditionalProperties.encodeSchema(ctx, s); err != nil {
+			return
+		}
 	}
 
 	s.WriteObjectEnd()
