@@ -27,8 +27,19 @@ func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
 	}
 
 	r.scan = scanner.NewCreator(func(typ reflect.Type) (scan scanner.Scanner, err error) {
+
+		// 1. If there is an explicit registered parser, use it
 		if desc, ok := r.desc[typ]; ok && desc.Parser != nil {
 			return desc.Parser("")
+		}
+
+		// 2. If the type can describe itself, let it
+		if typ.Implements(typeDescriber) {
+			if v, ok := reflect.New(typ).Interface().(TypeDescriber); ok {
+				if desc := v.TypeDescription(r); desc.Schema != nil {
+					return desc.Parser("")
+				}
+			}
 		}
 
 		return
