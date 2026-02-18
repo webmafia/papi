@@ -32,7 +32,8 @@ func (s Setter) Type() reflect.Type {
 }
 
 // Sets the setter to a specific value. The value MUST be wrapped in a pointer - any
-// non-pointers will return an error. Passing a nil value will zero the destination.
+// non-pointers will return an error. The pointer will not escape - only its value will
+// be copied. Passing a nil value will zero the destination.
 func (s Setter) Set(v any) (err error) {
 	if v == nil {
 		// Zero the destination value of type s.typ at s.ptr.

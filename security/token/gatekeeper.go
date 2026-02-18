@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fast"
 	"github.com/webmafia/hexid"
 	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/openapi"
@@ -123,7 +124,7 @@ func (s *Gatekeeper[T]) CheckPermission(c *fasthttp.RequestCtx, perm security.Pe
 		return
 	}
 
-	return s.store.CheckPermission(c, tok.id.Uint64(), perm, cond)
+	return s.store.CheckPermission(c, tok.id.Uint64(), fast.Noescape(tok.payload[:]), perm, cond)
 }
 
 // func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
