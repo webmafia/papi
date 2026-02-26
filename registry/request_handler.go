@@ -155,6 +155,10 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 					perm = p.String()
 				}
 
+				if err = r.policies.Register(security.Permission(perm), typ); err != nil {
+					return
+				}
+
 				bind = func(c *fasthttp.RequestCtx, policy unsafe.Pointer) error {
 					setter := internal.NewSetter(fld.Type, policy)
 					err := r.gatekeeper.CheckPermission(c, p, setter)
