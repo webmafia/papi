@@ -155,7 +155,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 					perm = p.String()
 				}
 
-				if err = r.policies.Register(security.Permission(perm), typ); err != nil {
+				if err = r.policies.Register(security.Permission(perm), fld.Type); err != nil {
 					return
 				}
 
