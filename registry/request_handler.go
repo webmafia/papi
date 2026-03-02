@@ -155,9 +155,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 					perm = p.String()
 				}
 
-				if err = r.policies.Register(security.Permission(perm), typ); err != nil {
-					return
-				}
+				r.perms.Add(p)
 
 				bind = func(c *fasthttp.RequestCtx, policy unsafe.Pointer) error {
 					setter := internal.NewSetter(fld.Type, policy)
@@ -192,31 +190,3 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 		return
 	}, perm, nil
 }
-
-// func (r *Registry) createOperationSecurityBinder(typ reflect.Type, perm security.Permission, caller *runtime.Func, gk security.RolesGatekeeper) (handler Binder, err error) {
-// 	if err = r.policies.Register(perm, typ); err != nil {
-// 		return
-// 	}
-
-// 	typ2 := reflect2.Type2(typ)
-
-// 	return func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
-// 		userRoles, err := gk.UserRoles(c)
-
-// 		if err != nil {
-// 			return
-// 		}
-
-// 		cond, err := r.policies.Get(userRoles, perm)
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		if cond != nil {
-// 			typ2.UnsafeSet(p, cond)
-// 		}
-
-// 		return nil
-// 	}, nil
-// }

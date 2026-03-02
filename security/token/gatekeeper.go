@@ -127,31 +127,6 @@ func (s *Gatekeeper[T]) CheckPermission(c *fasthttp.RequestCtx, perm security.Pe
 	return s.store.CheckPermission(c, tok.id.Uint64(), fast.Noescape(tok.payload[:]), perm, cond)
 }
 
-// func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
-// 	rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
-// 	bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
-
-// 	if !ok {
-// 		if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
-// 			bearer = cookie
-// 		} else {
-// 			return nil, security.ErrInvalidAuthToken
-// 		}
-// 	}
-
-// 	var tok Token
-
-// 	if err = tok.UnmarshalText(bearer); err != nil {
-// 		return
-// 	}
-
-// 	if err = s.auth.ValidateToken(tok); err != nil {
-// 		return
-// 	}
-
-// 	return s.store.UserRoles(c, uint64(tok.Id()))
-// }
-
 func (s *Gatekeeper[T]) CreateAuthCode(ctx context.Context, userId T, expiry time.Duration, cookie bool) (code string, err error) {
 	var c OneTimeCode
 
