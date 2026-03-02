@@ -23,8 +23,9 @@ type Gatekeeper[T any] struct {
 }
 
 type GatekeeperOptions struct {
-	BeforeRequest   func(c *fasthttp.RequestCtx, tok Token) error
-	OptionalPermTag bool
+	BeforeRequest            func(c *fasthttp.RequestCtx, tok Token) error
+	OptionalPermTag          bool
+	SecuritySchemeExtensions map[string]any
 }
 
 func NewGatekeeper[T any](secret Secret, store Store[T], opt ...GatekeeperOptions) *Gatekeeper[T] {
@@ -66,6 +67,7 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 		Description:  "API token",
 		Scheme:       "bearer",
 		BearerFormat: "base32hex",
+		Extensions:   s.opt.SecuritySchemeExtensions,
 	}
 }
 
