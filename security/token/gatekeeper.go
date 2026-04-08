@@ -24,8 +24,9 @@ type Gatekeeper[T any] struct {
 
 type GatekeeperOptions struct {
 	BeforeRequest            func(c *fasthttp.RequestCtx, tok Token) error
-	OptionalPermTag          bool
 	SecuritySchemeExtensions map[string]any
+	CookieName               string
+	OptionalPermTag          bool
 }
 
 func NewGatekeeper[T any](secret Secret, store Store[T], opt ...GatekeeperOptions) *Gatekeeper[T] {
@@ -80,7 +81,7 @@ func (g *Gatekeeper[T]) BeforeRequest(c *fasthttp.RequestCtx) (err error) {
 		var tok Token
 
 		if !ok {
-			if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
+			if cookie := c.Request.Header.Cookie(g.cookieName()); len(cookie) > 0 {
 				bearer = cookie
 			} else {
 
@@ -109,7 +110,7 @@ func (s *Gatekeeper[T]) CheckPermission(c *fasthttp.RequestCtx, perm security.Pe
 	bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
 	if !ok {
-		if cookie := c.Request.Header.Cookie("token"); len(cookie) > 0 {
+		if cookie := c.Request.Header.Cookie(s.cookieName()); len(cookie) > 0 {
 			bearer = cookie
 		} else {
 			return security.ErrInvalidAuthToken
@@ -177,4 +178,12 @@ func (s *Gatekeeper[T]) CreateTokenWithId(id hexid.ID, payload ...[]byte) (strin
 	}
 
 	return tok.String(), nil
+}
+
+func (s *Gatekeeper[T]) cookieName() string {
+	if s.opt.CookieName != "" {
+		return s.opt.CookieName
+	}
+
+	return "token"
 }
