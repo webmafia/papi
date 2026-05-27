@@ -9,7 +9,6 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/modern-go/reflect2"
 	"github.com/valyala/fasthttp"
 	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/security"
@@ -47,7 +46,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 	if r.gatekeeper != nil {
 		flds = append(flds, fieldBinder{
 			bind: func(c *fasthttp.RequestCtx, _ unsafe.Pointer) error {
-				return r.gatekeeper.PreRequest(c)
+				return r.gatekeeper.BeforeRequest(c)
 			},
 		})
 	}
@@ -146,25 +145,29 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 		}
 
 		if tags.Permission != "" && r.gatekeeper != nil {
-			switch gk := r.gatekeeper.(type) {
+			perm = tags.Permission
 
-			case security.RolesGatekeeper:
-				if bind, perm, err = r.createOperationSecurityBinder(fld.Type, tags.Permission, caller, gk); err != nil {
-					return
+			if perm != "-" {
+				p := security.Permission(perm)
+
+				if !p.HasResource() {
+					p.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
+					perm = p.String()
 				}
 
-			case security.CustomGatekeeper:
-				bind = func(c *fasthttp.RequestCtx, p unsafe.Pointer) error {
-					return gk.HandleSecurity(c, security.Permission(tags.Permission), reflect.NewAt(fld.Type, p).Interface())
+				r.perms.Add(p)
+
+				bind = func(c *fasthttp.RequestCtx, policy unsafe.Pointer) error {
+					setter := internal.NewSetter(fld.Type, policy)
+					err := r.gatekeeper.CheckPermission(c, p, setter)
+
+					if err != nil {
+						return security.ErrAccessDenied.Detailed(err.Error())
+					}
+
+					return err
 				}
 
-			default:
-				err = fmt.Errorf("unknown gatekeeper type: %T", gk)
-				return
-
-			}
-
-			if bind != nil {
 				flds = append(flds, fieldBinder{
 					offset: fld.Offset,
 					bind:   bind,
@@ -186,42 +189,4 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 
 		return
 	}, perm, nil
-}
-
-func (r *Registry) createOperationSecurityBinder(typ reflect.Type, permTag string, caller *runtime.Func, gk security.RolesGatekeeper) (handler Binder, modTag string, err error) {
-	if permTag == "-" {
-		return nil, permTag, nil
-	}
-
-	perm := security.Permission(permTag)
-
-	if !perm.HasResource() {
-		perm.SetResource(strings.ToLower(internal.CallerTypeFromFunc(caller)))
-	}
-
-	if err = r.policies.Register(perm, typ); err != nil {
-		return
-	}
-
-	typ2 := reflect2.Type2(typ)
-
-	return func(c *fasthttp.RequestCtx, p unsafe.Pointer) (err error) {
-		userRoles, err := gk.UserRoles(c)
-
-		if err != nil {
-			return
-		}
-
-		cond, err := r.policies.Get(userRoles, perm)
-
-		if err != nil {
-			return err
-		}
-
-		if cond != nil {
-			typ2.UnsafeSet(p, cond)
-		}
-
-		return nil
-	}, perm.String(), nil
 }

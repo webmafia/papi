@@ -1,6 +1,8 @@
 package openapi
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	jsoniter "github.com/json-iterator/go"
+)
 
 type SecurityScheme struct {
 	SchemeName       string
@@ -12,6 +14,7 @@ type SecurityScheme struct {
 	BearerFormat     string
 	Flows            SecuritySchemeFlows
 	OpenIdConnectUrl string
+	Extensions       map[string]any
 }
 
 func (sec *SecurityScheme) IsZero() bool {
@@ -64,6 +67,18 @@ func (sec *SecurityScheme) JsonEncode(s *jsoniter.Stream) {
 		s.WriteMore()
 		s.WriteObjectField("openIdConnectUrl")
 		s.WriteString(sec.OpenIdConnectUrl)
+	}
+
+	if len(sec.Extensions) > 0 {
+		for k, v := range sec.Extensions {
+			if k[:2] != "x-" {
+				continue
+			}
+
+			s.WriteMore()
+			s.WriteObjectField(k)
+			s.WriteVal(v)
+		}
 	}
 
 	s.WriteObjectEnd()

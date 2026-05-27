@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/valyala/fasthttp"
+	"github.com/webmafia/fast"
 	"github.com/webmafia/hexid"
+	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/openapi"
 	"github.com/webmafia/papi/security"
 )
@@ -21,9 +23,10 @@ type Gatekeeper[T any] struct {
 }
 
 type GatekeeperOptions struct {
-	PreRequest      func(c *fasthttp.RequestCtx, tok Token) error
-	OptionalPermTag bool
-	CookieName      string
+	BeforeRequest            func(c *fasthttp.RequestCtx, tok Token) error
+	SecuritySchemeExtensions map[string]any
+	CookieName               string
+	OptionalPermTag          bool
 }
 
 func NewGatekeeper[T any](secret Secret, store Store[T], opt ...GatekeeperOptions) *Gatekeeper[T] {
@@ -65,12 +68,13 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 		Description:  "API token",
 		Scheme:       "bearer",
 		BearerFormat: "base32hex",
+		Extensions:   s.opt.SecuritySchemeExtensions,
 	}
 }
 
 // PreRequest implements security.Gatekeeper.
-func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) (err error) {
-	if g.opt.PreRequest != nil {
+func (g *Gatekeeper[T]) BeforeRequest(c *fasthttp.RequestCtx) (err error) {
+	if g.opt.BeforeRequest != nil {
 		rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
 		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
@@ -82,7 +86,7 @@ func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) (err error) {
 			} else {
 
 				// Call with zero-valued token
-				return g.opt.PreRequest(c, tok)
+				return g.opt.BeforeRequest(c, tok)
 			}
 		}
 
@@ -94,13 +98,14 @@ func (g *Gatekeeper[T]) PreRequest(c *fasthttp.RequestCtx) (err error) {
 			return
 		}
 
-		return g.opt.PreRequest(c, tok)
+		return g.opt.BeforeRequest(c, tok)
 	}
 
 	return
 }
 
-func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err error) {
+// CheckPermission implements security.Gatekeeper.
+func (s *Gatekeeper[T]) CheckPermission(c *fasthttp.RequestCtx, perm security.Permission, cond internal.Setter) (err error) {
 	rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
 	bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
 
@@ -108,7 +113,7 @@ func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err e
 		if cookie := c.Request.Header.Cookie(s.cookieName()); len(cookie) > 0 {
 			bearer = cookie
 		} else {
-			return nil, security.ErrInvalidAuthToken
+			return security.ErrInvalidAuthToken
 		}
 	}
 
@@ -122,7 +127,7 @@ func (s *Gatekeeper[T]) UserRoles(c *fasthttp.RequestCtx) (roles []string, err e
 		return
 	}
 
-	return s.store.UserRoles(c, uint64(tok.Id()))
+	return s.store.CheckPermission(c, tok.id.Uint64(), fast.Noescape(tok.payload[:]), perm, cond)
 }
 
 func (s *Gatekeeper[T]) CreateAuthCode(ctx context.Context, userId T, expiry time.Duration, cookie bool) (code string, err error) {

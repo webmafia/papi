@@ -1,9 +1,10 @@
 package registry
 
 import (
+	"iter"
 	"reflect"
 
-	"github.com/webmafia/fast"
+	"github.com/webmafia/papi/internal"
 	"github.com/webmafia/papi/internal/scanner"
 	"github.com/webmafia/papi/security"
 )
@@ -13,7 +14,7 @@ type Registry struct {
 	desc       map[reflect.Type]TypeDescription
 	scan       scanner.Creator
 	gatekeeper security.Gatekeeper
-	policies   security.PolicyStore
+	perms      internal.Set[security.Permission]
 }
 
 func NewRegistry(gatekeeper ...security.Gatekeeper) (r *Registry) {
@@ -62,15 +63,17 @@ func (r *Registry) RegisterType(typs ...TypeRegistrar) (err error) {
 	return
 }
 
-// Could be nil.
+// Get the register's gatekeeper. Could be nil.
 func (r *Registry) Gatekeeper() security.Gatekeeper {
 	return r.gatekeeper
 }
 
-func (r *Registry) Policies() *security.PolicyStore {
-	return fast.Noescape(&r.policies)
+// Iterate through all unique permissions of all registred routes without any guaranteed order.
+func (t *Registry) Permissions() iter.Seq[security.Permission] {
+	return t.perms.Values()
 }
 
+// Returns whether the permission tag is optional or not on routes.
 func (r *Registry) OptionalPermTag() bool {
 	return r.gatekeeper == nil || r.gatekeeper.OptionalPermTag()
 }
