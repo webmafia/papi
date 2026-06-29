@@ -82,7 +82,8 @@ func NewAPI(reg *registry.Registry, opt ...Options) (api *API, err error) {
 	api.opt.setDefaults()
 
 	api.reg.RegisterType(
-		types.TimeType(),
+		types.Time(),
+		types.JsonRawMessage(),
 		multipartFiles{},
 	)
 

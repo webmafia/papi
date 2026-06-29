@@ -9,7 +9,7 @@ import (
 	"github.com/webmafia/papi/registry"
 )
 
-func TimeType() registry.TypeRegistrar {
+func Time() registry.TypeRegistrar {
 	return timeType{}
 }
 
