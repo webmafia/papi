@@ -113,8 +113,10 @@ func addRoute[I, O any](api *API, r AdvancedRoute[I, O]) (err error) {
 		}
 
 		// Add route to OpenAPI docs
-		if err = addToDocs(api, &r, perm, pc); err != nil {
-			return
+		if !r.HiddenFromDocs {
+			if err = addToDocs(api, &r, perm, pc); err != nil {
+				return
+			}
 		}
 
 		// Create a handler for output (response)

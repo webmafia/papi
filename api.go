@@ -38,6 +38,9 @@ type Options struct {
 
 	// Header for Cross-Origin Resource Sharing (CORS).
 	CORS string
+
+	// Whether to expose the OpenAPI documentation at /openapi.json.
+	ExposeOpenAPI bool
 }
 
 func (opt *Options) setDefaults() {
@@ -88,6 +91,10 @@ func NewAPI(reg *registry.Registry, opt ...Options) (api *API, err error) {
 	)
 
 	api.server.Handler = api.handler
+
+	if api.opt.ExposeOpenAPI {
+		api.RegisterRoutes(docsRoute{})
+	}
 
 	return
 }

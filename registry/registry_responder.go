@@ -22,6 +22,18 @@ func (r *Registry) Responder(typ reflect.Type) (scan Responder, err error) {
 func (r *Registry) defaultResponder(typ reflect.Type) (Responder, error) {
 	enc := json.EncoderOf(typ)
 
+	if typ.Size() == 0 {
+		return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer, next func() error) error {
+			if err := next(); err != nil {
+				return err
+			}
+
+			c.SetContentType("application/json")
+
+			return nil
+		}, nil
+	}
+
 	return func(c *fasthttp.RequestCtx, ptr unsafe.Pointer, next func() error) error {
 		if err := next(); err != nil {
 			return err
@@ -29,10 +41,14 @@ func (r *Registry) defaultResponder(typ reflect.Type) (Responder, error) {
 
 		c.SetContentType("application/json")
 
-		s := json.AcquireStream(c.Response.BodyWriter())
-		defer json.ReleaseStream(s)
+		if typ.Size() != 0 {
+			s := json.AcquireStream(c.Response.BodyWriter())
+			defer json.ReleaseStream(s)
 
-		enc.Encode(ptr, s)
-		return s.Flush()
+			enc.Encode(ptr, s)
+			return s.Flush()
+		}
+
+		return nil
 	}, nil
 }
