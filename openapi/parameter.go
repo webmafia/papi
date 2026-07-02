@@ -20,13 +20,17 @@ func (p *Parameter) JsonEncode(ctx *encoderContext, s *jsoniter.Stream) {
 	s.WriteObjectField("in")
 	p.In.JsonEncode(ctx, s)
 
-	s.WriteMore()
-	s.WriteObjectField("description")
-	s.WriteString(p.Description)
+	if p.Description != "" {
+		s.WriteMore()
+		s.WriteObjectField("description")
+		s.WriteString(p.Description)
+	}
 
-	s.WriteMore()
-	s.WriteObjectField("required")
-	s.WriteBool(p.Required)
+	if p.Required {
+		s.WriteMore()
+		s.WriteObjectField("required")
+		s.WriteBool(p.Required)
+	}
 
 	if _, ok := p.Schema.(*Array); ok {
 		s.WriteMore()
