@@ -1,9 +1,9 @@
 package papi
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-	"strings"
 	"unsafe"
 
 	"github.com/valyala/fasthttp"
@@ -26,8 +26,9 @@ func (fileType) Binary() bool        { return false }
 func (fileType) ContentType() string { return "" }
 
 type File[T FileType] struct {
-	w        io.Writer
-	filename string
+	w          io.Writer
+	filename   string
+	attachment bool
 }
 
 func (f *File[T]) Writer() io.Writer {
@@ -36,6 +37,11 @@ func (f *File[T]) Writer() io.Writer {
 
 func (f *File[T]) SetFilename(name string) {
 	f.filename = name
+}
+
+// Use `attachment` as Content-Disposition. Default is `inline`.
+func (f *File[T]) SetAttachment(v bool) {
+	f.attachment = v
 }
 
 // TypeDescription implements registry.TypeDescriber.
@@ -72,7 +78,13 @@ func (File[T]) TypeDescription(reg *registry.Registry) registry.TypeDescription 
 				}
 
 				if f.filename != "" {
-					c.Response.Header.Set("Content-Disposition", strings.Join([]string{`inline; filename="`, f.filename, `"`}, ""))
+					disposition := "inline"
+
+					if f.attachment {
+						disposition = "attachment"
+					}
+
+					c.Response.Header.Set("Content-Disposition", fmt.Sprintf(`%s; filename=%q`, disposition, f.filename))
 				}
 
 				return
