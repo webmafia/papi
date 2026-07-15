@@ -1,7 +1,6 @@
 package papi
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -24,6 +23,9 @@ var _ registry.TypeDescriber = (*MultipartFile)(nil)
 var _ io.Reader = (*MultipartFile)(nil)
 var _ io.WriterTo = (*MultipartFile)(nil)
 
+var zipType = filetype.GetType("zip")
+var zipTypes = []string{"xlsx", "docx", "pptx"}
+
 type MultipartFile struct {
 	file     *multipart.FileHeader
 	filetype types.Type
@@ -45,8 +47,18 @@ func (m *MultipartFile) openAndValidate() (multipart.File, error) {
 		}
 
 		if !filetype.IsType(head[:], m.filetype) {
-			f.Close()
-			return nil, errors.New("bad file header")
+			ext := strings.ToLower(strings.TrimLeft(filepath.Ext(m.file.Filename), "."))
+
+			if !filetype.IsType(head[:], zipType) || !slices.Contains(zipTypes, ext) {
+				t, err := filetype.Get(head[:])
+				f.Close()
+
+				if err != nil {
+					return nil, fmt.Errorf("bad file type")
+				}
+
+				return nil, fmt.Errorf("bad file type: got %s, want %s", t.Extension, ext)
+			}
 		}
 
 		if _, err = f.Seek(0, io.SeekStart); err != nil {
