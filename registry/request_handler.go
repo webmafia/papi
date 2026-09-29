@@ -25,6 +25,10 @@ func (t inputTags) IsZero() bool {
 	return t.Body == "" && t.Param == "" && t.Query == "" && t.Permission == ""
 }
 
+func (t inputTags) hasQuery() bool {
+	return t.Query != "" && t.Query != "-"
+}
+
 type fieldBinder struct {
 	offset uintptr
 	bind   Binder
@@ -133,7 +137,7 @@ func (r *Registry) createBinder(typ reflect.Type, paramKeys []string, caller *ru
 			})
 		}
 
-		if tags.Query != "" {
+		if tags.hasQuery() {
 			if bind, err = r.createQueryBinder(fld.Type, tags.Query, fld.Tag); err != nil {
 				return
 			}

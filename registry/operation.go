@@ -81,7 +81,7 @@ func (r *Registry) describeOperation(op *openapi.Operation, typ reflect.Type) (e
 			op.Parameters = append(op.Parameters, param)
 		}
 
-		if tags.Query != "" {
+		if tags.hasQuery() {
 			schema, err := r.Schema(fld.Type, fld.Tag)
 
 			if err != nil {
