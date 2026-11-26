@@ -72,36 +72,26 @@ func (s *Gatekeeper[T]) SecurityScheme() openapi.SecurityScheme {
 	}
 }
 
-// PreRequest implements security.Gatekeeper.
+// BeforeRequest implements security.Gatekeeper.
 func (g *Gatekeeper[T]) BeforeRequest(c *fasthttp.RequestCtx) (err error) {
-	if g.opt.BeforeRequest != nil {
-		rawToken := c.Request.Header.Peek(fasthttp.HeaderAuthorization)
-		bearer, ok := bytes.CutPrefix(rawToken, tokenPrefix)
-
-		var tok Token
-
-		if !ok {
-			if cookie := c.Request.Header.Cookie(g.cookieName()); len(cookie) > 0 {
-				bearer = cookie
-			} else {
-
-				// Call with zero-valued token
-				return g.opt.BeforeRequest(c, tok)
-			}
-		}
-
-		if err = tok.UnmarshalText(bearer); err != nil {
-			return
-		}
-
-		if err = g.auth.ValidateToken(tok); err != nil {
-			return
-		}
-
-		return g.opt.BeforeRequest(c, tok)
+	if g.opt.BeforeRequest == nil {
+		return
 	}
 
-	return
+	var tok Token
+	bearer, ok := bytes.CutPrefix(c.Request.Header.Peek(fasthttp.HeaderAuthorization), tokenPrefix)
+
+	if !ok {
+		bearer = c.Request.Header.Cookie(g.cookieName())
+	}
+
+	// A missing, malformed or forged token is treated as no token, so that it doesn't block
+	// public routes (e.g. logging in). Routes with a permission still reject it in CheckPermission.
+	if len(bearer) == 0 || tok.UnmarshalText(bearer) != nil || g.auth.ValidateToken(tok) != nil {
+		tok = Token{}
+	}
+
+	return g.opt.BeforeRequest(c, tok)
 }
 
 // CheckPermission implements security.Gatekeeper.
